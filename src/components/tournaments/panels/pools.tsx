@@ -1,0 +1,111 @@
+import { useMemo } from "react";
+import { title } from "@/components/base/primitives";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from "@/components/base/table";
+import { TabPanel } from "@/components/base/tabs";
+import { ProfileName } from "@/components/profiles/name";
+import { usePools } from "@/data/pools";
+import type { Tournament, TournamentDivision } from "@/db";
+import { getPoolStats, usePoolMatchResults } from "@/hooks/matches";
+
+export function PoolsPanel({
+  tournamentDivisionId,
+}: Pick<Tournament, "id"> & {
+  tournamentDivisionId: TournamentDivision["id"];
+}) {
+  const { data } = usePools({ tournamentDivisionId });
+  const poolMatchResults = usePoolMatchResults(data?.data);
+
+  const pools = useMemo(() => {
+    return data?.data.map((pool) => ({
+      pool,
+      stats: getPoolStats(pool),
+    }));
+  }, [data]);
+
+  return (
+    <TabPanel id="pools">
+      <div className="max-w-4xl mx-auto py-12 px-3 flex flex-col gap-12">
+        {pools?.map(({ pool, stats }) => {
+          pool.teams.sort((a, b) => {
+            return stats[a.teamId].rank - stats[b.teamId].rank;
+          });
+
+          const orderedTeams = pool.teams;
+
+          return (
+            <div key={pool.id} className="flex flex-col gap-6">
+              <h2 className={title({ size: "sm", className: "uppercase" })}>
+                Pool {pool.name}
+              </h2>
+
+              <Table aria-label={`Pool ${pool.name.toUpperCase()}`}>
+                <TableHeader className="bg-navbar-background">
+                  <TableColumn id="finish" allowsSorting minWidth={100}>
+                    Finish
+                  </TableColumn>
+                  <TableColumn
+                    id="seed"
+                    isRowHeader
+                    allowsSorting
+                    minWidth={100}
+                  >
+                    Seed
+                  </TableColumn>
+                  <TableColumn id="team" isRowHeader minWidth={90}>
+                    Team
+                  </TableColumn>
+                  <TableColumn id="wins" isRowHeader minWidth={90}>
+                    Wins
+                  </TableColumn>
+                  <TableColumn id="losses" isRowHeader minWidth={90}>
+                    Losses
+                  </TableColumn>
+                </TableHeader>
+                <TableBody items={orderedTeams}>
+                  {({
+                    id,
+                    seed,
+                    team: {
+                      id: teamId,
+                      team: { players },
+                    },
+                    finish,
+                  }) => {
+                    const { wins, losses } = poolMatchResults
+                      ? poolMatchResults[teamId]
+                      : { wins: null, losses: null };
+
+                    return (
+                      <TableRow key={id}>
+                        <TableCell>
+                          {finish ?? stats[teamId].rank ?? "-"}
+                        </TableCell>
+                        <TableCell>{seed ?? "-"}</TableCell>
+                        <TableCell>
+                          <span className="flex flex-col md:flex-row">
+                            {players.map(({ profile }) => (
+                              <ProfileName key={profile.id} {...profile} />
+                            ))}
+                          </span>
+                        </TableCell>
+                        <TableCell>{wins ?? "-"}</TableCell>
+                        <TableCell>{losses ?? "-"}</TableCell>
+                      </TableRow>
+                    );
+                  }}
+                </TableBody>
+              </Table>
+            </div>
+          );
+        })}
+      </div>
+    </TabPanel>
+  );
+}

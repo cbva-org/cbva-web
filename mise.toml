@@ -1,0 +1,19 @@
+[env]
+SUPABASE_API = "https://mbzypgimhfaesnwkzshf.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ienlwZ2ltaGZhZXNud2t6c2hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4NDc5NDcsImV4cCI6MjA3NzQyMzk0N30.8AziXyAtFqcxY7YHdB9XW5nUAj2Tg8rATNtRx1ElXCw"
+
+DATABASE_URL="postgresql://postgres.mbzypgimhfaesnwkzshf:EB7ETJbM!KytHoisWezsKnGsV@aws-1-us-east-2.pooler.supabase.com:6543/postgres"
+
+DATABASE_HOST = "aws-1-us-east-2.pooler.supabase.com"
+DATABASE_PORT = 6543
+DATABASE_PASS = "EB7ETJbM!KytHoisWezsKnGsV"
+
+# DATABASE_URL = "postgresql://postgres.souozynnlhutrhzoormh:EB7ETJbM!KytHoisWezsKnGsV@aws-1-us-east-2.pooler.supabase.com:5432/postgres?pgbouncer=true"
+# DATABASE_URL = "postgresql://admin:admin@localhost:5001/cbva"
+
+ANTHROPIC_BASE_URL = "https://api.deepseek.com/anthropic"
+ANTHROPIC_AUTH_TOKEN = "sk-af307144731644268ceeffe22375af9f"
+API_TIMEOUT_MS = 600000
+ANTHROPIC_MODEL = "deepseek-chat"
+ANTHROPIC_SMALL_FAST_MODEL = "deepseek-chat"
+CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = 1

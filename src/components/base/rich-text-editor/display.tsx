@@ -1,0 +1,94 @@
+import { createHeadlessEditor } from "@lexical/headless";
+import { $generateHtmlFromNodes } from "@lexical/html";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { createIsomorphicFn } from "@tanstack/react-start";
+import { JSDOM } from "jsdom";
+import { Suspense } from "react";
+import type { LexicalState } from "@/db/schema/shared";
+import { EDITOR_CONFIG_DEFAULTS } from "./config";
+
+export type RichTextDisplayProps = {
+  name: string;
+  content?: LexicalState | null;
+};
+
+function setupDom() {
+  const dom = new JSDOM();
+
+  const _window = global.window;
+  const _document = global.document;
+
+  // @ts-expect-error
+  global.window = dom.window;
+  global.document = dom.window.document;
+
+  return () => {
+    global.window = _window;
+    global.document = _document;
+  };
+}
+
+const generateHtml = createIsomorphicFn()
+  .server(async (name: string, state: string) => {
+    return await new Promise<string>((resolve) => {
+      const editor = createHeadlessEditor({
+        ...EDITOR_CONFIG_DEFAULTS,
+        namespace: name,
+        onError(error: Error) {
+          throw error;
+        },
+      });
+
+      editor.setEditorState(editor.parseEditorState(state));
+
+      editor.update(() => {
+        try {
+          const cleanup = setupDom();
+          const _html = $generateHtmlFromNodes(editor, null);
+          cleanup();
+
+          resolve(_html);
+        } catch (e) {
+          console.log(e);
+        }
+      });
+    });
+  })
+  .client(async (name: string, state: string) => {
+    return await new Promise<string>((resolve) => {
+      const editor = createHeadlessEditor({
+        ...EDITOR_CONFIG_DEFAULTS,
+        namespace: name,
+        onError(error: Error) {
+          throw error;
+        },
+      });
+
+      editor.setEditorState(editor.parseEditorState(state));
+
+      editor.update(() => {
+        try {
+          const _html = $generateHtmlFromNodes(editor, null);
+
+          resolve(_html);
+        } catch (e) {
+          console.log(e);
+        }
+      });
+    });
+  });
+
+export function RichTextDisplay({ name, content }: RichTextDisplayProps) {
+  const state = JSON.stringify(content);
+
+  const { data: html } = useSuspenseQuery({
+    queryKey: [state],
+    queryFn: () => generateHtml(name, state),
+  });
+
+  return (
+    <Suspense>
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </Suspense>
+  );
+}
