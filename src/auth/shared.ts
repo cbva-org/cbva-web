@@ -1,5 +1,8 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query"
 import { createMiddleware, createServerFn } from "@tanstack/react-start"
+
+import { authClient } from "./client"
+import type { Permissions } from "./permissions"
 import { getViewer } from "./server"
 
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
@@ -10,6 +13,7 @@ export const authMiddleware = createMiddleware().server(async ({ next }) => {
       viewer: viewer
         ? {
             id: viewer.id,
+            role: viewer.role,
           }
         : undefined,
     },
@@ -48,3 +52,34 @@ export function useIsLoggedIn() {
 //   .handler(async ({ context }) => {
 //     return context?.user?.image;
 //   });
+
+export const getViewerFn = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    return context?.viewer ?? null
+  })
+
+export const viewerQueryOptions = () =>
+  queryOptions({
+    queryKey: ["viewer"],
+    queryFn: () => getViewerFn(),
+  })
+
+export function useViewer() {
+  const { data: viewer } = useSuspenseQuery(viewerQueryOptions())
+
+  return viewer
+}
+
+export function useViewerHasPermission<P extends Permissions>(permissions: P) {
+  const viewer = useViewer()
+
+  if (!viewer) {
+    return false
+  }
+
+  return authClient.admin.checkRolePermission({
+    permissions,
+    role: "admin",
+  })
+}

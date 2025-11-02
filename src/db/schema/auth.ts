@@ -1,23 +1,29 @@
-import { relations } from "drizzle-orm";
-import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { createSchemaFactory } from "drizzle-zod";
-import z from "zod";
-import { playerProfiles } from "./player-profiles";
+import { relations } from "drizzle-orm"
+import {
+  boolean,
+  date,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core"
+import { createSchemaFactory } from "drizzle-zod"
+import z from "zod"
+import { playerProfiles } from "./player-profiles"
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
-  createSchemaFactory({ zodInstance: z });
+  createSchemaFactory({ zodInstance: z })
 
 const roleEnum = pgEnum("role", [
   "player",
   "tournament_director",
   "admin",
   "superadmin",
-]);
+])
 
 export const users = pgTable("users", {
   id: text().primaryKey(),
   name: text().notNull(),
-  role: roleEnum(),
   email: text().notNull().unique(),
   emailVerified: boolean()
     .$defaultFn(() => false)
@@ -27,27 +33,31 @@ export const users = pgTable("users", {
     .$defaultFn(() => false)
     .notNull(),
   image: text(),
+  role: roleEnum(),
+  banned: boolean(),
+  banReason: text(),
+  banDate: date(),
   createdAt: timestamp()
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
   updatedAt: timestamp()
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
-});
+})
 
-export const selectUserSchema = createSelectSchema(users);
+export const selectUserSchema = createSelectSchema(users)
 export const createUserSchema = createInsertSchema(users).omit({
   id: true,
-});
-export const updateUserSchema = createUpdateSchema(users);
+})
+export const updateUserSchema = createUpdateSchema(users)
 
-export type User = z.infer<typeof selectUserSchema>;
-export type CreateUser = z.infer<typeof createUserSchema>;
-export type UpdateUser = z.infer<typeof updateUserSchema>;
+export type User = z.infer<typeof selectUserSchema>
+export type CreateUser = z.infer<typeof createUserSchema>
+export type UpdateUser = z.infer<typeof updateUserSchema>
 
 export const userRelations = relations(users, ({ many }) => ({
   profiles: many(playerProfiles),
-}));
+}))
 
 export const sessions = pgTable("sessions", {
   id: text().primaryKey(),
@@ -60,7 +70,8 @@ export const sessions = pgTable("sessions", {
   userId: text()
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-});
+  impersonatedBy: text().references(() => users.id),
+})
 
 export const accounts = pgTable("accounts", {
   id: text().primaryKey(),
@@ -78,7 +89,7 @@ export const accounts = pgTable("accounts", {
   password: text(),
   createdAt: timestamp().notNull(),
   updatedAt: timestamp().notNull(),
-});
+})
 
 export const verifications = pgTable("verifications", {
   id: text().primaryKey(),
@@ -87,4 +98,4 @@ export const verifications = pgTable("verifications", {
   expiresAt: timestamp().notNull(),
   createdAt: timestamp().$defaultFn(() => /* @__PURE__ */ new Date()),
   updatedAt: timestamp().$defaultFn(() => /* @__PURE__ */ new Date()),
-});
+})

@@ -289,6 +289,7 @@ CREATE TABLE "venues" (
 	"directions" jsonb NOT NULL,
 	"map_url" text NOT NULL,
 	"status" "venue_status" NOT NULL,
+	"image_source" text,
 	"external_ref" uuid NOT NULL,
 	CONSTRAINT "venues_slug_unique" UNIQUE("slug"),
 	CONSTRAINT "venues_externalRef_unique" UNIQUE("external_ref"),

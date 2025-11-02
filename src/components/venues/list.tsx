@@ -1,9 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { venuesQueryOptions } from "@/data/venues"
 
 // import { useViewerHasPermissions } from "@/hooks/viewer";
-// import { DropdownMenu, DropdownMenuItem } from "@/components/dropdown-menu";
+import { DropdownMenu, DropdownMenuItem } from "@/components/base/dropdown-menu"
+import { venuesQueryOptions } from "@/data/venues"
 
 export function VenuesList() {
   const { data: venues } = useSuspenseQuery(venuesQueryOptions())

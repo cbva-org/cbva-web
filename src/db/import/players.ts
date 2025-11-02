@@ -1,17 +1,17 @@
-import { eq, inArray, not } from "drizzle-orm";
-import { chunk } from "lodash";
-import { db } from "../connection";
-import { legacy } from "../legacy";
-import { teamPlayers, users } from "../legacy/schema/tables";
-import { type PlayerProfile, playerProfiles } from "../schema";
-import { mapDivision } from "./shared";
+import { eq, inArray, not } from "drizzle-orm"
+import { chunk } from "lodash"
+import { db } from "../connection"
+import { legacy } from "../legacy"
+import { teamPlayers, users } from "../legacy/schema/tables"
+import { type PlayerProfile, playerProfiles } from "../schema"
+import { mapDivision } from "./shared"
 
 export async function importPlayers(levels: Map<string, number>) {
   const existing = await db.query.playerProfiles.findMany({
     columns: {
       externalRef: true,
     },
-  });
+  })
 
   // TODO: only get directors
   const usersWithDirectorPreferences =
@@ -23,10 +23,10 @@ export async function importPlayers(levels: Map<string, number>) {
         not(
           inArray(
             t.userId,
-            existing.map(({ externalRef }) => externalRef),
-          ),
+            existing.map(({ externalRef }) => externalRef)
+          )
         ),
-    });
+    })
 
   const usersWithTeams = await legacy
     .select()
@@ -35,11 +35,11 @@ export async function importPlayers(levels: Map<string, number>) {
       not(
         inArray(
           users.id,
-          existing.map(({ externalRef }) => externalRef),
-        ),
-      ),
+          existing.map(({ externalRef }) => externalRef)
+        )
+      )
     )
-    .innerJoin(teamPlayers, eq(users.id, teamPlayers.target));
+    .innerJoin(teamPlayers, eq(users.id, teamPlayers.target))
 
   const playersToCreate: (typeof playerProfiles.$inferInsert)[] = usersWithTeams
     .map(({ User }) => User)
@@ -55,11 +55,11 @@ export async function importPlayers(levels: Map<string, number>) {
       ratedPoints: user.ratedPoints,
       juniorsPoints: user.juniorsPoints,
       externalRef: user.id,
-    }));
+    }))
 
   for (const batch of chunk(playersToCreate, 5000)) {
-    console.log(`player_profiles: inserting batch of size ${batch.length}`);
+    console.log(`player_profiles: inserting batch of size ${batch.length}`)
 
-    await db.insert(playerProfiles).values(batch).onConflictDoNothing();
+    await db.insert(playerProfiles).values(batch).onConflictDoNothing()
   }
 }

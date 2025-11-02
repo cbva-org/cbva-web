@@ -1,12 +1,24 @@
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { reactStartCookies } from "better-auth/react-start";
+import { betterAuth } from "better-auth"
+import { drizzleAdapter } from "better-auth/adapters/drizzle"
+import { admin as adminPlugin } from "better-auth/plugins/admin"
+import { reactStartCookies } from "better-auth/react-start"
 
-import { db } from "@/db/connection";
-import * as schema from "@/db/schema/auth";
+import { db } from "@/db/connection"
+import * as schema from "@/db/schema/auth"
+import { ac, admin, td, user } from "./permissions"
 
 export const auth = betterAuth({
-  plugins: [reactStartCookies()],
+  plugins: [
+    adminPlugin({
+      ac,
+      roles: {
+        admin,
+        td,
+        user,
+      },
+    }),
+    reactStartCookies(),
+  ],
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,
@@ -45,7 +57,7 @@ export const auth = betterAuth({
         to: user.email,
         subject: "Verify your email address",
         text: `Click the link to verify your email: ${url}`,
-      });
+      })
 
       // await sendEmail({
       //   to: user.email,
@@ -55,7 +67,7 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins: ["http://localhost:5173"],
-});
+})
 
-export type Session = typeof auth.$Infer.Session;
-export type Viewer = Session["user"];
+export type Session = typeof auth.$Infer.Session
+export type Viewer = Session["user"]

@@ -1,11 +1,16 @@
-import { eq, inArray } from "drizzle-orm";
-import { alias } from "drizzle-orm/gel-core";
-import { chunk } from "lodash";
-import { db } from "../connection";
-import { legacy } from "../legacy";
-import * as legacyTables from "../legacy/schema/tables";
-import { bytesToScore } from "../legacy/utils";
-import { matchSets, playoffMatches, poolMatches } from "../schema";
+import { eq, inArray, type SQL, sql } from "drizzle-orm"
+import { alias } from "drizzle-orm/gel-core"
+import { chunk } from "lodash"
+import { db } from "../connection"
+import { legacy } from "../legacy"
+import * as legacyTables from "../legacy/schema/tables"
+import { bytesToScore } from "../legacy/utils"
+import {
+  matchSets,
+  playoffMatches,
+  poolMatches,
+  type UpdatePlayoffMatch,
+} from "../schema"
 
 export async function importGames(year: number) {
   const legacyTournamentsForYear = await legacy.query.tournaments.findMany({
@@ -14,9 +19,9 @@ export async function importGames(year: number) {
         gte(t.startAt, new Date(`${year}-01-01`)),
         lt(t.startAt, new Date(`${year + 1}-01-01`)),
         ne(t.status, "Schedule"),
-        ne(t.status, "Cancelled"),
+        ne(t.status, "Cancelled")
       ),
-  });
+  })
 
   const tournamentsMap = (
     await db.query.tournaments.findMany({
@@ -28,18 +33,18 @@ export async function importGames(year: number) {
     })
   ).reduce<{ [key: string]: number }>((memo, { tournamentDivisions }) => {
     for (const td of tournamentDivisions) {
-      memo[td.externalRef] = td.id;
+      memo[td.externalRef] = td.id
     }
-    return memo;
-  }, {});
+    return memo
+  }, {})
 
   const legacyPoolsForYear = await legacy.query.pools.findMany({
     where: (pools, { inArray }) =>
       inArray(
         pools.tournamentId,
-        legacyTournamentsForYear.map((t) => t.id),
+        legacyTournamentsForYear.map((t) => t.id)
       ),
-  });
+  })
 
   const poolsForYear = await db.query.pools.findMany({
     with: {
@@ -52,26 +57,26 @@ export async function importGames(year: number) {
     where: (t, { inArray }) =>
       inArray(
         t.externalRef,
-        legacyPoolsForYear.map((p) => p.id),
+        legacyPoolsForYear.map((p) => p.id)
       ),
-  });
+  })
 
   const poolsMap = poolsForYear.reduce<{ [key: string]: number }>(
     (memo, pool) => {
-      memo[pool.externalRef] = pool.id;
+      memo[pool.externalRef] = pool.id
 
-      return memo;
+      return memo
     },
-    {},
-  );
+    {}
+  )
 
   const teamsMap = poolsForYear
     .flatMap(({ teams }) => teams)
     .reduce<{ [key: string]: number }>((memo, poolTeam) => {
-      memo[poolTeam.team.externalRef] = poolTeam.teamId;
+      memo[poolTeam.team.externalRef] = poolTeam.teamId
 
-      return memo;
-    }, {});
+      return memo
+    }, {})
 
   const poolMatchData = await legacy.query.poolMatches.findMany({
     with: {
@@ -83,26 +88,26 @@ export async function importGames(year: number) {
     where: (t, { inArray }) =>
       inArray(
         t.poolId,
-        legacyPoolsForYear.map((p) => p.id),
+        legacyPoolsForYear.map((p) => p.id)
       ),
-  });
+  })
 
   const poolMatchesToCreate: (typeof poolMatches.$inferInsert)[] =
     poolMatchData.map((pm) => {
       const tow = pm.matchSets.reduce<number | null>((memo, ms) => {
-        const score = ms.score ? bytesToScore(convertHex(ms.score)) : null;
+        const score = ms.score ? bytesToScore(convertHex(ms.score)) : null
 
         if (score === null) {
-          return null;
+          return null
         }
 
         if (score[0] > score[1]) {
-          return (memo || 0) + 1;
+          return (memo || 0) + 1
         }
-        return (memo || 0) - 1;
-      }, null);
+        return (memo || 0) - 1
+      }, null)
 
-      const winnerId = tow === null ? null : tow > 0 ? pm.teamAId : pm.teamBId;
+      const winnerId = tow === null ? null : tow > 0 ? pm.teamAId : pm.teamBId
 
       return {
         poolId: poolsMap[pm.poolId] as number,
@@ -112,30 +117,30 @@ export async function importGames(year: number) {
         matchNumber: pm.matchNumber,
         court: pm.court,
         externalRef: pm.id,
-      };
-    });
+      }
+    })
 
-  const poolMatchesMap = new Map<string, number>();
+  const poolMatchesMap = new Map<string, number>()
 
   for (const batch of chunk(poolMatchesToCreate, 500)) {
     console.log(
-      `pool_matches(${year}): inserting batch of size ${batch.length}`,
-    );
+      `pool_matches(${year}): inserting batch of size ${batch.length}`
+    )
 
     const result = await db.insert(poolMatches).values(batch).returning({
       id: poolMatches.id,
       externalRef: poolMatches.externalRef,
-    });
+    })
 
     for (const row of result) {
-      poolMatchesMap.set(row.externalRef as string, row.id);
+      poolMatchesMap.set(row.externalRef as string, row.id)
     }
   }
 
   const poolMatchSetsToCreate: (typeof matchSets.$inferInsert)[] =
     poolMatchData.flatMap(({ id, teamAId, teamBId, matchSets }) =>
       matchSets.map((ms) => {
-        const score = ms.score ? bytesToScore(convertHex(ms.score)) : null;
+        const score = ms.score ? bytesToScore(convertHex(ms.score)) : null
 
         return {
           poolMatchId: poolMatchesMap.get(id) as number,
@@ -152,19 +157,19 @@ export async function importGames(year: number) {
           startedAt: ms.startedAt ? new Date(ms.startedAt.toString()) : null,
           endedAt: ms.endedAt ? new Date(ms.endedAt.toString()) : null,
           externalRef: ms.id,
-        };
-      }),
-    );
+        }
+      })
+    )
 
   for (const batch of chunk(poolMatchSetsToCreate, 500)) {
     console.log(
-      `pool_matches->match_sets(${year}): inserting batch of size ${batch.length}`,
-    );
+      `pool_matches->match_sets(${year}): inserting batch of size ${batch.length}`
+    )
 
     await db
       .insert(matchSets)
       .values(batch)
-      .returning({ id: matchSets.id, externalRef: matchSets.externalRef });
+      .returning({ id: matchSets.id, externalRef: matchSets.externalRef })
   }
 
   const playoffMatchData = await legacy.query.playoffMatches.findMany({
@@ -176,26 +181,26 @@ export async function importGames(year: number) {
     where: (t, { inArray }) =>
       inArray(
         t.tournamentId,
-        legacyTournamentsForYear.map((p) => p.id),
+        legacyTournamentsForYear.map((p) => p.id)
       ),
-  });
+  })
 
   const playoffMatchesToCreate: (typeof playoffMatches.$inferInsert)[] =
     playoffMatchData.map((pm) => {
       const tow = pm.matchSets.reduce<number | null>((memo, ms) => {
-        const score = ms.score ? bytesToScore(convertHex(ms.score)) : null;
+        const score = ms.score ? bytesToScore(convertHex(ms.score)) : null
 
         if (score === null) {
-          return null;
+          return null
         }
 
         if (score[0] > score[1]) {
-          return (memo || 0) + 1;
+          return (memo || 0) + 1
         }
-        return (memo || 0) - 1;
-      }, null);
+        return (memo || 0) - 1
+      }, null)
 
-      const winnerId = tow === null ? null : tow > 0 ? pm.teamAId : pm.teamBId;
+      const winnerId = tow === null ? null : tow > 0 ? pm.teamAId : pm.teamBId
 
       return {
         tournamentDivisionId: tournamentsMap[pm.tournamentId] as number,
@@ -205,30 +210,30 @@ export async function importGames(year: number) {
         matchNumber: pm.matchNumber,
         court: pm.court,
         externalRef: pm.id,
-      };
-    });
+      }
+    })
 
-  const playoffMatchesMap = new Map<string, number>();
+  const playoffMatchesMap = new Map<string, number>()
 
   for (const batch of chunk(playoffMatchesToCreate, 500)) {
     console.log(
-      `pool_matches(${year}): inserting batch of size ${batch.length}`,
-    );
+      `pool_matches(${year}): inserting batch of size ${batch.length}`
+    )
 
     const result = await db.insert(playoffMatches).values(batch).returning({
       id: playoffMatches.id,
       externalRef: playoffMatches.externalRef,
-    });
+    })
 
     for (const row of result) {
-      playoffMatchesMap.set(row.externalRef as string, row.id);
+      playoffMatchesMap.set(row.externalRef as string, row.id)
     }
   }
 
   const playoffMatchSetsToCreate: (typeof matchSets.$inferInsert)[] =
     playoffMatchData.flatMap(({ id, teamAId, teamBId, matchSets }) =>
       matchSets.map((ms) => {
-        const score = ms.score ? bytesToScore(convertHex(ms.score)) : null;
+        const score = ms.score ? bytesToScore(convertHex(ms.score)) : null
 
         return {
           playoffMatchId: playoffMatchesMap.get(id) as number,
@@ -245,41 +250,41 @@ export async function importGames(year: number) {
           startedAt: ms.startedAt ? new Date(ms.startedAt.toString()) : null,
           endedAt: ms.endedAt ? new Date(ms.endedAt.toString()) : null,
           externalRef: ms.id,
-        };
-      }),
-    );
+        }
+      })
+    )
 
   for (const batch of chunk(playoffMatchSetsToCreate, 500)) {
     console.log(
-      `playoff_matches->match_sets(${year}): inserting batch of size ${batch.length}`,
-    );
+      `playoff_matches->match_sets(${year}): inserting batch of size ${batch.length}`
+    )
 
     await db
       .insert(matchSets)
       .values(batch)
-      .returning({ id: matchSets.id, externalRef: matchSets.externalRef });
+      .returning({ id: matchSets.id, externalRef: matchSets.externalRef })
   }
 
-  await buildPlayoffTrees(playoffMatchesMap, new Map(Object.entries(poolsMap)));
+  await buildPlayoffTrees(playoffMatchesMap, new Map(Object.entries(poolsMap)))
 }
 
 function convertHex(bytes: string) {
   // Convert hex string to base64, then decode to bytes
-  const cleanHex = bytes.replace(/\\x/g, "");
+  const cleanHex = bytes.replace(/\\x/g, "")
 
-  return Buffer.from(cleanHex, "hex").toString("ascii");
+  return Buffer.from(cleanHex, "hex").toString("ascii")
 }
 
 async function buildPlayoffTrees(
   playoffMatchMap: Map<string, number>,
-  poolsMap: Map<string, number>,
+  poolsMap: Map<string, number>
 ) {
-  console.log("fixing playoff trees");
+  console.log("fixing playoff trees")
 
   const legacyPlayoffMatches = await legacy.query.playoffMatches.findMany({
     where: (t, { inArray }) =>
       inArray(t.id, Array.from(playoffMatchMap.keys())),
-  });
+  })
 
   await db.transaction(async (txn) => {
     for (const pm of legacyPlayoffMatches) {
@@ -303,9 +308,9 @@ async function buildPlayoffTrees(
               ? playoffMatchMap.get(pm.bFromId)
               : null,
         })
-        .where(eq(playoffMatches.externalRef, pm.id));
+        .where(eq(playoffMatches.externalRef, pm.id))
     }
-  });
+  })
 
-  console.log("done");
+  console.log("done")
 }

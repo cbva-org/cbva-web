@@ -1,5 +1,5 @@
 {
-  "id": "40caa967-5b07-4d16-b9ba-2d0ec4dc7c6f",
+  "id": "f4253200-bac2-4a2f-8c52-d9c24fa499f2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2361,6 +2361,12 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
+        },
+        "image_source": {
+          "name": "image_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "external_ref": {
           "name": "external_ref",

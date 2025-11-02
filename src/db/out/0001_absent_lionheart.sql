@@ -1,1 +1,0 @@
-ALTER TABLE "venues" ADD COLUMN "image_source" text;
