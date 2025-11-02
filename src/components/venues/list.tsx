@@ -10,7 +10,7 @@ export function VenuesList() {
   // const canCreateVenue = useViewerHasPermissions("venues.create");
 
   return (
-    <div className={"m1ax-w-4xl m-auto flex flex-col space-y-12"}>
+    <div className={"m1ax-w-4xl m-auto flex flex-col space-y-12 py-8"}>
       <div className="px-8 flex flex-col space-y-3">
         <div className="flex flex-row justify-between items-center">
           <h2 className="text-4xl font-bold mb-8">
@@ -28,7 +28,7 @@ export function VenuesList() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">
-          {venues?.map(({ id, name, city, image_file_id }) => (
+          {venues?.map(({ id, name, city, imageSource }) => (
             <Link
               key={id}
               to={"/venues/$venueId"}
@@ -37,7 +37,7 @@ export function VenuesList() {
             >
               <img
                 className="w-full min-h-80 max-h-80 object-cover"
-                src={image_file_id ? `/api/files/${image_file_id}` : undefined}
+                src={imageSource ? imageSource : undefined}
                 alt={`${name}, ${city}`}
               />
               <div className="bg-white py-3 px-4 text-2xl text-navy-500 font-extrabold font-panton uppercase">

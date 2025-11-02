@@ -13,6 +13,7 @@ import { db, type UpdateVenue, venues } from "@/db"
 async function readVenues() {
   return await db.query.venues.findMany({
     where: (venues, { eq }) => eq(venues.status, "active"),
+    orderBy: (venues, { asc }) => asc(venues.city),
   })
 }
 

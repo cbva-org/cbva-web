@@ -3,6 +3,7 @@ import clsx from "clsx"
 import { useIsLoggedIn } from "@/auth/shared"
 import { button } from "@/components/base/button"
 import { title } from "@/components/base/primitives"
+import { VenuesList } from "@/components/venues/list"
 import { DefaultLayout } from "@/layouts/default"
 
 const BRAND_ANCHOR_CLASS =
@@ -177,6 +178,7 @@ function RouteComponent() {
           </div>
         </div>
       </div>
+      <VenuesList />
     </DefaultLayout>
   )
 }

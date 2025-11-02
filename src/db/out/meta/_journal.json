@@ -8,6 +8,13 @@
       "when": 1762054541115,
       "tag": "0000_striped_firelord",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1762112674036,
+      "tag": "0001_absent_lionheart",
+      "breakpoints": true
     }
   ]
 }
