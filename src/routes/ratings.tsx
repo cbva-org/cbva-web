@@ -5,12 +5,10 @@ import {
 } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start"
-import type { SerializedEditorState } from "lexical"
 import { Suspense, useState } from "react"
 
 import { title } from "@/components/base/primitives"
 import { RichTextDisplay } from "@/components/base/rich-text-editor/display"
-import { RichTextEditorModal } from "@/components/base/rich-text-editor/modal"
 import { Select } from "@/components/base/select"
 import { contentPageBlocksQueryOptions, updatePageFn } from "@/data/blocks"
 import { divisionsQueryOptions } from "@/data/divisions"
@@ -93,29 +91,23 @@ function RouteComponent() {
       <Suspense>
         <h1
           className={title({
-            class: "w-full text-center relative",
+            class: "w-full text-center ",
           })}
         >
-          <span>Ratings</span>
-
-          <RichTextEditorModal
-            triggerClassName="absolute right-0"
-            name="ratings"
-            title="Update Page Content"
-            initialValue={
-              blocks.get("ratings") as SerializedEditorState | undefined
-            }
-            onSave={async (state) => {
-              await mutateAsync({
-                key: "ratings",
-                content: state as LexicalState,
-              })
-            }}
-          />
+          Ratings
         </h1>
         <div>
           {blocks?.has("ratings") && (
-            <RichTextDisplay name="ratings" content={blocks.get("ratings")} />
+            <RichTextDisplay
+              name="ratings"
+              content={blocks.get("ratings")}
+              onSave={async (state) => {
+                await mutateAsync({
+                  key: "ratings",
+                  content: state as LexicalState,
+                })
+              }}
+            />
           )}
         </div>
         <div>
@@ -146,52 +138,32 @@ function RouteComponent() {
               />
             </div>
             <div className="relative">
-              <RichTextEditorModal
-                triggerClassName="absolute right-0 top-0"
-                name={genderDivisionKey}
-                title="Update Page Content"
-                initialValue={
-                  blocks.get(genderDivisionKey) as
-                    | SerializedEditorState
-                    | undefined
-                }
-                onSave={async (state) => {
-                  await mutateAsync({
-                    key: genderDivisionKey,
-                    content: state as LexicalState,
-                  })
-                }}
-              />
               {blocks?.has(genderDivisionKey) && (
                 <RichTextDisplay
                   name={genderDivisionKey}
                   content={blocks.get(genderDivisionKey)}
+                  onSave={async (state) => {
+                    await mutateAsync({
+                      key: genderDivisionKey,
+                      content: state as LexicalState,
+                    })
+                  }}
                 />
               )}
             </div>
             {divisions.find((l) => l.display === "OPEN" || "AAA")?.value ===
               division && (
               <div className="relative">
-                <RichTextEditorModal
-                  triggerClassName="absolute right-0 top-0"
-                  name="prize-pool"
-                  title="Update Page Content"
-                  initialValue={
-                    blocks.get("prize-pool") as
-                      | SerializedEditorState
-                      | undefined
-                  }
-                  onSave={async (state) => {
-                    await mutateAsync({
-                      key: "prize-pool",
-                      content: state as LexicalState,
-                    })
-                  }}
-                />
                 {blocks?.has("prize-pool") && (
                   <RichTextDisplay
                     name="prize-pool"
                     content={blocks.get("prize-pool")}
+                    onSave={async (state) => {
+                      await mutateAsync({
+                        key: "prize-pool",
+                        content: state as LexicalState,
+                      })
+                    }}
                   />
                 )}
               </div>
@@ -199,26 +171,16 @@ function RouteComponent() {
           </div>
         </div>
         <div className="flex flex-col">
-          <RichTextEditorModal
-            triggerClassName="self-end"
-            name="sanction-requirements"
-            title="Update Page Content"
-            initialValue={
-              blocks.get("sanction-requirements") as
-                | SerializedEditorState
-                | undefined
-            }
-            onSave={async (state) => {
-              await mutateAsync({
-                key: "sanction-requirements",
-                content: state as LexicalState,
-              })
-            }}
-          />
           {blocks?.has("sanction-requirements") && (
             <RichTextDisplay
               name="sanction-requirements"
               content={blocks.get("sanction-requirements")}
+              onSave={async (state) => {
+                await mutateAsync({
+                  key: "sanction-requirements",
+                  content: state as LexicalState,
+                })
+              }}
             />
           )}
         </div>

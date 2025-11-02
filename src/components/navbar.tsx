@@ -1,28 +1,26 @@
-import { Link, type LinkProps } from "@tanstack/react-router";
-import clsx from "clsx";
-import { MenuIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { Link, type LinkProps } from "@tanstack/react-router"
+import clsx from "clsx"
+import { MenuIcon } from "lucide-react"
+import type { ReactNode } from "react"
 import {
   Button,
   Menu,
   MenuItem,
   MenuSection,
   MenuTrigger,
-} from "react-aria-components";
+} from "react-aria-components"
 
-// import { useViewer } from "@/hooks/viewer";
+import { Popover } from "@/components/base/popover"
+import { useViewer } from "@/hooks/auth"
 
-import { Popover } from "@/components/base/popover";
-import { useViewer } from "@/hooks/auth";
-
-type Viewer = object;
+type Viewer = object
 
 const links: {
-  className?: string;
-  subMenuClassName?: string;
-  to: LinkProps["to"];
-  label: ReactNode;
-  visible?: (viewer?: Viewer | null) => boolean;
+  className?: string
+  subMenuClassName?: string
+  to: LinkProps["to"]
+  label: ReactNode
+  visible?: (viewer?: Viewer | null) => boolean
 }[] = [
   {
     to: "/tournaments",
@@ -62,17 +60,17 @@ const links: {
     to: "/account",
     label: "Account",
   },
-];
+]
 
 const linkClassName =
-  "uppercase text-navbar-foreground hover:bg-navbar-foreground hover:text-navbar-foreground-hover px-3 py-1 font-bold tracking-wide";
+  "uppercase text-navbar-foreground hover:bg-navbar-foreground hover:text-navbar-foreground-hover px-3 py-1 font-bold tracking-wide"
 
 export function Navbar() {
-  const viewer = useViewer();
+  const viewer = useViewer()
 
   const visibleLinks = links.filter(({ visible = () => true }) =>
-    visible(viewer),
-  );
+    visible(viewer)
+  )
 
   return (
     <nav className="w-full bg-navbar-background flex items-center p-3 gap-3">
@@ -121,7 +119,7 @@ export function Navbar() {
                 key={to}
                 className={clsx(
                   "rounded-lg items-stretch justify-stretch",
-                  subMenuClassName,
+                  subMenuClassName
                 )}
               >
                 <Link
@@ -129,7 +127,7 @@ export function Navbar() {
                   className={clsx(
                     linkClassName,
                     "rounded-lg w-full inline-block",
-                    className,
+                    className
                   )}
                 >
                   {label}
@@ -140,5 +138,5 @@ export function Navbar() {
         </Popover>
       </MenuTrigger>
     </nav>
-  );
+  )
 }
