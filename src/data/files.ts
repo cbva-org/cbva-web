@@ -31,7 +31,7 @@ export const uploadFileServerFn = createServerFn({ method: "POST" })
 
     return {
       success: true,
-      url: `http://localhost:3030/api/files?id=${result.id}`,
+      url: `/api/files?id=${result.id}`,
       message: "File uploaded successfully",
     }
   })
