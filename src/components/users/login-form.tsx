@@ -1,46 +1,66 @@
-import z from 'zod/v4';
-
-import { useAppForm } from '@/components/form';
-import { useLogin } from '@/hooks/auth';
-import { useLoggedInRedirect } from '@/hooks/viewer';
+import { useMutation } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
+import z from "zod/v4"
+import { authClient } from "@/auth/client"
+import { useAppForm } from "@/components/base/form"
+import { useLoggedInRedirect } from "@/hooks/auth"
 
 export type LoginFormProps = {
-  className?: string;
-};
+  className?: string
+  next?: string
+}
 
 const schema = z.object({
   email: z.email(),
   password: z.string().nonempty({
-    message: 'This field is required',
+    message: "This field is required",
   }),
-});
+  next: z.string().optional().nullable(),
+})
 
-export function LoginForm({ className }: LoginFormProps) {
-  const { mutate: login, failureReason } = useLogin();
+export function LoginForm({ className, next }: LoginFormProps) {
+  const navigate = useNavigate()
 
-  useLoggedInRedirect('/account');
+  const { mutate: login, failureReason } = useMutation({
+    mutationFn: async ({ email, password, next }: z.infer<typeof schema>) => {
+      const { error } = await authClient.signIn.email({
+        email,
+        password,
+      })
+
+      if (error) {
+        throw error
+      }
+
+      navigate({
+        to: next ?? "/account",
+      })
+    },
+  })
+
+  useLoggedInRedirect("/account")
 
   const form = useAppForm({
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
     validators: {
       onMount: schema,
       onChange: schema,
     },
     onSubmit: ({ value }) => {
-      login({ ...value, next: null });
+      login({ ...value, next })
     },
-  });
+  })
 
   return (
     <form
       className={className}
       onSubmit={(e) => {
-        e.preventDefault();
+        e.preventDefault()
 
-        form.handleSubmit();
+        form.handleSubmit()
       }}
     >
       <div className="flex flex-col gap-4 max-w-md">
@@ -90,11 +110,11 @@ export function LoginForm({ className }: LoginFormProps) {
                     Log in
                   </form.SubmitButton>
                 </form.Footer>
-              );
+              )
             }}
           />
         </form.AppForm>
       </div>
     </form>
-  );
+  )
 }

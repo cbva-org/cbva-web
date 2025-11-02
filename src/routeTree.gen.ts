@@ -13,6 +13,7 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SanctioningRouteImport } from './routes/sanctioning'
 import { Route as RatingsRouteImport } from './routes/ratings'
+import { Route as LogOutRouteImport } from './routes/log-out'
 import { Route as LogInRouteImport } from './routes/log-in'
 import { Route as JuniorsRouteImport } from './routes/juniors'
 import { Route as IndexRouteImport } from './routes/index'
@@ -46,6 +47,11 @@ const SanctioningRoute = SanctioningRouteImport.update({
 const RatingsRoute = RatingsRouteImport.update({
   id: '/ratings',
   path: '/ratings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogOutRoute = LogOutRouteImport.update({
+  id: '/log-out',
+  path: '/log-out',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LogInRoute = LogInRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/juniors': typeof JuniorsRoute
   '/log-in': typeof LogInRoute
+  '/log-out': typeof LogOutRoute
   '/ratings': typeof RatingsRoute
   '/sanctioning': typeof SanctioningRoute
   '/search': typeof SearchRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/juniors': typeof JuniorsRoute
   '/log-in': typeof LogInRoute
+  '/log-out': typeof LogOutRoute
   '/ratings': typeof RatingsRoute
   '/sanctioning': typeof SanctioningRoute
   '/search': typeof SearchRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/juniors': typeof JuniorsRoute
   '/log-in': typeof LogInRoute
+  '/log-out': typeof LogOutRoute
   '/ratings': typeof RatingsRoute
   '/sanctioning': typeof SanctioningRoute
   '/search': typeof SearchRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/'
     | '/juniors'
     | '/log-in'
+    | '/log-out'
     | '/ratings'
     | '/sanctioning'
     | '/search'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/'
     | '/juniors'
     | '/log-in'
+    | '/log-out'
     | '/ratings'
     | '/sanctioning'
     | '/search'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/'
     | '/juniors'
     | '/log-in'
+    | '/log-out'
     | '/ratings'
     | '/sanctioning'
     | '/search'
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   JuniorsRoute: typeof JuniorsRoute
   LogInRoute: typeof LogInRoute
+  LogOutRoute: typeof LogOutRoute
   RatingsRoute: typeof RatingsRoute
   SanctioningRoute: typeof SanctioningRoute
   SearchRoute: typeof SearchRoute
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/ratings'
       fullPath: '/ratings'
       preLoaderRoute: typeof RatingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/log-out': {
+      id: '/log-out'
+      path: '/log-out'
+      fullPath: '/log-out'
+      preLoaderRoute: typeof LogOutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/log-in': {
@@ -401,6 +421,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   JuniorsRoute: JuniorsRoute,
   LogInRoute: LogInRoute,
+  LogOutRoute: LogOutRoute,
   RatingsRoute: RatingsRoute,
   SanctioningRoute: SanctioningRoute,
   SearchRoute: SearchRoute,
