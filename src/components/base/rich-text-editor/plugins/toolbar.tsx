@@ -7,6 +7,13 @@
  */
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
+  $isListNode,
+  INSERT_ORDERED_LIST_COMMAND,
+  INSERT_UNORDERED_LIST_COMMAND,
+  ListNode,
+  REMOVE_LIST_COMMAND,
+} from "@lexical/list";
+import {
   INSERT_TABLE_COMMAND,
   type InsertTableCommandPayload,
   type InsertTableCommandPayloadHeaders,
@@ -36,6 +43,8 @@ import {
   BoldIcon,
   ItalicIcon,
   LinkIcon,
+  ListIcon,
+  ListOrderedIcon,
   LoaderCircleIcon,
   RedoIcon,
   StrikethroughIcon,
@@ -85,6 +94,8 @@ export function ToolbarPlugin({
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isLink, setIsLink] = useState(false);
   const [currentLinkUrl, setCurrentLinkUrl] = useState<string | null>(null);
+  const [isBulletList, setIsBulletList] = useState(false);
+  const [isNumberedList, setIsNumberedList] = useState(false);
 
   const $updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -106,6 +117,41 @@ export function ToolbarPlugin({
       } else {
         setIsLink(false);
         setCurrentLinkUrl(null);
+      }
+
+      // Update list state
+      const anchorNode = selection.anchor.getNode();
+      const focusNode = selection.focus.getNode();
+      let currentListNode = null;
+
+      // Check if selection is within a list
+      let element = anchorNode.getParent();
+      while (element !== null) {
+        if ($isListNode(element)) {
+          currentListNode = element;
+          break;
+        }
+        element = element.getParent();
+      }
+
+      if (!currentListNode) {
+        element = focusNode.getParent();
+        while (element !== null) {
+          if ($isListNode(element)) {
+            currentListNode = element;
+            break;
+          }
+          element = element.getParent();
+        }
+      }
+
+      if (currentListNode) {
+        const listType = currentListNode.getListType();
+        setIsBulletList(listType === "bullet");
+        setIsNumberedList(listType === "number");
+      } else {
+        setIsBulletList(false);
+        setIsNumberedList(false);
       }
     }
   }, []);
@@ -227,6 +273,33 @@ export function ToolbarPlugin({
           aria-label="Insert Link"
         >
           <LinkIcon size={16} />
+        </Button>
+        <Divider />
+        <Button
+          onPress={() => {
+            if (isBulletList) {
+              editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+            } else {
+              editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+            }
+          }}
+          className={buttonClassName({ active: isBulletList })}
+          aria-label="Bullet List"
+        >
+          <ListIcon size={16} />
+        </Button>
+        <Button
+          onPress={() => {
+            if (isNumberedList) {
+              editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+            } else {
+              editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+            }
+          }}
+          className={buttonClassName({ active: isNumberedList })}
+          aria-label="Numbered List"
+        >
+          <ListOrderedIcon size={16} />
         </Button>
         <Divider />
         <Button

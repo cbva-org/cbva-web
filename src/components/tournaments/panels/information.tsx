@@ -76,8 +76,8 @@ export function InformationPanel({
                         isDisabled={directors.length === 1}
                       />
                     </li>
-                    <li>{td.director.email || "todo"}</li>
-                    <li>{td.director.phone || "todo"}</li>
+                    {td.director.email && <li>{td.director.email}</li>}
+                    {td.director.phone && <li>{td.director.phone}</li>}
                   </ul>
                 )
               })}

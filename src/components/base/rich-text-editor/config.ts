@@ -1,4 +1,10 @@
 import { $createLinkNode, LinkNode } from "@lexical/link";
+import {
+  $createListItemNode,
+  $createListNode,
+  ListItemNode,
+  ListNode,
+} from "@lexical/list";
 import type { InitialConfigType } from "@lexical/react/LexicalComposer";
 import {
   $createTableCellNode,
@@ -92,6 +98,8 @@ const exportMap: DOMExportOutputMap = new Map<
   [ParagraphNode, removeStylesExportDOM],
   [TextNode, removeStylesExportDOM],
   [LinkNode, removeStylesExportDOM],
+  [ListNode, removeStylesExportDOM],
+  [ListItemNode, removeStylesExportDOM],
   [TableNode, removeStylesExportDOM],
   [TableRowNode, removeStylesExportDOM],
   [TableCellNode, removeStylesExportDOM],
@@ -133,6 +141,39 @@ const constructImportMap = (): DOMConversionMap => {
         };
       }
       return null;
+    },
+    ul: (node: Node) => {
+      return {
+        conversion: () => {
+          const listNode = $createListNode("bullet");
+          return {
+            node: listNode,
+          };
+        },
+        priority: 1,
+      };
+    },
+    ol: (node: Node) => {
+      return {
+        conversion: () => {
+          const listNode = $createListNode("number");
+          return {
+            node: listNode,
+          };
+        },
+        priority: 1,
+      };
+    },
+    li: (node: Node) => {
+      return {
+        conversion: () => {
+          const listItemNode = $createListItemNode();
+          return {
+            node: listItemNode,
+          };
+        },
+        priority: 1,
+      };
     },
     table: (node: Node) => {
       const element = node as HTMLTableElement;
@@ -230,6 +271,8 @@ export const EDITOR_CONFIG_DEFAULTS: Pick<
     ParagraphNode,
     TextNode,
     LinkNode,
+    ListNode,
+    ListItemNode,
     TableNode,
     TableCellNode,
     TableRowNode,

@@ -3,8 +3,8 @@ import {
   ModalOverlay,
   type ModalOverlayProps,
   Modal as RACModal,
-} from "react-aria-components";
-import { tv } from "tailwind-variants";
+} from "react-aria-components"
+import { tv } from "tailwind-variants"
 
 const overlayStyles = tv({
   base: "fixed top-0 left-0 w-full h-(--visual-viewport-height) isolate z-20 bg-black/[15%] flex items-center justify-center p-4 text-center backdrop-blur-lg",
@@ -16,7 +16,7 @@ const overlayStyles = tv({
       true: "animate-out fade-out duration-200 ease-in",
     },
   },
-});
+})
 
 const modalStyles = tv({
   base: "w-full max-w-md max-h-full overflow-y-scroll rounded-2xl bg-white forced-colors:bg-[Canvas] text-left align-middle shadow-2xl bg-clip-padding border border-black/10 dark:border-white/10",
@@ -31,19 +31,20 @@ const modalStyles = tv({
       md: "max-w-md",
       lg: "max-w-lg",
       xl: "max-w-xl",
+      "2xl": "max-w-2xl",
     },
   },
   defaultVariants: {
     size: "md",
   },
-});
+})
 
 export function Modal({
   isDismissable = true,
   children,
   size,
   ...props
-}: ModalOverlayProps & { size?: "xl" | "lg" | "md" }) {
+}: ModalOverlayProps & { size?: "2xl" | "xl" | "lg" | "md" }) {
   return (
     <ModalOverlay
       {...props}
@@ -60,5 +61,5 @@ export function Modal({
         <Dialog children={children} />
       </RACModal>
     </ModalOverlay>
-  );
+  )
 }

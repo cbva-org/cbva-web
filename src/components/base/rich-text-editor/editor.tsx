@@ -7,6 +7,7 @@
  */
 
 import { LinkNode } from "@lexical/link";
+import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import {
   type InitialConfigType,
@@ -130,6 +131,7 @@ export function RichTextEditor({
             <HistoryPlugin />
             <AutoFocusPlugin />
             <LinkPlugin />
+            <ListPlugin />
             <TablePlugin hasCellMerge={true} hasCellBackgroundColor={true} />
             {anchorElem && <TableActionMenuPlugin anchorElem={anchorElem} />}
             <OnChangePlugin

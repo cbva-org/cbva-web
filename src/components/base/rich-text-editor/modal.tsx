@@ -26,7 +26,7 @@ export function RichTextEditorModal({
         Edit
       </Button>
 
-      <Modal size="xl" isDismissable isOpen={isOpen} onOpenChange={setOpen}>
+      <Modal size="2xl" isDismissable isOpen={isOpen} onOpenChange={setOpen}>
         <div className="p-3 flex flex-col space-y-4 relative">
           <h3 className={titleStyles({ size: "sm" })}>{title}</h3>
           <RichTextEditor {...props} onClose={() => setOpen(false)} />

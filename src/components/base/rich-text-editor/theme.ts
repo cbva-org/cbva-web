@@ -1,4 +1,4 @@
-import type { EditorThemeClasses } from "lexical";
+import type { EditorThemeClasses } from "lexical"
 
 const theme: EditorThemeClasses = {
   code: "bg-slate-100 font-mono block py-2 px-2 pl-[52px] leading-6 text-[13px] m-0 mt-2 mb-2 [tab-size:2] overflow-x-auto relative before:content-[attr(data-gutter)] before:absolute before:bg-gray-100 before:left-0 before:top-0 before:border-r before:border-gray-300 before:py-2 before:px-2 before:text-gray-600 before:whitespace-pre-wrap before:text-right before:min-w-[25px] after:content-[attr(data-highlight-language)] after:top-0 after:right-1 after:py-1 after:px-1 after:text-[10px] after:uppercase after:absolute after:text-black/50",
@@ -12,12 +12,12 @@ const theme: EditorThemeClasses = {
   image: "max-w-full h-auto",
   link: "text-blue-600 no-underline hover:underline",
   list: {
-    listitem: "my-2 mx-8",
-    nested: {
-      listitem: "list-none",
-    },
-    ol: "p-0 m-0 ml-4",
-    ul: "p-0 m-0 ml-4",
+    // listitem: "my-2 mx-8",
+    // nested: {
+    //   listitem: "list-none",
+    // },
+    ol: "list-decimal ml-4",
+    ul: "list-disc ml-4",
   },
   paragraph: "m-0 mb-4 relative last-of-type:mb-0",
   placeholder:
@@ -45,6 +45,6 @@ const theme: EditorThemeClasses = {
     underlineStrikethrough: "[text-decoration:underline_line-through]",
     uppercase: "uppercase",
   },
-};
+}
 
-export default theme;
+export default theme
