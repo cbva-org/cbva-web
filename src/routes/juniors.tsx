@@ -1,9 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router"
 
-export const Route = createFileRoute('/juniors')({
+import { UnderConstruction } from "@/components/under-construction"
+import { DefaultLayout } from "@/layouts/default"
+
+export const Route = createFileRoute("/juniors")({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  return <div>Hello "/juniors"!</div>
+  return (
+    <DefaultLayout classNames={{ content: "w-full max-w-lg mx-auto py-12" }}>
+      <UnderConstruction />
+    </DefaultLayout>
+  )
 }
