@@ -1,8 +1,12 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query"
-import { createMiddleware, createServerFn } from "@tanstack/react-start"
+import {
+  createIsomorphicFn,
+  createMiddleware,
+  createServerFn,
+} from "@tanstack/react-start"
 
 import { authClient } from "./client"
-import type { Permissions } from "./permissions"
+import type { Permissions, Role } from "./permissions"
 import { getViewer } from "./server"
 
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
@@ -71,6 +75,12 @@ export function useViewer() {
   return viewer
 }
 
+export function useViewerRole() {
+  const { data: viewer } = useSuspenseQuery(viewerQueryOptions())
+
+  return viewer?.role
+}
+
 export function useViewerHasPermission<P extends Permissions>(permissions: P) {
   const viewer = useViewer()
 
@@ -78,8 +88,15 @@ export function useViewerHasPermission<P extends Permissions>(permissions: P) {
     return false
   }
 
+  return roleHasPermission(viewer.role, permissions)
+}
+
+export function roleHasPermission<P extends Permissions>(
+  role: Role,
+  permissions: P
+) {
   return authClient.admin.checkRolePermission({
     permissions,
-    role: viewer.role,
+    role,
   })
 }

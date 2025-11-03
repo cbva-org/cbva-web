@@ -1,38 +1,41 @@
-import { Link, useRouterState, useSearch } from "@tanstack/react-router";
-import sortBy from "lodash/sortBy";
-import unionBy from "lodash/unionBy";
-import { MinusIcon, PlusIcon, Undo2Icon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { Link, useRouterState, useSearch } from "@tanstack/react-router"
+import sortBy from "lodash/sortBy"
+import unionBy from "lodash/unionBy"
+import { MinusIcon, PlusIcon, Undo2Icon } from "lucide-react"
+import { useMemo, useState } from "react"
 import {
   Button as AriaButton,
   Disclosure,
   DisclosureGroup,
   DisclosurePanel,
   Heading,
-} from "react-aria-components";
-import { button } from "@/components/base/button";
-import { MultiSelect } from "@/components/base/multi-select";
-import { title } from "@/components/base/primitives";
-import { TabPanel } from "@/components/base/tabs";
-import { usePools } from "@/data/pools";
-import type { Tournament, TournamentDivision } from "@/db/schema";
-import { isNotNull } from "@/utils/types";
-import { PoolMatchGrid } from "./pool-match-grid";
+} from "react-aria-components"
+import { button } from "@/components/base/button"
+import { MultiSelect } from "@/components/base/multi-select"
+import { title } from "@/components/base/primitives"
+import { TabPanel } from "@/components/base/tabs"
+import { poolsQueryOptions } from "@/data/pools"
+import type { Tournament, TournamentDivision } from "@/db/schema"
+import { isNotNull } from "@/utils/types"
+import { PoolMatchGrid } from "./pool-match-grid"
 
 export function GamesPanel({
   tournamentDivisionId,
 }: Pick<Tournament, "id"> & {
-  tournamentDivisionId: TournamentDivision["id"];
+  tournamentDivisionId: TournamentDivision["id"]
 }) {
   const search = useSearch({
     from: "/tournaments/$tournamentId/$divisionId",
-  });
+  })
 
-  const state = useRouterState();
+  const state = useRouterState()
 
-  const { data, refetch } = usePools({
-    tournamentDivisionId,
-  });
+  const { data, refetch } = useSuspenseQuery(
+    poolsQueryOptions({
+      tournamentDivisionId,
+    })
+  )
 
   const poolFilterOptions = useMemo(() => {
     return (
@@ -40,41 +43,41 @@ export function GamesPanel({
         return {
           display: pool.name.toUpperCase(),
           value: pool.id,
-        };
+        }
       }) ?? []
-    );
-  }, [data]);
+    )
+  }, [data])
 
   const courtFilterOptions = useMemo(() => {
     return sortBy(
       data?.data.map((p) => p.court).filter(isNotNull) ?? [],
       (v) => {
         if (Number.isNaN(v)) {
-          return v;
+          return v
         }
 
-        return Number.parseInt(v, 10);
-      },
+        return Number.parseInt(v, 10)
+      }
     ).map((court) => {
       return {
         display: court,
         value: court,
-      };
-    });
-  }, [data]);
+      }
+    })
+  }, [data])
 
-  const poolFilterValues = new Set(search.pools);
-  const courtFilterValues = new Set(search.courts);
+  const poolFilterValues = new Set(search.pools)
+  const courtFilterValues = new Set(search.courts)
 
-  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false)
 
   const visiblePools = useMemo(() => {
-    const hasFilters = poolFilterValues.size > 0 || courtFilterValues.size > 0;
+    const hasFilters = poolFilterValues.size > 0 || courtFilterValues.size > 0
 
     const byPool =
       data?.data.filter((pool) =>
-        hasFilters ? poolFilterValues.has(pool.id) : true,
-      ) ?? [];
+        hasFilters ? poolFilterValues.has(pool.id) : true
+      ) ?? []
 
     const byCourt =
       data?.data.filter((pool) =>
@@ -82,11 +85,11 @@ export function GamesPanel({
           ? pool.court
             ? courtFilterValues.has(pool.court)
             : false
-          : true,
-      ) ?? [];
+          : true
+      ) ?? []
 
-    return unionBy(byPool, byCourt, (pool) => pool.id);
-  }, [data, poolFilterValues, courtFilterValues]);
+    return unionBy(byPool, byCourt, (pool) => pool.id)
+  }, [data, poolFilterValues, courtFilterValues])
 
   return (
     <TabPanel id="games">
@@ -163,5 +166,5 @@ export function GamesPanel({
         ))}
       </div>
     </TabPanel>
-  );
+  )
 }

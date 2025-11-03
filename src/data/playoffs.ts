@@ -1,11 +1,15 @@
-import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { db } from "@/db";
+import {
+  queryOptions,
+  type UseQueryOptions,
+  useQuery,
+} from "@tanstack/react-query"
+import { createServerFn, useServerFn } from "@tanstack/react-start"
+import { db } from "@/db"
 
 async function readPlayoffs({
   tournamentDivisionId,
 }: {
-  tournamentDivisionId: number;
+  tournamentDivisionId: number
 }) {
   return await db.query.playoffMatches.findMany({
     with: {
@@ -50,7 +54,7 @@ async function readPlayoffs({
     where: (t, { eq, and }) =>
       and(eq(t.tournamentDivisionId, tournamentDivisionId)),
     orderBy: (t, { asc }) => asc(t.matchNumber),
-  });
+  })
 }
 
 export const getPlayoffs = createServerFn({
@@ -59,28 +63,22 @@ export const getPlayoffs = createServerFn({
   .inputValidator(
     (i) =>
       i as {
-        tournamentDivisionId: number;
-      },
+        tournamentDivisionId: number
+      }
   )
-  .handler(async ({ data }) => await readPlayoffs(data));
+  .handler(async ({ data }) => await readPlayoffs(data))
 
-export function usePlayoffs(
-  { tournamentDivisionId }: { tournamentDivisionId: number },
-  options: Omit<
-    UseQueryOptions<Awaited<ReturnType<typeof readPlayoffs>>, unknown>,
-    "queryFn" | "queryKey"
-  > = {},
-) {
-  const fetchPlayoffs = useServerFn(getPlayoffs);
-
-  return useQuery({
-    ...options,
+export const playoffsQueryOptions = ({
+  tournamentDivisionId,
+}: {
+  tournamentDivisionId: number
+}) =>
+  queryOptions({
     queryKey: ["playoffs", tournamentDivisionId].filter(Boolean),
     queryFn: () =>
-      fetchPlayoffs({
+      getPlayoffs({
         data: {
           tournamentDivisionId,
         },
       }),
-  });
-}
+  })

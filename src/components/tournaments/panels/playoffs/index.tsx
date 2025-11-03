@@ -1,18 +1,21 @@
-import { TabPanel } from "@/components/base/tabs";
-import { usePlayoffs } from "@/data/playoffs";
-import type { Tournament, TournamentDivision } from "@/db";
-import { Bracket } from "./bracket";
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { TabPanel } from "@/components/base/tabs"
+import { playoffsQueryOptions } from "@/data/playoffs"
+import type { Tournament, TournamentDivision } from "@/db"
+import { Bracket } from "./bracket"
 
 export function PlayoffsPanel({
   tournamentDivisionId,
 }: Pick<Tournament, "id"> & {
-  tournamentDivisionId: TournamentDivision["id"];
+  tournamentDivisionId: TournamentDivision["id"]
 }) {
-  const { data } = usePlayoffs({ tournamentDivisionId });
+  const { data } = useSuspenseQuery(
+    playoffsQueryOptions({ tournamentDivisionId })
+  )
 
   return (
     <TabPanel id="playoffs">
       <Bracket matches={data || []} />
     </TabPanel>
-  );
+  )
 }

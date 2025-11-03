@@ -1,5 +1,6 @@
-import { useMemo } from "react";
-import { title } from "@/components/base/primitives";
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
+import { title } from "@/components/base/primitives"
 import {
   Table,
   TableBody,
@@ -7,37 +8,37 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-} from "@/components/base/table";
-import { TabPanel } from "@/components/base/tabs";
-import { ProfileName } from "@/components/profiles/name";
-import { usePools } from "@/data/pools";
-import type { Tournament, TournamentDivision } from "@/db";
-import { getPoolStats, usePoolMatchResults } from "@/hooks/matches";
+} from "@/components/base/table"
+import { TabPanel } from "@/components/base/tabs"
+import { ProfileName } from "@/components/profiles/name"
+import { poolsQueryOptions, usePools } from "@/data/pools"
+import type { Tournament, TournamentDivision } from "@/db"
+import { getPoolStats, usePoolMatchResults } from "@/hooks/matches"
 
 export function PoolsPanel({
   tournamentDivisionId,
 }: Pick<Tournament, "id"> & {
-  tournamentDivisionId: TournamentDivision["id"];
+  tournamentDivisionId: TournamentDivision["id"]
 }) {
-  const { data } = usePools({ tournamentDivisionId });
-  const poolMatchResults = usePoolMatchResults(data?.data);
+  const { data } = useSuspenseQuery(poolsQueryOptions({ tournamentDivisionId }))
+  const poolMatchResults = usePoolMatchResults(data?.data)
 
   const pools = useMemo(() => {
     return data?.data.map((pool) => ({
       pool,
       stats: getPoolStats(pool),
-    }));
-  }, [data]);
+    }))
+  }, [data])
 
   return (
     <TabPanel id="pools">
       <div className="max-w-4xl mx-auto py-12 px-3 flex flex-col gap-12">
         {pools?.map(({ pool, stats }) => {
           pool.teams.sort((a, b) => {
-            return stats[a.teamId].rank - stats[b.teamId].rank;
-          });
+            return stats[a.teamId].rank - stats[b.teamId].rank
+          })
 
-          const orderedTeams = pool.teams;
+          const orderedTeams = pool.teams
 
           return (
             <div key={pool.id} className="flex flex-col gap-6">
@@ -80,7 +81,7 @@ export function PoolsPanel({
                   }) => {
                     const { wins, losses } = poolMatchResults
                       ? poolMatchResults[teamId]
-                      : { wins: null, losses: null };
+                      : { wins: null, losses: null }
 
                     return (
                       <TableRow key={id}>
@@ -98,14 +99,14 @@ export function PoolsPanel({
                         <TableCell>{wins ?? "-"}</TableCell>
                         <TableCell>{losses ?? "-"}</TableCell>
                       </TableRow>
-                    );
+                    )
                   }}
                 </TableBody>
               </Table>
             </div>
-          );
+          )
         })}
       </div>
     </TabPanel>
-  );
+  )
 }

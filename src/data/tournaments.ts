@@ -170,8 +170,8 @@ export const getTournament = createServerFn({
   )
   .handler(({ data }) => readTournament(data))
 
-export const tournamentQueryOptions = (id: number) =>
+export const tournamentQueryOptions = (id?: number) =>
   queryOptions({
     queryKey: ["tournament", id],
-    queryFn: () => getTournament({ data: { id } }),
+    queryFn: () => (id ? getTournament({ data: { id: id as number } }) : null),
   })

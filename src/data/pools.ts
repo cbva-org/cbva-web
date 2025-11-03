@@ -1,15 +1,19 @@
-import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { db, findPaged } from "@/db";
+import {
+  queryOptions,
+  type UseQueryOptions,
+  useQuery,
+} from "@tanstack/react-query"
+import { createServerFn, useServerFn } from "@tanstack/react-start"
+import { db, findPaged } from "@/db"
 
 async function readPools({
   tournamentDivisionId,
   ids,
   pagination: { page, pageSize },
 }: {
-  tournamentDivisionId: number;
-  ids?: [];
-  pagination: { page: number; pageSize: number };
+  tournamentDivisionId: number
+  ids?: []
+  pagination: { page: number; pageSize: number }
 }) {
   return await findPaged("pools", {
     paging: { page, size: pageSize },
@@ -83,11 +87,11 @@ async function readPools({
           ...[
             eq(t.tournamentDivisionId, tournamentDivisionId),
             ids ? inArray(t.id, ids) : undefined,
-          ].filter(Boolean),
+          ].filter(Boolean)
         ),
       orderBy: (t, { asc }) => asc(t.name),
     },
-  });
+  })
 }
 
 export const getPools = createServerFn({
@@ -96,37 +100,32 @@ export const getPools = createServerFn({
   .inputValidator(
     (i) =>
       i as {
-        tournamentDivisionId: number;
-        pagination: { page: number; pageSize: number };
-      },
+        tournamentDivisionId: number
+        pagination: { page: number; pageSize: number }
+      }
   )
-  .handler(async ({ data }) => await readPools(data));
+  .handler(async ({ data }) => await readPools(data))
 
-export function usePools(
+export const poolsQueryOptions = (
   {
     tournamentDivisionId,
     ids,
-  }: { tournamentDivisionId: number; ids?: number[] },
-  pagination: { page: number; pageSize: number } = { page: 1, pageSize: 50 },
-  options: Omit<
-    UseQueryOptions<Awaited<ReturnType<typeof readPools>>, unknown>,
-    "queryFn" | "queryKey"
-  > = {},
-) {
-  const fetchPools = useServerFn(getPools);
-
-  return useQuery({
-    ...options,
+  }: {
+    tournamentDivisionId: number
+    ids?: number[]
+  },
+  pagination: { page: number; pageSize: number } = { page: 1, pageSize: 50 }
+) =>
+  queryOptions({
     queryKey: ["pools", tournamentDivisionId, ids ? ids.join() : null].filter(
-      Boolean,
+      Boolean
     ),
     queryFn: () =>
-      fetchPools({
+      getPools({
         data: {
           tournamentDivisionId,
           ids,
           pagination,
         },
       }),
-  });
-}
+  })

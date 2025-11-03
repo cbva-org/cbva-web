@@ -26,6 +26,7 @@ export function InformationPanel({
   venue: Pick<Venue, "name" | "city" | "description" | "directions" | "mapUrl">
 }) {
   const tournamentQuery = tournamentQueryOptions(id)
+
   const { mutateAsync: updateVenue } = useUpdateVenue([
     tournamentQuery.queryKey,
   ])

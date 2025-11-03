@@ -4,7 +4,7 @@ import {
   parseDate,
 } from "@internationalized/date"
 import { useDateFormatter } from "@react-aria/i18n"
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import clsx from "clsx"
 import { CheckIcon } from "lucide-react"
@@ -17,11 +17,14 @@ import {
 } from "@/components/base/dropdown-menu"
 import { subtitle, title } from "@/components/base/primitives"
 import { Tab, TabList, Tabs } from "@/components/base/tabs"
+import { TournamentControls } from "@/components/tournaments/controls"
 import { GamesPanel } from "@/components/tournaments/panels/games"
 import { InformationPanel } from "@/components/tournaments/panels/information"
 import { PlayoffsPanel } from "@/components/tournaments/panels/playoffs"
 import { PoolsPanel } from "@/components/tournaments/panels/pools"
 import { TeamsPanel } from "@/components/tournaments/panels/teams"
+import { playoffsQueryOptions } from "@/data/playoffs"
+import { poolsQueryOptions } from "@/data/pools"
 import { tournamentQueryOptions } from "@/data/tournaments"
 import { getTournamentDivisionDisplay } from "@/hooks/tournament"
 import { DefaultLayout } from "@/layouts/default"
@@ -43,7 +46,10 @@ export const Route = createFileRoute("/tournaments/$tournamentId/$divisionId")({
       courts: Array.isArray(search?.courts) ? search.courts : [],
     }
   },
-  loader: async ({ params: { tournamentId }, context: { queryClient } }) => {
+  loader: async ({
+    params: { tournamentId, divisionId },
+    context: { queryClient },
+  }) => {
     const tournament = await queryClient.ensureQueryData(
       tournamentQueryOptions(Number.parseInt(tournamentId, 10))
     )
@@ -51,6 +57,17 @@ export const Route = createFileRoute("/tournaments/$tournamentId/$divisionId")({
     if (!tournament) {
       throw new Error("not found")
     }
+
+    // const activeDivision =
+    //   tournament.tournamentDivisions.find(
+    //     ({ id }) => id.toString() === divisionId
+    //   ) ?? tournament.tournamentDivisions[0]
+
+    // await queryClient.ensureQueryData(
+    //   poolsQueryOptions({
+    //     tournamentDivisionId: activeDivision.id,
+    //   })
+    // )
 
     return tournament
   },
@@ -72,10 +89,6 @@ export const Route = createFileRoute("/tournaments/$tournamentId/$divisionId")({
 })
 
 function RouteComponent() {
-  const canCreateTournament = useViewerHasPermission({
-    tournament: ["create"],
-  })
-
   const { tournamentId, divisionId } = Route.useParams()
 
   const { data } = useSuspenseQuery(
@@ -90,6 +103,27 @@ function RouteComponent() {
     tournament.tournamentDivisions.find(
       ({ id }) => id.toString() === divisionId
     ) ?? tournament.tournamentDivisions[0]
+
+  const { data: hasPools } = useQuery({
+    ...poolsQueryOptions({
+      tournamentDivisionId: activeDivision.id,
+    }),
+    select: (data) => data.data.length > 0,
+  })
+
+  const { data: hasGames } = useQuery({
+    ...poolsQueryOptions({
+      tournamentDivisionId: activeDivision.id,
+    }),
+    select: (data) => data.data.some((pool) => pool.matches.length > 0),
+  })
+
+  const { data: hasPlayoffs } = useQuery({
+    ...playoffsQueryOptions({
+      tournamentDivisionId: activeDivision.id,
+    }),
+    select: (data) => data.length > 0,
+  })
 
   const { name, venue } = tournament || {}
 
@@ -132,18 +166,11 @@ function RouteComponent() {
 
   return (
     <DefaultLayout classNames={{ content: "bg-white relative" }}>
-      {canCreateTournament && (
-        <DropdownMenu buttonClassName="absolute top-6 right-6">
-          <DropdownMenuItemLink
-            to="/tournaments/create"
-            search={{
-              template: tournamentId.toString(),
-            }}
-          >
-            Duplicate
-          </DropdownMenuItemLink>
-        </DropdownMenu>
-      )}
+      <TournamentControls
+        tournamentId={Number.parseInt(tournamentId, 10)}
+        divisionId={activeDivision.id}
+      />
+
       <div>
         <div className="py-12 max-w-lg mx-auto flex flex-col space-y-6">
           <div className="text-center flex flex-col space-y-2">
@@ -193,9 +220,15 @@ function RouteComponent() {
             >
               <Tab id="info">Information</Tab>
               <Tab id="teams">Teams</Tab>
-              <Tab id="pools">Pools</Tab>
-              <Tab id="games">Games</Tab>
-              <Tab id="playoffs">Playoffs</Tab>
+              <Tab id="pools" isDisabled={!hasPools}>
+                Pools
+              </Tab>
+              <Tab id="games" isDisabled={!hasGames}>
+                Games
+              </Tab>
+              <Tab id="playoffs" isDisabled={!hasPlayoffs}>
+                Playoffs
+              </Tab>
             </TabList>
           </div>
           <InformationPanel {...tournament} />

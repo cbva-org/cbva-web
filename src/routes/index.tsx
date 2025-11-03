@@ -122,10 +122,12 @@ function RouteComponent() {
       </div>
       <div className="relative w-full bg-navbar-background text-navbar-foreground text-center h-[75svh]">
         <img
+          alt="A bear"
           src="/bear.svg"
           className="absolute left-0 top-1/2 -translate-y-1/2"
         />
         <img
+          alt="A bear"
           src="/bear.svg"
           className="absolute right-0 -scale-x-100 top-1/2 -translate-y-1/2"
         />
