@@ -5,20 +5,19 @@ import { seedRatingsPage } from "./lexical"
 import { seedVenues } from "./venues"
 
 async function main() {
-  // await db
-  //   .insert(pages)
-  //   .values([
-  //     {
-  //       path: "ratings",
-  //     },
-  //     {
-  //       path: "juniors",
-  //     },
-  //   ])
-  //   .onConflictDoNothing();
-  // await example();
-  // await seedRatingsPage();
-  // await seedRatingsPage2();
+  await db
+    .insert(pages)
+    .values([
+      {
+        path: "ratings",
+      },
+      {
+        path: "juniors",
+      },
+    ])
+    .onConflictDoNothing()
+
+  await seedRatingsPage()
   await seedVenues()
 }
 
