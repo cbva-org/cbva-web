@@ -6,7 +6,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start"
 import { Suspense, useState } from "react"
-import { useViewerHasPermission, useViewerRole } from "@/auth/shared"
+import { useViewerHasPermission } from "@/auth/shared"
 import { title } from "@/components/base/primitives"
 import { RichTextDisplay } from "@/components/base/rich-text-editor/display"
 import { Select } from "@/components/base/select"
