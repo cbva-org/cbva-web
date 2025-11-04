@@ -4,6 +4,7 @@ import { adminAc, defaultStatements } from "better-auth/plugins/admin/access"
 export const statement = {
   tournament: ["create", "update", "delete", "teehee"],
   venues: ["create", "update", "delete"],
+  content: ["update"],
   ...defaultStatements,
 } as const
 
@@ -18,6 +19,7 @@ export type Permissions = {
 export const admin = ac.newRole({
   tournament: ["create", "update", "delete"],
   venues: ["create", "update", "delete"],
+  content: ["update"],
   ...adminAc.statements,
 })
 

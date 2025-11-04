@@ -6,7 +6,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start"
 import { Suspense, useState } from "react"
-
+import { useViewerHasPermission, useViewerRole } from "@/auth/shared"
 import { title } from "@/components/base/primitives"
 import { RichTextDisplay } from "@/components/base/rich-text-editor/display"
 import { Select } from "@/components/base/select"
@@ -27,6 +27,10 @@ export const Route = createFileRoute("/ratings")({
 })
 
 function RouteComponent() {
+  const canEdit = useViewerHasPermission({
+    content: ["update"],
+  })
+
   const { data: blocks } = useSuspenseQuery({
     ...contentPageBlocksQueryOptions("ratings"),
     select: (data) => new Map(data.map(({ key, content }) => [key, content])),
@@ -101,12 +105,16 @@ function RouteComponent() {
             <RichTextDisplay
               name="ratings"
               content={blocks.get("ratings")}
-              onSave={async (state) => {
-                await mutateAsync({
-                  key: "ratings",
-                  content: state as LexicalState,
-                })
-              }}
+              onSave={
+                canEdit
+                  ? async (state) => {
+                      await mutateAsync({
+                        key: "ratings",
+                        content: state as LexicalState,
+                      })
+                    }
+                  : undefined
+              }
             />
           )}
         </div>
@@ -142,12 +150,16 @@ function RouteComponent() {
                 <RichTextDisplay
                   name={genderDivisionKey}
                   content={blocks.get(genderDivisionKey)}
-                  onSave={async (state) => {
-                    await mutateAsync({
-                      key: genderDivisionKey,
-                      content: state as LexicalState,
-                    })
-                  }}
+                  onSave={
+                    canEdit
+                      ? async (state) => {
+                          await mutateAsync({
+                            key: genderDivisionKey,
+                            content: state as LexicalState,
+                          })
+                        }
+                      : undefined
+                  }
                 />
               )}
             </div>
@@ -158,12 +170,16 @@ function RouteComponent() {
                   <RichTextDisplay
                     name="prize-pool"
                     content={blocks.get("prize-pool")}
-                    onSave={async (state) => {
-                      await mutateAsync({
-                        key: "prize-pool",
-                        content: state as LexicalState,
-                      })
-                    }}
+                    onSave={
+                      canEdit
+                        ? async (state) => {
+                            await mutateAsync({
+                              key: "prize-pool",
+                              content: state as LexicalState,
+                            })
+                          }
+                        : undefined
+                    }
                   />
                 )}
               </div>
@@ -175,12 +191,16 @@ function RouteComponent() {
             <RichTextDisplay
               name="sanction-requirements"
               content={blocks.get("sanction-requirements")}
-              onSave={async (state) => {
-                await mutateAsync({
-                  key: "sanction-requirements",
-                  content: state as LexicalState,
-                })
-              }}
+              onSave={
+                canEdit
+                  ? async (state) => {
+                      await mutateAsync({
+                        key: "sanction-requirements",
+                        content: state as LexicalState,
+                      })
+                    }
+                  : undefined
+              }
             />
           )}
         </div>

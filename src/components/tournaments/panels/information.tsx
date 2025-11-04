@@ -1,3 +1,4 @@
+import { useViewerHasPermission } from "@/auth/shared"
 import { subtitle } from "@/components/base/primitives"
 import { RichTextDisplay } from "@/components/base/rich-text-editor/display"
 import { TabPanel } from "@/components/base/tabs"
@@ -31,6 +32,10 @@ export function InformationPanel({
     tournamentQuery.queryKey,
   ])
 
+  const canEdit = useViewerHasPermission({
+    tournament: ["update"],
+  })
+
   return (
     <TabPanel id="info">
       <div className="max-w-4xl mx-auto pt-12 px-3">
@@ -44,21 +49,27 @@ export function InformationPanel({
                 ? JSON.parse(venue.description)
                 : venue.description
             }
-            onSave={async (state) => {
-              await updateVenue({
-                description: state as LexicalState,
-              })
-            }}
+            onSave={
+              canEdit
+                ? async (state) => {
+                    await updateVenue({
+                      description: state as LexicalState,
+                    })
+                  }
+                : undefined
+            }
           />
 
           <div className="relative flex flex-col space-y-3 min-w-3/12">
             <h5 className="font-semibold flex flex-row justify-between items-center">
               <span>Director</span>
 
-              <AddDirector
-                tournamentId={id}
-                existingDirectorIds={directors.map((d) => d.directorId)}
-              />
+              {canEdit && (
+                <AddDirector
+                  tournamentId={id}
+                  existingDirectorIds={directors.map((d) => d.directorId)}
+                />
+              )}
             </h5>
 
             <div className="flex flex-col space-y-2">
@@ -69,12 +80,15 @@ export function InformationPanel({
                   <ul key={td.id} className="relative">
                     <li className="flex flex-row justify-between items-center relative whitespace-nowrap overflow-ellipsis">
                       <span>{name}</span>
-                      <RemoveDirector
-                        id={td.id}
-                        name={name}
-                        tournamentId={id}
-                        isDisabled={directors.length === 1}
-                      />
+
+                      {canEdit && (
+                        <RemoveDirector
+                          id={td.id}
+                          name={name}
+                          tournamentId={id}
+                          isDisabled={directors.length === 1}
+                        />
+                      )}
                     </li>
                     {td.director.email && <li>{td.director.email}</li>}
                     {td.director.phone && <li>{td.director.phone}</li>}
@@ -94,11 +108,15 @@ export function InformationPanel({
                 ? JSON.parse(venue.directions)
                 : venue.directions
             }
-            onSave={async (state) => {
-              await updateVenue({
-                directions: state as LexicalState,
-              })
-            }}
+            onSave={
+              canEdit
+                ? async (state) => {
+                    await updateVenue({
+                      directions: state as LexicalState,
+                    })
+                  }
+                : undefined
+            }
           />
         </div>
       </div>

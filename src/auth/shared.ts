@@ -81,6 +81,12 @@ export function useViewerRole() {
   return viewer?.role
 }
 
+export function useViewerIsAdmin() {
+  const { data: viewer } = useSuspenseQuery(viewerQueryOptions())
+
+  return viewer?.role === "admin"
+}
+
 export function useViewerHasPermission<P extends Permissions>(permissions: P) {
   const viewer = useViewer()
 
