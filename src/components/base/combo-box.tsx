@@ -1,6 +1,6 @@
 import { Link, type LinkOptions, useRouter } from "@tanstack/react-router"
 import { ChevronDown, XIcon } from "lucide-react"
-import { useMemo } from "react"
+import { useMemo, useRef, useState } from "react"
 import {
   ComboBox as AriaComboBox,
   type ComboBoxProps as AriaComboBoxProps,
@@ -31,6 +31,21 @@ export interface ComboBoxProps<T extends Key>
 
 // TODO: make this a multi-select too. Single select with tag group beneath it with selected items that can be removed.
 
+// onFocusChange={(focus) => {
+//   setIsFocused(focus)
+//   props.onFocusChange?.(focus)
+// }}
+// onSelectionChange={(key) => {
+//   console.log("?", key)
+
+//   props.onSelectionChange?.(key)
+
+//   if (!multi && key !== null && inputRef.current) {
+//     inputRef.current.blur()
+//     console.log("blurring")
+//   }
+// }}
+
 export function ComboBox<T extends Key>({
   label,
   description,
@@ -46,8 +61,18 @@ export function ComboBox<T extends Key>({
   multi?: boolean
   selectedKeys?: Iterable<T>
 }) {
+  const [isFocused, setIsFocused] = useState(false)
   const itemsMap = new Map(Array.from(items).map((item) => [item.value, item]))
   const selectedKeysSet = new Set(selectedKeys)
+
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const selectedItem =
+    !multi && props.selectedKey
+      ? itemsMap.get(props.selectedKey as T)
+      : undefined
+
+  console.log(multi, isFocused, selectedItem)
 
   return (
     <AriaComboBox
@@ -56,10 +81,19 @@ export function ComboBox<T extends Key>({
         props.className,
         "group flex flex-col gap-1"
       )}
+      inputValue={
+        !multi && !isFocused && selectedItem
+          ? selectedItem.display
+          : props.inputValue
+      }
+      onFocusChange={(focus) => {
+        setIsFocused(focus)
+        props.onFocusChange?.(focus)
+      }}
     >
       <Label>{label}</Label>
       <FieldGroup>
-        <Input placeholder={placeholder} />
+        <Input placeholder={placeholder} ref={inputRef} />
         <Button
           variant="icon"
           color="muted"

@@ -134,6 +134,10 @@ export function AddTeamForm({
           />
 
           <form.AppForm>
+            <form.StateDebugger />
+          </form.AppForm>
+
+          <form.AppForm>
             <form.Footer className="col-span-full">
               <Button onPress={() => onOpenChange(false)}>Cancel</Button>
 

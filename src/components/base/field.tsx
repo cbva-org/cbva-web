@@ -1,8 +1,11 @@
+import type React from "react"
+import { forwardRef } from "react"
 import {
   composeRenderProps,
   type FieldErrorProps,
   Group,
   type GroupProps,
+  InputContext,
   type InputProps,
   type LabelProps,
   FieldError as RACFieldError,
@@ -10,11 +13,11 @@ import {
   Label as RACLabel,
   Text,
   type TextProps,
-} from "react-aria-components";
-import { twMerge } from "tailwind-merge";
-import { tv } from "tailwind-variants";
-
-import { composeTailwindRenderProps, focusRing } from "./utils";
+  useContextProps,
+} from "react-aria-components"
+import { twMerge } from "tailwind-merge"
+import { tv } from "tailwind-variants"
+import { composeTailwindRenderProps, focusRing } from "./utils"
 
 export function Label(props: LabelProps) {
   return (
@@ -22,10 +25,10 @@ export function Label(props: LabelProps) {
       {...props}
       className={twMerge(
         "text-sm text-gray-500 dark:text-zinc-400 font-medium cursor-default w-fit",
-        props.className,
+        props.className
       )}
     />
-  );
+  )
 }
 
 export function Description(props: TextProps) {
@@ -35,7 +38,7 @@ export function Description(props: TextProps) {
       slot="description"
       className={twMerge("text-sm text-gray-600", props.className)}
     />
-  );
+  )
 }
 
 export function FieldError(props: FieldErrorProps) {
@@ -44,10 +47,10 @@ export function FieldError(props: FieldErrorProps) {
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "text-sm text-red-600 forced-colors:text-[Mark]",
+        "text-sm text-red-600 forced-colors:text-[Mark]"
       )}
     />
-  );
+  )
 }
 
 export const fieldBorderStyles = tv({
@@ -63,33 +66,50 @@ export const fieldBorderStyles = tv({
       true: "border-gray-600 forced-colors:border-[GrayText]",
     },
   },
-});
+})
 
 export const fieldGroupStyles = tv({
   extend: focusRing,
   base: "group flex items-stretch bg-white forced-colors:bg-[Field] border-1 rounded-lg overflow-hidden",
   variants: fieldBorderStyles.variants,
-});
+})
 
 export function FieldGroup(props: GroupProps) {
   return (
     <Group
       {...props}
       className={composeRenderProps(props.className, (className, renderProps) =>
-        fieldGroupStyles({ ...renderProps, className }),
+        fieldGroupStyles({ ...renderProps, className })
       )}
     />
-  );
+  )
 }
 
-export function Input(props: InputProps) {
-  return (
-    <RACInput
-      {...props}
-      className={composeTailwindRenderProps(
-        props.className,
-        "px-2 py-1.5 flex-1 min-w-0 border-0 outline-0 bg-white text-sm text-content-foreground",
-      )}
-    />
-  );
-}
+export const Input = forwardRef(
+  (props: InputProps, ref: React.ForwardedRef<HTMLInputElement>) => {
+    const [mergedProps, mergedRef] = useContextProps(props, ref, InputContext)
+
+    return (
+      <RACInput
+        ref={mergedRef}
+        {...mergedProps}
+        className={composeTailwindRenderProps(
+          props.className,
+          "px-2 py-1.5 flex-1 min-w-0 border-0 outline-0 bg-white text-sm text-content-foreground"
+        )}
+      />
+    )
+  }
+)
+
+// export function Input(props: InputProps) {
+//   return (
+//     <RACInput
+//       {...props}
+//       className={composeTailwindRenderProps(
+//         props.className,
+//         "px-2 py-1.5 flex-1 min-w-0 border-0 outline-0 bg-white text-sm text-content-foreground"
+//       )}
+//     />
+//   )
+// }

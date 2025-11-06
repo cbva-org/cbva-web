@@ -23,7 +23,10 @@ export function ComboBoxField<T extends Key>({
       items={options || []}
       disabledKeys={disabledKeys}
       selectedKey={field.state.value}
-      onSelectionChange={(value) => field.handleChange(value)}
+      onSelectionChange={(value) => {
+        console.log("->", value)
+        field.handleChange(value)
+      }}
       onOpenChange={(open) => {
         if (!open) {
           field.handleBlur()
