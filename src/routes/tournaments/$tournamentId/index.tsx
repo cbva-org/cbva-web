@@ -7,12 +7,12 @@ export const Route = createFileRoute("/tournaments/$tournamentId/")({
   validateSearch: (
     search: Record<string, unknown>
   ): {
-    pools: number[]
-    courts: string[]
+    pools?: number[]
+    courts?: string[]
   } => {
     return {
-      pools: Array.isArray(search?.pools) ? search.pools : [],
-      courts: Array.isArray(search?.courts) ? search.courts : [],
+      pools: Array.isArray(search?.pools) ? search.pools : undefined,
+      courts: Array.isArray(search?.courts) ? search.courts : undefined,
     }
   },
   loader: async ({ params: { tournamentId }, context: { queryClient } }) => {

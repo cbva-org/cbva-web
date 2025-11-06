@@ -12,9 +12,12 @@ import { useAppForm } from "@/components/base/form"
 import { Modal } from "@/components/base/modal"
 import { title } from "@/components/base/primitives"
 import { duplicateTournamentOptions } from "@/data/tournaments/schedule"
+import type { Division, TournamentDivision } from "@/db/schema"
+import { getTournamentDivisionDisplay } from "@/hooks/tournament"
 
-export type DuplicateFormProps = {
+export type AddTeamFormProps = {
   tournamentId: number
+  division: TournamentDivision & { division: Division }
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -41,11 +44,12 @@ const schema = z.object({
     ),
 })
 
-export function DuplicateForm({
+export function AddTeamForm({
   tournamentId,
+  division,
   onOpenChange,
   ...props
-}: DuplicateFormProps) {
+}: AddTeamFormProps) {
   const navigate = useNavigate()
 
   const { mutate } = useMutation({
@@ -79,7 +83,15 @@ export function DuplicateForm({
   return (
     <Modal {...props} onOpenChange={onOpenChange}>
       <div className="p-3 flex flex-col space-y-4 relative">
-        <h3 className={title({ size: "sm" })}>Duplicate Tournament</h3>
+        <h3 className={title({ size: "sm" })}>Add Team</h3>
+
+        <p>
+          Add a team to the{" "}
+          <span className="font-bold italic">
+            {getTournamentDivisionDisplay(division)}
+          </span>{" "}
+          division for free.
+        </p>
 
         <form
           onSubmit={(e) => {

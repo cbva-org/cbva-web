@@ -50,6 +50,7 @@ const popoverStyles = tv({
 
 export type DropdownMenuProps = {
   buttonContent?: ReactNode
+  buttonIcon?: ReactNode
   label?: string
   buttonClassName?: string
   children: ReactNode
@@ -58,6 +59,7 @@ export type DropdownMenuProps = {
 export function DropdownMenu({
   label = "Menu",
   buttonContent,
+  buttonIcon,
   buttonClassName,
   children,
 }: DropdownMenuProps) {
@@ -68,7 +70,8 @@ export function DropdownMenu({
         variant={buttonContent ? "text" : "icon"}
         className={buttonClassName}
       >
-        {buttonContent} {buttonContent ? <ChevronDownIcon /> : <MenuIcon />}
+        {buttonContent}{" "}
+        {buttonIcon ?? (buttonContent ? <ChevronDownIcon /> : <MenuIcon />)}
       </Button>
       <Popover
         className={composeRenderProps("min-w-xs", (className, render) =>

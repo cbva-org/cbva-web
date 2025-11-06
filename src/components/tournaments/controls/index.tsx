@@ -1,39 +1,77 @@
+import { SettingsIcon } from "lucide-react"
 import { useState } from "react"
-import { useViewerHasPermission, useViewerRole } from "@/auth/shared"
+
+import { useViewerHasPermission } from "@/auth/shared"
 import { DropdownMenu, DropdownMenuItem } from "@/components/base/dropdown-menu"
-import { Modal } from "../base/modal"
-import { title } from "../base/primitives"
+import type { Division, TournamentDivision } from "@/db/schema"
+
+import { AddTeamForm } from "./add-team"
 import { DuplicateForm } from "./duplicate"
 
 export type TournamentAdminControlsProps = {
   tournamentId: number
-  divisionId: number
+  division: TournamentDivision & { division: Division }
 }
+
+type ModalKind = "duplicate" | "add-team"
 
 export function TournamentControls({
   tournamentId,
-  divisionId,
+  division,
 }: TournamentAdminControlsProps) {
   const canCreate = useViewerHasPermission({
     tournament: ["create"],
   })
 
-  const [isDuplicating, setDuplicating] = useState<boolean>()
+  const canUpdate = useViewerHasPermission({
+    tournament: ["update"],
+  })
 
-  if (![canCreate].some(Boolean)) {
+  const [activeModal, setActiveModal] = useState<ModalKind>()
+
+  if (![canCreate, canUpdate].some(Boolean)) {
     return null
   }
 
   return (
     <>
-      <DropdownMenu buttonClassName="absolute top-6 right-6">
+      <DropdownMenu
+        buttonClassName="absolute top-6 right-6"
+        buttonIcon={<SettingsIcon />}
+      >
         {canCreate && (
-          <DropdownMenuItem onPress={() => setDuplicating(true)}>
+          <DropdownMenuItem onPress={() => setActiveModal("duplicate")}>
             Duplicate
           </DropdownMenuItem>
         )}
+
+        {canUpdate && (
+          <DropdownMenuItem onPress={() => setActiveModal("add-team")}>
+            Add Team
+          </DropdownMenuItem>
+        )}
       </DropdownMenu>
-      <DuplicateForm isOpen={isDuplicating} onOpenChange={setDuplicating} />
+
+      <DuplicateForm
+        tournamentId={tournamentId}
+        isOpen={activeModal === "duplicate"}
+        onOpenChange={(open) => {
+          const next = open ? "duplicate" : undefined
+
+          setActiveModal(next)
+        }}
+      />
+
+      <AddTeamForm
+        tournamentId={tournamentId}
+        division={division}
+        isOpen={activeModal === "add-team"}
+        onOpenChange={(open) => {
+          const next = open ? "add-team" : undefined
+
+          setActiveModal(next)
+        }}
+      />
     </>
   )
 }

@@ -1,10 +1,23 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { DefaultLayout } from '@/layouts/default';
+import { createFileRoute } from "@tanstack/react-router"
+import { useViewer } from "@/auth/shared"
+import { DefaultLayout } from "@/layouts/default"
 
-export const Route = createFileRoute('/account/')({
+export const Route = createFileRoute("/account/")({
   component: RouteComponent,
-});
+})
 
 function RouteComponent() {
-  return <DefaultLayout>Hello "/account/"!</DefaultLayout>;
+  const viewer = useViewer()
+
+  return (
+    <DefaultLayout
+      classNames={{
+        content: "py-12 w-full max-w-lg mx-auto",
+      }}
+    >
+      <pre className="p-6 rounded-lg border border-gray-900 bg-white">
+        {JSON.stringify(viewer, null, 2)}
+      </pre>
+    </DefaultLayout>
+  )
 }

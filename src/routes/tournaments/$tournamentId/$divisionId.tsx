@@ -9,10 +9,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import clsx from "clsx"
 import { CheckIcon } from "lucide-react"
 import { match, P } from "ts-pattern"
-import { useViewerHasPermission } from "@/auth/shared"
 import {
   DropdownMenu,
-  DropdownMenuItem,
   DropdownMenuItemLink,
 } from "@/components/base/dropdown-menu"
 import { subtitle, title } from "@/components/base/primitives"
@@ -25,6 +23,7 @@ import { PoolsPanel } from "@/components/tournaments/panels/pools"
 import { TeamsPanel } from "@/components/tournaments/panels/teams"
 import { playoffsQueryOptions } from "@/data/playoffs"
 import { poolsQueryOptions } from "@/data/pools"
+import { teamsQueryOptions } from "@/data/teams"
 import { tournamentQueryOptions } from "@/data/tournaments"
 import { getTournamentDivisionDisplay } from "@/hooks/tournament"
 import { DefaultLayout } from "@/layouts/default"
@@ -38,18 +37,15 @@ export const Route = createFileRoute("/tournaments/$tournamentId/$divisionId")({
   validateSearch: (
     search: Record<string, unknown>
   ): {
-    pools: number[]
-    courts: string[]
+    pools?: number[]
+    courts?: string[]
   } => {
     return {
-      pools: Array.isArray(search?.pools) ? search.pools : [],
-      courts: Array.isArray(search?.courts) ? search.courts : [],
+      pools: Array.isArray(search?.pools) ? search.pools : undefined,
+      courts: Array.isArray(search?.courts) ? search.courts : undefined,
     }
   },
-  loader: async ({
-    params: { tournamentId, divisionId },
-    context: { queryClient },
-  }) => {
+  loader: async ({ params: { tournamentId }, context: { queryClient } }) => {
     const tournament = await queryClient.ensureQueryData(
       tournamentQueryOptions(Number.parseInt(tournamentId, 10))
     )
@@ -57,17 +53,6 @@ export const Route = createFileRoute("/tournaments/$tournamentId/$divisionId")({
     if (!tournament) {
       throw new Error("not found")
     }
-
-    // const activeDivision =
-    //   tournament.tournamentDivisions.find(
-    //     ({ id }) => id.toString() === divisionId
-    //   ) ?? tournament.tournamentDivisions[0]
-
-    // await queryClient.ensureQueryData(
-    //   poolsQueryOptions({
-    //     tournamentDivisionId: activeDivision.id,
-    //   })
-    // )
 
     return tournament
   },
@@ -103,6 +88,11 @@ function RouteComponent() {
     tournament.tournamentDivisions.find(
       ({ id }) => id.toString() === divisionId
     ) ?? tournament.tournamentDivisions[0]
+
+  const { data: hasTeams } = useQuery({
+    ...teamsQueryOptions(activeDivision.id),
+    select: (data) => data.data.length > 0,
+  })
 
   const { data: hasPools } = useQuery({
     ...poolsQueryOptions({
@@ -168,7 +158,7 @@ function RouteComponent() {
     <DefaultLayout classNames={{ content: "bg-white relative" }}>
       <TournamentControls
         tournamentId={Number.parseInt(tournamentId, 10)}
-        divisionId={activeDivision.id}
+        division={activeDivision}
       />
 
       <div>
@@ -186,7 +176,7 @@ function RouteComponent() {
 
           <DropdownMenu
             buttonContent={
-              <span className={subtitle({ className: "!w-auto" })}>
+              <span className={subtitle({ className: "w-auto!" })}>
                 {activeDivision && getTournamentDivisionDisplay(activeDivision)}
               </span>
             }
@@ -219,7 +209,9 @@ function RouteComponent() {
               className="px-6 min-w-max"
             >
               <Tab id="info">Information</Tab>
-              <Tab id="teams">Teams</Tab>
+              <Tab id="teams" isDisabled={!hasTeams}>
+                Teams
+              </Tab>
               <Tab id="pools" isDisabled={!hasPools}>
                 Pools
               </Tab>
