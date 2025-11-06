@@ -4,101 +4,101 @@ import {
   useNodesInitialized,
   useReactFlow,
   useViewport,
-} from "@xyflow/react";
-import { useResponsive } from "ahooks";
+} from "@xyflow/react"
+import { useResponsive } from "ahooks"
 import {
   ArrowDown,
   ArrowDownLeft,
   ArrowRight,
   ArrowUp,
   ArrowUpLeft,
-} from "lucide-react";
-import { type ReactNode, type RefObject, useCallback, useMemo } from "react";
-import { Button } from "@/components/base/button";
-import type { BracketMatch } from ".";
+} from "lucide-react"
+import { type ReactNode, type RefObject, useCallback, useMemo } from "react"
+import { Button } from "@/components/base/button"
+import type { BracketMatch } from "."
 
 export function Toolbar({
   rounds,
   container,
   children,
 }: {
-  rounds: BracketMatch[][];
-  container: RefObject<HTMLDivElement | null>;
-  children: ReactNode;
+  rounds: BracketMatch[][]
+  container: RefObject<HTMLDivElement | null>
+  children: ReactNode
 }) {
-  const controller = useReactFlow();
+  const controller = useReactFlow()
 
-  const viewport = useViewport();
-  const nodes = useNodes<Node<BracketMatch>>();
-  const size = useResponsive();
+  const viewport = useViewport()
+  const nodes = useNodes<Node<BracketMatch>>()
+  const size = useResponsive()
 
-  const topPadding = size.medium ? 100 : 25;
+  const topPadding = size.medium ? 100 : 25
 
   const closestNodeToCenter = useMemo(() => {
-    const bounds = container.current?.getBoundingClientRect();
+    const bounds = container.current?.getBoundingClientRect()
 
     if (!bounds) {
-      return null;
+      return null
     }
 
     // Calculate the focus point in screen coordinates
     // Horizontally: center of viewport
     // Vertically: topPadding distance from top
-    const screenFocusX = bounds.width / 2;
-    const screenFocusY = topPadding;
+    const screenFocusX = bounds.width / 2
+    const screenFocusY = topPadding
 
     // Convert screen coordinates to flow coordinates
-    const flowFocusX = (screenFocusX - viewport.x) / viewport.zoom;
-    const flowFocusY = (screenFocusY - viewport.y) / viewport.zoom;
+    const flowFocusX = (screenFocusX - viewport.x) / viewport.zoom
+    const flowFocusY = (screenFocusY - viewport.y) / viewport.zoom
 
     // Find the node closest to this focus point
-    let closestNode: Node<BracketMatch> | null = null;
-    let minDistance = Number.POSITIVE_INFINITY;
+    let closestNode: Node<BracketMatch> | null = null
+    let minDistance = Number.POSITIVE_INFINITY
 
     for (const node of nodes) {
-      const nodeWidth = node.measured?.width ?? node.width ?? 400;
-      const nodeHeight = node.measured?.height ?? node.height ?? 200;
+      const nodeWidth = node.measured?.width ?? node.width ?? 400
+      const nodeHeight = node.measured?.height ?? node.height ?? 200
 
       // Calculate the node's "focus point" (horizontally centered, at the top)
-      const nodeFocusX = node.position.x + nodeWidth / 2;
-      const nodeFocusY = node.position.y; // Top of the node
+      const nodeFocusX = node.position.x + nodeWidth / 2
+      const nodeFocusY = node.position.y // Top of the node
 
       // Calculate distance from viewport focus point to node focus point
       const distance = Math.sqrt(
-        (nodeFocusX - flowFocusX) ** 2 + (nodeFocusY - flowFocusY) ** 2,
-      );
+        (nodeFocusX - flowFocusX) ** 2 + (nodeFocusY - flowFocusY) ** 2
+      )
 
       if (distance < minDistance) {
-        minDistance = distance;
-        closestNode = node;
+        minDistance = distance
+        closestNode = node
       }
     }
 
-    return closestNode;
-  }, [container, nodes, viewport, topPadding]);
+    return closestNode
+  }, [container, nodes, viewport, topPadding])
 
   const getNodeCoords = useCallback(
     (id: number) => {
       for (const [r, round] of rounds.entries()) {
         for (const [m, mat] of round.entries()) {
           if (mat.id === id) {
-            return [r, m];
+            return [r, m]
           }
         }
       }
 
-      throw new Error("node not in list");
+      throw new Error("node not in list")
     },
-    [rounds],
-  );
+    [rounds]
+  )
 
   const [roundOfClosestNodeToCenter, matchClosestToCenter] = useMemo(() => {
     if (closestNodeToCenter) {
-      return getNodeCoords(closestNodeToCenter.data.id);
+      return getNodeCoords(closestNodeToCenter.data.id)
     }
 
-    return [null, null];
-  }, [closestNodeToCenter, getNodeCoords]);
+    return [null, null]
+  }, [closestNodeToCenter, getNodeCoords])
 
   // const roundOfClosestNodeToCenter = useMemo(() => {
   //   return rounds.findIndex((round) =>
@@ -106,45 +106,43 @@ export function Toolbar({
   //   );
   // }, [closestNodeToCenter, rounds]);
 
-  const nodesInitialized = useNodesInitialized();
+  const nodesInitialized = useNodesInitialized()
 
   const centerViewportAtNode = (roundIdx: number, matchIdx: number) => {
-    const target = controller.getNode(rounds[roundIdx][matchIdx].id.toString());
-    const bounds = container.current?.getBoundingClientRect();
+    const target = controller.getNode(rounds[roundIdx][matchIdx].id.toString())
+    const bounds = container.current?.getBoundingClientRect()
 
     if (target && bounds) {
       // Use measured dimensions if available, otherwise use defaults
-      const nodeWidth = target.measured?.width ?? target.width ?? 400;
-      const nodeHeight = target.measured?.height ?? target.height ?? 200;
+      const nodeWidth = target.measured?.width ?? target.width ?? 400
+      const nodeHeight = target.measured?.height ?? target.height ?? 200
 
-      const zoom = 0.8;
+      const zoom = 0.8
 
       // Calculate the horizontal center (node should be centered horizontally)
-      const targetX = target.position.x + nodeWidth / 2;
+      const targetX = target.position.x + nodeWidth / 2
 
       // Calculate Y position to place node at top with padding
       // setCenter centers the viewport at the given point, so we need to offset by half the viewport height
-      const viewportHeightInFlowCoords = bounds.height / zoom;
-      const paddingInFlowCoords = topPadding / zoom;
+      const viewportHeightInFlowCoords = bounds.height / zoom
+      const paddingInFlowCoords = topPadding / zoom
 
       // To place the node top at 'topPadding' from viewport top:
       // The center point should be at: nodeTop + (viewportHeight / 2)
       const targetY =
-        target.position.y +
-        viewportHeightInFlowCoords / 2 -
-        paddingInFlowCoords;
+        target.position.y + viewportHeightInFlowCoords / 2 - paddingInFlowCoords
 
       controller.setCenter(targetX, targetY, {
         zoom: zoom,
         duration: 800,
-      });
+      })
     }
-  };
+  }
 
   const centeredRound =
     roundOfClosestNodeToCenter !== null
       ? rounds[roundOfClosestNodeToCenter]
-      : null;
+      : null
 
   return (
     <>
@@ -164,7 +162,7 @@ export function Toolbar({
       <div className="relative w-full h-full">
         {children}
         <div className="flex flex-row absolute left-0 top-0 bottom-0">
-          <div className="flex flex-col justify-end h-full space-y-3 p-3">
+          <div className="flex flex-col justify-start h-full space-y-3 p-3">
             {centeredRound?.map((m, i) => (
               <Button
                 key={m.id}
@@ -178,7 +176,7 @@ export function Toolbar({
                 }
                 onPress={() => {
                   if (typeof roundOfClosestNodeToCenter === "number") {
-                    centerViewportAtNode(roundOfClosestNodeToCenter, i);
+                    centerViewportAtNode(roundOfClosestNodeToCenter, i)
                   }
                 }}
               >
@@ -198,12 +196,12 @@ export function Toolbar({
               }
               onPress={() => {
                 const upLeftNode =
-                  closestNodeToCenter?.data.teamAPreviousMatchId;
+                  closestNodeToCenter?.data.teamAPreviousMatchId
 
                 if (upLeftNode) {
-                  const coords = getNodeCoords(upLeftNode);
+                  const coords = getNodeCoords(upLeftNode)
 
-                  centerViewportAtNode(coords[0], coords[1]);
+                  centerViewportAtNode(coords[0], coords[1])
                 }
               }}
             >
@@ -220,12 +218,12 @@ export function Toolbar({
               }
               onPress={() => {
                 const downLeftNode =
-                  closestNodeToCenter?.data.teamBPreviousMatchId;
+                  closestNodeToCenter?.data.teamBPreviousMatchId
 
                 if (downLeftNode) {
-                  const coords = getNodeCoords(downLeftNode);
+                  const coords = getNodeCoords(downLeftNode)
 
-                  centerViewportAtNode(coords[0], coords[1]);
+                  centerViewportAtNode(coords[0], coords[1])
                 }
               }}
             >
@@ -249,8 +247,8 @@ export function Toolbar({
                 ) {
                   centerViewportAtNode(
                     roundOfClosestNodeToCenter,
-                    matchClosestToCenter - 1,
-                  );
+                    matchClosestToCenter - 1
+                  )
                 }
               }}
             >
@@ -277,8 +275,8 @@ export function Toolbar({
                 ) {
                   centerViewportAtNode(
                     roundOfClosestNodeToCenter,
-                    matchClosestToCenter + 1,
-                  );
+                    matchClosestToCenter + 1
+                  )
                 }
               }}
             >
@@ -293,12 +291,12 @@ export function Toolbar({
                 typeof closestNodeToCenter?.data.nextMatchId !== "number"
               }
               onPress={() => {
-                const rightNode = closestNodeToCenter?.data.nextMatchId;
+                const rightNode = closestNodeToCenter?.data.nextMatchId
 
                 if (rightNode) {
-                  const coords = getNodeCoords(rightNode);
+                  const coords = getNodeCoords(rightNode)
 
-                  centerViewportAtNode(coords[0], coords[1]);
+                  centerViewportAtNode(coords[0], coords[1])
                 }
               }}
             >
@@ -308,5 +306,5 @@ export function Toolbar({
         </div>
       </div>
     </>
-  );
+  )
 }

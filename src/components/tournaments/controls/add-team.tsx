@@ -1,16 +1,19 @@
-import {
-  type CalendarDate,
-  getLocalTimeZone,
-  today,
-} from "@internationalized/date"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
+import { useServerFn } from "@tanstack/react-start"
+import { useState } from "react"
+import { useAsyncList } from "react-stately"
 import z from "zod"
-
 import { Button } from "@/components/base/button"
 import { useAppForm } from "@/components/base/form"
 import { Modal } from "@/components/base/modal"
 import { title } from "@/components/base/primitives"
+import type { Option } from "@/components/base/select"
+import {
+  searchProfiles,
+  searchProfilesQueryOptions,
+  searchProfilesSchema,
+} from "@/data/profiles"
 import { duplicateTournamentOptions } from "@/data/tournaments/schedule"
 import type { Division, TournamentDivision } from "@/db/schema"
 import { getTournamentDivisionDisplay } from "@/hooks/tournament"
@@ -21,28 +24,6 @@ export type AddTeamFormProps = {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
-
-const schema = z.object({
-  date: z
-    .any()
-    .refine((value) => Boolean(value), {
-      message: "This field is required",
-    })
-    .refine(
-      (value: CalendarDate) => {
-        if (!value) {
-          return true
-        }
-
-        const todayDate = today(getLocalTimeZone())
-
-        return value > todayDate
-      },
-      {
-        message: "Date must be in the future",
-      }
-    ),
-})
 
 export function AddTeamForm({
   tournamentId,
@@ -64,21 +45,26 @@ export function AddTeamForm({
     },
   })
 
+  const schema = z.object({
+    players: z.array(z.number()).length(division.teamSize),
+  })
+
   const form = useAppForm({
     defaultValues: {
-      date: today(getLocalTimeZone()).add({ days: 1 }),
+      players: Array.from({ length: division.teamSize }).map(
+        () => null as null | number
+      ),
     },
     validators: {
       onMount: schema,
       onChange: schema,
     },
-    onSubmit: ({ value: { date } }) => {
-      mutate({
-        id: tournamentId,
-        date: date.toString(),
-      })
+    onSubmit: ({ value: { players } }) => {
+      console.log(players)
     },
   })
+
+  const searchProfilesFn = useServerFn(searchProfiles)
 
   return (
     <Modal {...props} onOpenChange={onOpenChange}>
@@ -99,18 +85,52 @@ export function AddTeamForm({
 
             form.handleSubmit()
           }}
+          className="flex flex-col space-y-2"
         >
           <form.AppField
-            name="date"
-            children={(field) => (
-              <field.DatePicker
-                isRequired
-                className="col-span-3"
-                label="Date"
-                field={field}
-                minValue={today(getLocalTimeZone())}
-              />
-            )}
+            name="players"
+            mode="array"
+            children={(field) =>
+              field.state.value.map((_, i) => (
+                <form.AppField key={i} name={`players[${i}]`}>
+                  {(subField) => (
+                    <subField.AsyncComboBox
+                      isRequired
+                      className="col-span-3"
+                      label="Player"
+                      field={subField}
+                      fetchOptions={{
+                        load: async ({ signal, filterText }) => {
+                          const parse = searchProfilesSchema.safeParse({
+                            name: filterText,
+                          })
+
+                          if (!parse.success) {
+                            return {
+                              items: [],
+                            }
+                          }
+
+                          const result = await searchProfilesFn({
+                            data: parse.data,
+                            signal,
+                          })
+
+                          return {
+                            items: result.map(
+                              ({ id, preferredName, firstName, lastName }) => ({
+                                display: `${preferredName || firstName} ${lastName}`,
+                                value: id,
+                              })
+                            ),
+                          }
+                        },
+                      }}
+                    />
+                  )}
+                </form.AppField>
+              ))
+            }
           />
 
           <form.AppForm>

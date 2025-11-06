@@ -1,55 +1,55 @@
-import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
-import clsx from "clsx";
-import type { ReactNode } from "react";
+import { createFormHook, createFormHookContexts } from "@tanstack/react-form"
+import clsx from "clsx"
+import type { ReactNode } from "react"
 
-import { type AlertProps, Alert as BaseAlert } from "@/components/base/alert";
-import { Button, type ButtonProps } from "@/components/base/button";
+import { type AlertProps, Alert as BaseAlert } from "@/components/base/alert"
+import { Button, type ButtonProps } from "@/components/base/button"
 
-import { ComboBoxField } from "./fields/combo-box";
-import { DateField } from "./fields/date";
-import { DatePickerField } from "./fields/date-picker";
-import { ImageField } from "./fields/image";
-import { MultiSelectField } from "./fields/multi-select";
-import { NumberField } from "./fields/number";
-import { PasswordField } from "./fields/password";
-import { SelectField } from "./fields/select";
-import { TextField } from "./fields/text";
-import { TextAreaField } from "./fields/text-area";
-import { TimeField } from "./fields/time";
+import { AsyncComboBoxField, ComboBoxField } from "./fields/combo-box"
+import { DateField } from "./fields/date"
+import { DatePickerField } from "./fields/date-picker"
+import { ImageField } from "./fields/image"
+import { MultiSelectField } from "./fields/multi-select"
+import { NumberField } from "./fields/number"
+import { PasswordField } from "./fields/password"
+import { SelectField } from "./fields/select"
+import { TextField } from "./fields/text"
+import { TextAreaField } from "./fields/text-area"
+import { TimeField } from "./fields/time"
 
 function Alert({ className, ...props }: AlertProps) {
-  return <BaseAlert className={clsx("mb-2", className)} {...props} />;
+  return <BaseAlert className={clsx("mb-2", className)} {...props} />
 }
 
 function Footer({
   className,
   children,
 }: {
-  className?: string;
-  children: ReactNode;
+  className?: string
+  children: ReactNode
 }) {
   return (
     <div className={clsx("mt-4 flex gap-4 justify-end", className)}>
       {children}
     </div>
-  );
+  )
 }
 
 function Row({
   className,
   children,
 }: {
-  className?: string;
-  children: ReactNode;
+  className?: string
+  children: ReactNode
 }) {
   return (
     <div className={clsx("flex flex-row gap-3 items-end", className)}>
       {children}
     </div>
-  );
+  )
 }
 
-const { fieldContext, formContext, useFormContext } = createFormHookContexts();
+const { fieldContext, formContext, useFormContext } = createFormHookContexts()
 
 function SubmitButton({
   isDisabled,
@@ -57,7 +57,7 @@ function SubmitButton({
   children = <>Submit</>,
   ...props
 }: Omit<ButtonProps, "type">) {
-  const form = useFormContext();
+  const form = useFormContext()
 
   return (
     <form.Subscribe
@@ -74,11 +74,11 @@ function SubmitButton({
         </Button>
       )}
     />
-  );
+  )
 }
 
 function StateDebugger({ className }: { className: string }) {
-  const form = useFormContext();
+  const form = useFormContext()
 
   return (
     <form.Subscribe
@@ -89,7 +89,7 @@ function StateDebugger({ className }: { className: string }) {
         </pre>
       )}
     />
-  );
+  )
 }
 
 export const { useAppForm } = createFormHook({
@@ -100,6 +100,7 @@ export const { useAppForm } = createFormHook({
     Number: NumberField,
     Select: SelectField,
     ComboBox: ComboBoxField,
+    AsyncComboBox: AsyncComboBoxField,
     Image: ImageField,
     Date: DateField,
     DatePicker: DatePickerField,
@@ -116,4 +117,4 @@ export const { useAppForm } = createFormHook({
   },
   fieldContext,
   formContext,
-});
+})

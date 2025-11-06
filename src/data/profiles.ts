@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { createServerFn, useServerFn } from "@tanstack/react-start"
+import z from "zod"
 
 import type { Viewer } from "@/auth"
 import { getViewer } from "@/auth/server"
@@ -13,6 +14,7 @@ import { db } from "@/db/connection"
 import {
   type CreatePlayerProfile,
   createPlayerProfileSchema,
+  type PlayerProfile,
   playerProfiles,
   selectPlayerProfileSchema,
   updatePlayerProfileSchema,
@@ -173,3 +175,40 @@ export function useUpdatePlayerProfile() {
     },
   })
 }
+
+export const searchProfilesSchema = z.object({
+  name: z.string().min(3),
+})
+
+export const searchProfiles = createServerFn({
+  method: "GET",
+})
+  .inputValidator(searchProfilesSchema)
+  .handler(async ({ data: { name } }) => {
+    const profiles = await db.query.playerProfiles.findMany({
+      limit: 25,
+      where: (t, { or, ilike, sql }) =>
+        or(
+          ilike(
+            sql`
+            CASE
+              WHEN ${t.preferredName} IS NOT NULL
+              THEN ${t.preferredName} || ' ' || ${t.lastName}
+              ELSE ${t.firstName} || ' ' || ${t.lastName}
+            END
+            `,
+            `%${name}%`
+          )
+        ),
+    })
+
+    return profiles
+  })
+
+export const searchProfilesQueryOptions = (
+  filter: z.infer<typeof searchProfilesSchema>
+) =>
+  queryOptions({
+    queryKey: ["searchProfiles", JSON.stringify(filter)],
+    queryFn: () => searchProfiles({ data: filter }),
+  })

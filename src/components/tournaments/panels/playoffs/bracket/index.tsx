@@ -1,12 +1,11 @@
 import {
-  Controls,
   type Node,
   ReactFlow,
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
+} from "@xyflow/react"
+import "@xyflow/react/dist/style.css"
 import {
   createContext,
   type Dispatch,
@@ -15,114 +14,114 @@ import {
   useEffect,
   useRef,
   useState,
-} from "react";
-import type { PlayoffMatch } from "@/db";
-import { isNotNull } from "@/utils/types";
-import type { MatchTeam } from "../../games/pool-match-grid";
-import { MatchEdge } from "./match-edge";
-import { MatchNode } from "./match-node";
-import { Toolbar } from "./toolbar";
+} from "react"
+import type { PlayoffMatch } from "@/db"
+import { isNotNull } from "@/utils/types"
+import type { MatchTeam } from "../../games/pool-match-grid"
+import { MatchEdge } from "./match-edge"
+import { MatchNode } from "./match-node"
+import { Toolbar } from "./toolbar"
 
-const nodeTypes = { match: MatchNode };
+const nodeTypes = { match: MatchNode }
 const edgeTypes = {
   match: MatchEdge,
-};
+}
 
 type MatchesMap = {
-  [key: number]: BracketMatch;
-};
+  [key: number]: BracketMatch
+}
 
 function getBracketRounds(
   map: MatchesMap,
-  match: BracketMatch,
+  match: BracketMatch
 ): (BracketMatch & { midx: number })[][] {
-  const rounds: (BracketMatch & { midx: number })[][] = [];
+  const rounds: (BracketMatch & { midx: number })[][] = []
 
   // Start with the finals match in round 0
-  rounds[0] = [{ ...match, midx: 0 }];
+  rounds[0] = [{ ...match, midx: 0 }]
 
   // Process each round to find previous matches
-  let currentRoundIndex = 0;
+  let currentRoundIndex = 0
 
   while (rounds[currentRoundIndex] && rounds[currentRoundIndex].length > 0) {
-    const nextRoundMatches: (BracketMatch & { midx: number })[] = [];
+    const nextRoundMatches: (BracketMatch & { midx: number })[] = []
 
     for (const currentMatch of rounds[currentRoundIndex]) {
       // Add team A's previous match if it exists
       if (currentMatch.teamAPreviousMatchId) {
-        const prevMatch = map[currentMatch.teamAPreviousMatchId];
+        const prevMatch = map[currentMatch.teamAPreviousMatchId]
         if (prevMatch) {
           if (!prevMatch.nextMatchId) {
-            prevMatch.nextMatchId = currentMatch.id;
+            prevMatch.nextMatchId = currentMatch.id
           }
 
           nextRoundMatches.push({
             ...prevMatch,
             midx: nextRoundMatches.length,
-          });
+          })
         }
       }
 
       // Add team B's previous match if it exists
       if (currentMatch.teamBPreviousMatchId) {
-        const prevMatch = map[currentMatch.teamBPreviousMatchId];
+        const prevMatch = map[currentMatch.teamBPreviousMatchId]
         if (prevMatch) {
           if (!prevMatch.nextMatchId) {
-            prevMatch.nextMatchId = currentMatch.id;
+            prevMatch.nextMatchId = currentMatch.id
           }
 
           nextRoundMatches.push({
             ...prevMatch,
             midx: nextRoundMatches.length,
-          });
+          })
         }
       }
     }
 
     if (nextRoundMatches.length > 0) {
-      rounds[currentRoundIndex + 1] = nextRoundMatches;
+      rounds[currentRoundIndex + 1] = nextRoundMatches
     }
 
-    currentRoundIndex++;
+    currentRoundIndex++
   }
 
-  return rounds;
+  return rounds
 }
 
 function getNodesFromRounds(
-  rounds: (BracketMatch & { midx: number })[][],
+  rounds: (BracketMatch & { midx: number })[][]
 ): Node[] {
-  const nodes: Node[] = [];
+  const nodes: Node[] = []
 
   const roundSizes = rounds.map((_, i) =>
-    i === 0 ? 1 : rounds[i - 1]?.length * 2,
-  );
+    i === 0 ? 1 : rounds[i - 1]?.length * 2
+  )
 
-  roundSizes.reverse();
-  rounds.reverse();
+  roundSizes.reverse()
+  rounds.reverse()
 
-  const maxHeight = Math.max(...roundSizes);
-  const matchHeight = 300; // Height allocated per match slot
+  const maxHeight = Math.max(...roundSizes)
+  const matchHeight = 300 // Height allocated per match slot
 
-  const totalHeight = maxHeight * matchHeight;
+  const totalHeight = maxHeight * matchHeight
 
   for (const [ridx, round] of rounds.entries()) {
-    const roundRows = roundSizes[ridx];
-    const expectedMatches = roundRows;
-    const isPlayInRound = round.length < expectedMatches;
+    const roundRows = roundSizes[ridx]
+    const expectedMatches = roundRows
+    const isPlayInRound = round.length < expectedMatches
 
-    const nextRound = rounds[ridx + 1];
+    const nextRound = rounds[ridx + 1]
 
-    const spacing = totalHeight / (roundRows + 1);
+    const spacing = totalHeight / (roundRows + 1)
 
     for (const match of round) {
       if (isPlayInRound) {
-        const nextMatch = nextRound.find((m) => m.id === match.nextMatchId);
+        const nextMatch = nextRound.find((m) => m.id === match.nextMatchId)
 
         if (match.id === nextMatch?.teamAPreviousMatchId) {
-          match.midx = nextMatch.midx * 2;
+          match.midx = nextMatch.midx * 2
         } else if (match.id === nextMatch?.teamBPreviousMatchId) {
-          match.midx = nextMatch.midx * 2 + 1;
+          match.midx = nextMatch.midx * 2 + 1
         }
       }
 
@@ -136,85 +135,85 @@ function getNodesFromRounds(
         data: match,
         draggable: false,
         selectable: false,
-      });
+      })
     }
   }
 
-  return nodes;
+  return nodes
 }
 
 function buildNodeTree(map: MatchesMap): {
-  nodes: Node[];
-  rounds: BracketMatch[][];
+  nodes: Node[]
+  rounds: BracketMatch[][]
 } {
   if (Object.values(map).length === 0) {
-    return { nodes: [], rounds: [] };
+    return { nodes: [], rounds: [] }
   }
 
-  const finals = Object.values(map).find((match) => match.matchNumber === 1);
+  const finals = Object.values(map).find((match) => match.matchNumber === 1)
 
   if (!finals) {
-    throw new Error("Could not find finals match");
+    throw new Error("Could not find finals match")
   }
 
-  const rounds = getBracketRounds(map, finals);
+  const rounds = getBracketRounds(map, finals)
 
-  const nodes = getNodesFromRounds(rounds);
+  const nodes = getNodesFromRounds(rounds)
 
-  return { nodes, rounds };
+  return { nodes, rounds }
 }
 
 export type BracketMatch = PlayoffMatch & {
-  teamA: MatchTeam;
-  teamB: MatchTeam;
-};
+  teamA: MatchTeam
+  teamB: MatchTeam
+}
 
 export type BracketProps = {
-  matches: BracketMatch[];
-};
+  matches: BracketMatch[]
+}
 
 type BracketContextState = {
-  activeTeam: number | null;
-};
+  activeTeam: number | null
+}
 
 const BracketContext = createContext<{
-  state: BracketContextState;
-  setState: Dispatch<SetStateAction<BracketContextState>>;
+  state: BracketContextState
+  setState: Dispatch<SetStateAction<BracketContextState>>
 }>({
   state: { activeTeam: null },
   setState: () => {},
-});
+})
 
 export function useBracketContext() {
-  const context = useContext(BracketContext);
+  const context = useContext(BracketContext)
 
-  return context;
+  return context
 }
 
 export function useActiveTeam() {
   const {
     state: { activeTeam },
-  } = useBracketContext();
+  } = useBracketContext()
 
-  return activeTeam;
+  return activeTeam
 }
 
 export function useSetActiveTeam() {
-  const { setState } = useBracketContext();
+  const { setState } = useBracketContext()
 
-  return (activeTeam: number | null) => setState({ activeTeam });
+  return (activeTeam: number | null) => setState({ activeTeam })
 }
 
 function BracketFlow({ matches }: BracketProps) {
   const matchesMap = matches.reduce<{
-    [key: number]: BracketMatch;
+    [key: number]: BracketMatch
   }>((memo, match) => {
-    memo[match.id] = match;
+    memo[match.id] = match
 
-    return memo;
-  }, {});
+    return memo
+  }, {})
 
-  const { nodes: initialNodes, rounds } = buildNodeTree(matchesMap);
+  const { nodes: initialNodes, rounds } = buildNodeTree(matchesMap)
 
   const initialEdges = matches.flatMap((match) =>
     [
@@ -238,22 +237,22 @@ function BracketFlow({ matches }: BracketProps) {
             type: "step",
           }
         : null,
-    ].filter(isNotNull),
-  );
+    ].filter(isNotNull)
+  )
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
   // Update nodes and edges when matches change
   useEffect(() => {
     const matchesMap = matches.reduce<{
-      [key: number]: BracketMatch;
+      [key: number]: BracketMatch
     }>((memo, match) => {
-      memo[match.id] = match;
-      return memo;
-    }, {});
+      memo[match.id] = match
+      return memo
+    }, {})
 
-    const { nodes: newNodes } = buildNodeTree(matchesMap);
+    const { nodes: newNodes } = buildNodeTree(matchesMap)
 
     const newEdges = matches.flatMap((match) =>
       [
@@ -277,43 +276,43 @@ function BracketFlow({ matches }: BracketProps) {
               type: "match",
             }
           : null,
-      ].filter(isNotNull),
-    );
+      ].filter(isNotNull)
+    )
 
-    setNodes(newNodes);
-    setEdges(newEdges);
-  }, [matches, setNodes, setEdges]);
+    setNodes(newNodes)
+    setEdges(newEdges)
+  }, [matches, setNodes, setEdges])
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Calculate bounds of all nodes to set translate extent
   // Add extra padding equal to half the viewport so any node can be centered
   const calculateBounds = () => {
     if (nodes.length === 0) {
-      return { minX: -2000, minY: -2000, maxX: 3000, maxY: 3000 };
+      return { minX: -2000, minY: -2000, maxX: 3000, maxY: 3000 }
     }
 
-    const containerBounds = containerRef.current?.getBoundingClientRect();
+    const containerBounds = containerRef.current?.getBoundingClientRect()
 
     // Use large padding to allow centering any node in the viewport
     // This should be at least half the viewport width/height
-    const horizontalPadding = (containerBounds?.width || 2000) * 0.75;
-    const verticalPadding = (containerBounds?.height || 1500) * 0.75;
+    const horizontalPadding = (containerBounds?.width || 2000) * 0.75
+    const verticalPadding = (containerBounds?.height || 1500) * 0.75
 
-    let minX = Number.POSITIVE_INFINITY;
-    let minY = Number.POSITIVE_INFINITY;
-    let maxX = Number.NEGATIVE_INFINITY;
-    let maxY = Number.NEGATIVE_INFINITY;
+    let minX = Number.POSITIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
 
     for (const node of nodes) {
       // Use measured dimensions if available, otherwise use default fallbacks
-      const nodeWidth = node.measured?.width ?? node.width ?? 400;
-      const nodeHeight = node.measured?.height ?? node.height ?? 200;
+      const nodeWidth = node.measured?.width ?? node.width ?? 400
+      const nodeHeight = node.measured?.height ?? node.height ?? 200
 
-      minX = Math.min(minX, node.position.x);
-      minY = Math.min(minY, node.position.y);
-      maxX = Math.max(maxX, node.position.x + nodeWidth);
-      maxY = Math.max(maxY, node.position.y + nodeHeight);
+      minX = Math.min(minX, node.position.x)
+      minY = Math.min(minY, node.position.y)
+      maxX = Math.max(maxX, node.position.x + nodeWidth)
+      maxY = Math.max(maxY, node.position.y + nodeHeight)
     }
 
     return {
@@ -321,10 +320,10 @@ function BracketFlow({ matches }: BracketProps) {
       minY: minY - verticalPadding,
       maxX: maxX + horizontalPadding,
       maxY: maxY + verticalPadding,
-    };
-  };
+    }
+  }
 
-  const bounds = calculateBounds();
+  const bounds = calculateBounds()
 
   // TODO:
   //
@@ -365,13 +364,13 @@ function BracketFlow({ matches }: BracketProps) {
         </ReactFlow>
       </Toolbar>
     </div>
-  );
+  )
 }
 
 export function Bracket({ matches }: BracketProps) {
   const [state, setState] = useState<BracketContextState>({
     activeTeam: null,
-  });
+  })
 
   return (
     <ReactFlowProvider>
@@ -379,5 +378,5 @@ export function Bracket({ matches }: BracketProps) {
         <BracketFlow matches={matches} />
       </BracketContext>
     </ReactFlowProvider>
-  );
+  )
 }

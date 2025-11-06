@@ -1,12 +1,13 @@
-import type { Key } from "react-aria-components";
-import { ComboBox, ComboBoxItem, type ComboBoxProps } from "../../combo-box";
-import type { Option } from "../../select";
-import type { FieldProps } from "./shared";
+import type { Key } from "react-aria-components"
+import { type AsyncListOptions, useAsyncList } from "react-stately"
+import { ComboBox, ComboBoxItem, type ComboBoxProps } from "../../combo-box"
+import type { Option } from "../../select"
+import type { FieldProps } from "./shared"
 
 export type ComboBoxFieldProps<T extends Key> = {
-  options?: Option<T>[] | null;
+  options?: Option<T>[] | null
 } & Omit<ComboBoxProps<T>, "children"> &
-  FieldProps;
+  FieldProps
 
 export function ComboBoxField<T extends Key>({
   field,
@@ -25,7 +26,7 @@ export function ComboBoxField<T extends Key>({
       onSelectionChange={(value) => field.handleChange(value)}
       onOpenChange={(open) => {
         if (!open) {
-          field.handleBlur();
+          field.handleBlur()
         }
       }}
       isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
@@ -33,5 +34,25 @@ export function ComboBoxField<T extends Key>({
     >
       {(item) => <ComboBoxItem id={item.value}>{item.display}</ComboBoxItem>}
     </ComboBox>
-  );
+  )
+}
+
+export function AsyncComboBoxField<T extends Key, C>({
+  fetchOptions,
+  ...props
+}: Omit<ComboBoxFieldProps<T>, "options"> & {
+  fetchOptions: AsyncListOptions<Option<T>, C>
+}) {
+  const options = useAsyncList<Option<T>, C>(fetchOptions)
+
+  return (
+    <ComboBoxField
+      {...props}
+      options={options.items || []}
+      inputValue={options.filterText}
+      onInputChange={options.setFilterText}
+      onLoadMore={options.loadMore}
+      loadingState={options.loadingState}
+    />
+  )
 }

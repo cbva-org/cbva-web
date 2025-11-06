@@ -1,6 +1,6 @@
-import { Link, type LinkOptions, useRouter } from "@tanstack/react-router";
-import { ChevronDown, XIcon } from "lucide-react";
-import { useMemo } from "react";
+import { Link, type LinkOptions, useRouter } from "@tanstack/react-router"
+import { ChevronDown, XIcon } from "lucide-react"
+import { useMemo } from "react"
 import {
   ComboBox as AriaComboBox,
   type ComboBoxProps as AriaComboBoxProps,
@@ -8,25 +8,25 @@ import {
   ListBox,
   type ListBoxItemProps,
   type ValidationResult,
-} from "react-aria-components";
-import { isNotNullOrUndefined } from "@/utils/types";
-import { Button } from "./button";
-import { Description, FieldError, FieldGroup, Input, Label } from "./field";
+} from "react-aria-components"
+import { isNotNullOrUndefined } from "@/utils/types"
+import { Button } from "./button"
+import { Description, FieldError, FieldGroup, Input, Label } from "./field"
 import {
   DropdownItem,
   DropdownSection,
   type DropdownSectionProps,
-} from "./list-box";
-import { Popover } from "./popover";
-import type { Option } from "./select";
-import { composeTailwindRenderProps } from "./utils";
+} from "./list-box"
+import { Popover } from "./popover"
+import type { Option } from "./select"
+import { composeTailwindRenderProps } from "./utils"
 
 export interface ComboBoxProps<T extends Key>
   extends Omit<AriaComboBoxProps<Option<T>>, "children"> {
-  label?: string;
-  description?: string | null;
-  errorMessage?: string | ((validation: ValidationResult) => string);
-  children: React.ReactNode | ((item: Option<T>) => React.ReactNode);
+  label?: string
+  description?: string | null
+  errorMessage?: string | ((validation: ValidationResult) => string)
+  children: React.ReactNode | ((item: Option<T>) => React.ReactNode)
 }
 
 // TODO: make this a multi-select too. Single select with tag group beneath it with selected items that can be removed.
@@ -42,19 +42,19 @@ export function ComboBox<T extends Key>({
   multi,
   ...props
 }: ComboBoxProps<T> & {
-  placeholder?: string;
-  multi?: boolean;
-  selectedKeys?: Iterable<T>;
+  placeholder?: string
+  multi?: boolean
+  selectedKeys?: Iterable<T>
 }) {
-  const itemsMap = new Map(Array.from(items).map((item) => [item.value, item]));
-  const selectedKeysSet = new Set(selectedKeys);
+  const itemsMap = new Map(Array.from(items).map((item) => [item.value, item]))
+  const selectedKeysSet = new Set(selectedKeys)
 
   return (
     <AriaComboBox
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "group flex flex-col gap-1",
+        "group flex flex-col gap-1"
       )}
     >
       <Label>{label}</Label>
@@ -95,14 +95,14 @@ export function ComboBox<T extends Key>({
 
                   <XIcon size={12} />
                 </div>
-              ),
+              )
             )}
         </div>
       )}
       <Popover className="w-(--trigger-width)">
         <ListBox
           items={Array.from(items).filter(
-            ({ value }) => !selectedKeysSet.has(value),
+            ({ value }) => !selectedKeysSet.has(value)
           )}
           className="outline-0 p-1 max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]"
         >
@@ -110,30 +110,30 @@ export function ComboBox<T extends Key>({
         </ListBox>
       </Popover>
     </AriaComboBox>
-  );
+  )
 }
 
 export function ComboBoxItem({
   link,
   ...props
 }: ListBoxItemProps & { link?: LinkOptions }) {
-  const router = useRouter();
+  const router = useRouter()
 
   const href = useMemo(() => {
     if (!link) {
-      return undefined;
+      return undefined
     }
 
-    const location = router.buildLocation(link);
+    const location = router.buildLocation(link)
 
-    return location.href;
-  }, [router, link]);
+    return location.href
+  }, [router, link])
 
-  return <DropdownItem {...props} href={href} />;
+  return <DropdownItem {...props} href={href} />
 }
 
 export function ComboBoxSection<T extends object>(
-  props: DropdownSectionProps<T>,
+  props: DropdownSectionProps<T>
 ) {
-  return <DropdownSection {...props} />;
+  return <DropdownSection {...props} />
 }
