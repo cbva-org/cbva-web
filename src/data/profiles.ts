@@ -178,17 +178,17 @@ export function useUpdatePlayerProfile() {
 export const searchProfilesSchema = z.object({
   name: z.string().min(3),
   gender: genderSchema.optional(),
-  qualifiedForLevel: z.number().optional(),
+  levels: z.array(z.number().nonoptional()).optional(),
 })
 
 export const searchProfiles = createServerFn({
   method: "GET",
 })
   .inputValidator(searchProfilesSchema)
-  .handler(async ({ data: { name, gender, qualifiedForLevel } }) => {
+  .handler(async ({ data: { name, gender, levels } }) => {
     const profiles = await db.query.playerProfiles.findMany({
       limit: 25,
-      where: (t, { and, ilike, eq, lte, sql }) => {
+      where: (t, { and, ilike, eq, inArray, sql }) => {
         const filters = [
           ilike(
             sql`
@@ -201,7 +201,7 @@ export const searchProfiles = createServerFn({
             `%${name}%`
           ),
           gender ? eq(t.gender, gender) : null,
-          qualifiedForLevel ? lte(t.levelId, qualifiedForLevel) : null,
+          levels ? inArray(t.levelId, levels) : null,
         ].filter(isNotNull)
 
         return and(...filters)

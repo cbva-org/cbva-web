@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { XIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import z from "zod"
@@ -17,7 +17,7 @@ import { teamsQueryOptions } from "@/data/teams"
 import { addTeamOptions } from "@/data/tournaments/teams"
 import type { Division, PlayerProfile, TournamentDivision } from "@/db/schema"
 import { getTournamentDivisionDisplay } from "@/hooks/tournament"
-import { UnderConstruction } from "@/components/under-construction"
+import { levelsQueryOptions } from "@/data/levels"
 
 export type AddTeamFormProps = {
   tournamentId: number
@@ -73,6 +73,10 @@ export function AddTeamForm({
     (PlayerProfile | null)[]
   >([])
 
+  const { data: levelsForDivision } = useQuery(
+    levelsQueryOptions({ division: division.division.order })
+  )
+
   return (
     <Modal {...props} onOpenChange={onOpenChange}>
       <div className="p-3 flex flex-col space-y-4 relative">
@@ -112,7 +116,15 @@ export function AddTeamForm({
                         <Button
                           className="text-red-500"
                           variant="icon"
-                          onPress={() => subField.handleChange(null)}
+                          onPress={() => {
+                            subField.handleChange(null)
+
+                            setSelectedProfiles((state) => {
+                              const next = [...state]
+                              next[i] = null
+                              return next
+                            })
+                          }}
                         >
                           <XIcon size={16} />
                         </Button>
@@ -123,9 +135,9 @@ export function AddTeamForm({
                         className="col-span-3"
                         label="Player"
                         field={subField}
-                        onSelectionChange={(id) => {
+                        onSelectionChange={(next) => {
                           const player = profiles.current?.find(
-                            ({ id }) => id === subField.state.value
+                            ({ id }) => id === next
                           )
 
                           setSelectedProfiles((state) => {
@@ -138,6 +150,7 @@ export function AddTeamForm({
                           load: async ({ filterText }) => {
                             const parse = searchProfilesSchema.safeParse({
                               name: filterText,
+                              levels: levelsForDivision?.map(({ id }) => id),
                             })
 
                             if (!parse.success) {
@@ -174,8 +187,6 @@ export function AddTeamForm({
               ))
             }
           />
-
-          <UnderConstruction />
 
           <form.AppForm>
             <form.Footer className="col-span-full">

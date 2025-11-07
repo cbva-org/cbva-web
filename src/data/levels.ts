@@ -1,18 +1,29 @@
-import { queryOptions } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { db } from "@/db";
+import { queryOptions } from "@tanstack/react-query"
+import { createServerFn } from "@tanstack/react-start"
+import z from "zod"
+
+import { db } from "@/db"
+
+export const getLevelsSchema = z.object({
+  division: z.number().optional(),
+})
 
 const getLevels = createServerFn({
   method: "GET",
-}).handler(
-  async () =>
-    await db.query.levels.findMany({
-      orderBy: (t, { desc }) => desc(t.order),
-    }),
-);
+})
+  .inputValidator(getLevelsSchema)
+  .handler(
+    async ({ data: { division } }) =>
+      await db.query.levels.findMany({
+        where: division ? (t, { lte }) => lte(t.order, division) : undefined,
+        orderBy: (t, { desc }) => desc(t.order),
+      })
+  )
 
-export const levelsQueryOptions = () =>
+export const levelsQueryOptions = (
+  data: z.infer<typeof getLevelsSchema> = {}
+) =>
   queryOptions({
     queryKey: ["levels"],
-    queryFn: () => getLevels(),
-  });
+    queryFn: () => getLevels({ data }),
+  })
