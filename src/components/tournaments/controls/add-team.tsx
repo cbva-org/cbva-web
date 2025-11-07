@@ -147,7 +147,7 @@ export function AddTeamForm({
                           })
                         }}
                         fetchOptions={{
-                          load: async ({ filterText }) => {
+                          load: async ({ filterText, signal }) => {
                             const parse = searchProfilesSchema.safeParse({
                               name: filterText,
                               levels: levelsForDivision?.map(({ id }) => id),
@@ -160,7 +160,7 @@ export function AddTeamForm({
                             }
 
                             const result = await queryClient.ensureQueryData(
-                              searchProfilesQueryOptions(parse.data)
+                              searchProfilesQueryOptions(parse.data, signal)
                             )
 
                             profiles.current = result

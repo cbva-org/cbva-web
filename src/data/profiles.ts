@@ -17,7 +17,7 @@ import {
   updatePlayerProfileSchema,
 } from "@/db/schema/player-profiles"
 import { genderSchema } from "@/db/schema/shared"
-import { isNotNull } from "@/utils/types"
+import { isNotNull, isNotNullOrUndefined } from "@/utils/types"
 
 async function readViewerProfiles(userId: Viewer["id"]) {
   return await db.query.playerProfiles.findMany({
@@ -212,9 +212,16 @@ export const searchProfiles = createServerFn({
   })
 
 export const searchProfilesQueryOptions = (
-  filter: z.infer<typeof searchProfilesSchema>
+  filter: z.infer<typeof searchProfilesSchema>,
+  signal?: AbortSignal
 ) =>
   queryOptions({
     queryKey: ["searchProfiles", JSON.stringify(filter)],
-    queryFn: () => searchProfiles({ data: filter }),
+    queryFn: ({ signal: queryFnSignal }) =>
+      searchProfiles({
+        data: filter,
+        signal: AbortSignal.any(
+          [signal, queryFnSignal].filter(isNotNullOrUndefined)
+        ),
+      }),
   })
