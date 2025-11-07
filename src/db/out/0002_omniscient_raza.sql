@@ -1,0 +1,1 @@
+ALTER TABLE "tournament_division_teams" ALTER COLUMN "external_ref" DROP NOT NULL;

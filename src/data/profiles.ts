@@ -1,8 +1,6 @@
 import {
   queryOptions,
-  type UseQueryOptions,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
 import { createServerFn, useServerFn } from "@tanstack/react-start"
@@ -14,11 +12,12 @@ import { db } from "@/db/connection"
 import {
   type CreatePlayerProfile,
   createPlayerProfileSchema,
-  type PlayerProfile,
   playerProfiles,
   selectPlayerProfileSchema,
   updatePlayerProfileSchema,
 } from "@/db/schema/player-profiles"
+import { genderSchema } from "@/db/schema/shared"
+import { isNotNull } from "@/utils/types"
 
 async function readViewerProfiles(userId: Viewer["id"]) {
   return await db.query.playerProfiles.findMany({
@@ -178,17 +177,19 @@ export function useUpdatePlayerProfile() {
 
 export const searchProfilesSchema = z.object({
   name: z.string().min(3),
+  gender: genderSchema.optional(),
+  qualifiedForLevel: z.number().optional(),
 })
 
 export const searchProfiles = createServerFn({
   method: "GET",
 })
   .inputValidator(searchProfilesSchema)
-  .handler(async ({ data: { name } }) => {
+  .handler(async ({ data: { name, gender, qualifiedForLevel } }) => {
     const profiles = await db.query.playerProfiles.findMany({
       limit: 25,
-      where: (t, { or, ilike, sql }) =>
-        or(
+      where: (t, { and, ilike, eq, lte, sql }) => {
+        const filters = [
           ilike(
             sql`
             CASE
@@ -198,8 +199,13 @@ export const searchProfiles = createServerFn({
             END
             `,
             `%${name}%`
-          )
-        ),
+          ),
+          gender ? eq(t.gender, gender) : null,
+          qualifiedForLevel ? lte(t.levelId, qualifiedForLevel) : null,
+        ].filter(isNotNull)
+
+        return and(...filters)
+      },
     })
 
     return profiles

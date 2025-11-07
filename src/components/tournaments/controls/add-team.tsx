@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
 import { XIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import z from "zod"
@@ -14,9 +13,11 @@ import {
   searchProfilesQueryOptions,
   searchProfilesSchema,
 } from "@/data/profiles"
+import { teamsQueryOptions } from "@/data/teams"
 import { addTeamOptions } from "@/data/tournaments/teams"
 import type { Division, PlayerProfile, TournamentDivision } from "@/db/schema"
 import { getTournamentDivisionDisplay } from "@/hooks/tournament"
+import { UnderConstruction } from "@/components/under-construction"
 
 export type AddTeamFormProps = {
   tournamentId: number
@@ -31,12 +32,16 @@ export function AddTeamForm({
   onOpenChange,
   ...props
 }: AddTeamFormProps) {
-  const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { mutate } = useMutation({
     ...addTeamOptions(),
     onSuccess: () => {
       onOpenChange(false)
+
+      queryClient.invalidateQueries({
+        queryKey: teamsQueryOptions(division.id).queryKey,
+      })
     },
   })
 
@@ -67,8 +72,6 @@ export function AddTeamForm({
   const [selectedProfiles, setSelectedProfiles] = useState<
     (PlayerProfile | null)[]
   >([])
-
-  const queryClient = useQueryClient()
 
   return (
     <Modal {...props} onOpenChange={onOpenChange}>
@@ -171,6 +174,8 @@ export function AddTeamForm({
               ))
             }
           />
+
+          <UnderConstruction />
 
           <form.AppForm>
             <form.Footer className="col-span-full">

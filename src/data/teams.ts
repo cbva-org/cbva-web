@@ -2,16 +2,16 @@ import {
   queryOptions,
   type UseQueryOptions,
   useQuery,
-} from "@tanstack/react-query";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { findPaged } from "@/db";
+} from "@tanstack/react-query"
+import { createServerFn, useServerFn } from "@tanstack/react-start"
+import { findPaged } from "@/db"
 
 async function readTeams({
   tournamentDivisionId,
   pagination: { page, pageSize },
 }: {
-  tournamentDivisionId: number;
-  pagination: { page: number; pageSize: number };
+  tournamentDivisionId: number
+  pagination: { page: number; pageSize: number }
 }) {
   return await findPaged("tournamentDivisionTeams", {
     paging: { page, size: pageSize },
@@ -36,17 +36,15 @@ async function readTeams({
           },
         },
       },
-      where: (teams, { eq, and }) =>
+      where: (teams, { eq, and, or }) =>
         and(
           eq(teams.tournamentDivisionId, tournamentDivisionId),
-          eq(teams.status, "confirmed"),
+          or(eq(teams.status, "confirmed"), eq(teams.status, "registered"))
         ),
       orderBy: (teams, { asc }) => asc(teams.finish),
     },
-  });
+  })
 }
-
-// type TeamsResponse = Awaited<ReturnType<typeof readTeams>>;
 
 export const getTeams = createServerFn({
   method: "GET",
@@ -54,11 +52,11 @@ export const getTeams = createServerFn({
   .inputValidator(
     (i) =>
       i as {
-        tournamentDivisionId: number;
-        pagination: { page: number; pageSize: number };
-      },
+        tournamentDivisionId: number
+        pagination: { page: number; pageSize: number }
+      }
   )
-  .handler(async ({ data }) => await readTeams(data));
+  .handler(async ({ data }) => await readTeams(data))
 
 export const teamsQueryOptions = <Out = Awaited<ReturnType<typeof getTeams>>>(
   tournamentDivisionId: number,
@@ -66,7 +64,7 @@ export const teamsQueryOptions = <Out = Awaited<ReturnType<typeof getTeams>>>(
   options: Omit<
     UseQueryOptions<Awaited<ReturnType<typeof getTeams>>, unknown, Out>,
     "queryFn" | "queryKey"
-  > = {},
+  > = {}
 ) =>
   queryOptions({
     ...options,
@@ -78,7 +76,7 @@ export const teamsQueryOptions = <Out = Awaited<ReturnType<typeof getTeams>>>(
           pagination,
         },
       }),
-  });
+  })
 
 export function useTeams(
   tournamentDivisionId: number,
@@ -86,9 +84,9 @@ export function useTeams(
   options: Omit<
     UseQueryOptions<Awaited<ReturnType<typeof readTeams>>, unknown>,
     "queryFn" | "queryKey"
-  > = {},
+  > = {}
 ) {
-  const fetchTeams = useServerFn(getTeams);
+  const fetchTeams = useServerFn(getTeams)
 
   return useQuery({
     ...options,
@@ -100,5 +98,5 @@ export function useTeams(
           pagination,
         },
       }),
-  });
+  })
 }
