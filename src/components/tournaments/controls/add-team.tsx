@@ -1,23 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { useServerFn } from "@tanstack/react-start"
 import { XIcon } from "lucide-react"
-import { Profiler, useRef, useState } from "react"
-import { useAsyncList } from "react-stately"
+import { useRef, useState } from "react"
 import z from "zod"
+
 import { Button } from "@/components/base/button"
 import { useAppForm } from "@/components/base/form"
 import { Modal } from "@/components/base/modal"
 import { title } from "@/components/base/primitives"
-import type { Option } from "@/components/base/select"
 import { ProfileName } from "@/components/profiles/name"
 import { ProfilePhoto } from "@/components/profiles/photo"
 import {
-  searchProfiles,
   searchProfilesQueryOptions,
   searchProfilesSchema,
 } from "@/data/profiles"
-import { duplicateTournamentOptions } from "@/data/tournaments/schedule"
+import { addTeamOptions } from "@/data/tournaments/teams"
 import type { Division, PlayerProfile, TournamentDivision } from "@/db/schema"
 import { getTournamentDivisionDisplay } from "@/hooks/tournament"
 
@@ -37,14 +34,9 @@ export function AddTeamForm({
   const navigate = useNavigate()
 
   const { mutate } = useMutation({
-    ...duplicateTournamentOptions(),
-    onSuccess: ({ data }) => {
-      navigate({
-        to: "/tournaments/$tournamentId",
-        params: {
-          tournamentId: data.id.toString(),
-        },
-      })
+    ...addTeamOptions(),
+    onSuccess: () => {
+      onOpenChange(false)
     },
   })
 
@@ -63,9 +55,10 @@ export function AddTeamForm({
       onChange: schema,
     },
     onSubmit: ({ value: { players } }) => {
-      console.log(players)
-
-      onOpenChange(false)
+      mutate({
+        tournamentDivisionId: division.id,
+        players: players as number[],
+      })
     },
   })
 
