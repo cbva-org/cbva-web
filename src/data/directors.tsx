@@ -1,12 +1,10 @@
 import {
-  type UseQueryOptions,
+  queryOptions,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
 import { createServerFn, useServerFn } from "@tanstack/react-start"
 import { eq } from "drizzle-orm"
-
 import { db } from "@/db/connection"
 import {
   type CreateTournamentDirector,
@@ -26,20 +24,11 @@ const getDirectors = createServerFn({
   method: "GET",
 }).handler(() => readDirectors())
 
-export function useDirectors<Out>(
-  options: Omit<
-    UseQueryOptions<Awaited<ReturnType<typeof readDirectors>>, unknown, Out>,
-    "queryFn" | "queryKey"
-  > = {}
-) {
-  const fetchDirectors = useServerFn(getDirectors)
-
-  return useQuery({
-    ...options,
+export const directorsQueryOptions = () =>
+  queryOptions({
     queryKey: ["directors"],
-    queryFn: () => fetchDirectors(),
+    queryFn: () => getDirectors(),
   })
-}
 
 export const insertTournamentDirectorFn = createServerFn({ method: "POST" })
   .inputValidator(createTournamentDirectorSchema)

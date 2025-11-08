@@ -1,10 +1,14 @@
-import {
-  queryOptions,
-  type UseQueryOptions,
-  useQuery,
-} from "@tanstack/react-query"
-import { createServerFn, useServerFn } from "@tanstack/react-start"
-import { db, findPaged } from "@/db"
+import { mutationOptions, queryOptions } from "@tanstack/react-query"
+import { notFound } from "@tanstack/react-router"
+import { createServerFn } from "@tanstack/react-start"
+import { eq } from "drizzle-orm"
+import orderBy from "lodash/orderBy"
+import sum from "lodash/sum"
+import z from "zod"
+
+import { db } from "@/db/connection"
+import { findPaged } from "@/db/pagination"
+import { selectTournamentSchema, tournamentDivisionTeams } from "@/db/schema"
 
 async function readPools({
   tournamentDivisionId,
@@ -128,4 +132,83 @@ export const poolsQueryOptions = (
           pagination,
         },
       }),
+  })
+
+export const generatePoolsSchema = selectTournamentSchema
+  .pick({
+    id: true,
+  })
+  .extend({
+    overwrite: z.boolean(),
+  })
+
+const generatePoolsFn = createServerFn()
+  .inputValidator(generatePoolsSchema)
+  .handler(async ({ data: { id: tournamentId, overwrite } }) => {
+    const tournament = await db.query.tournaments.findFirst({
+      with: {
+        tournamentDivisions: {
+          with: {
+            teams: {
+              with: {
+                team: {
+                  with: {
+                    players: {
+                      with: {
+                        profile: {
+                          with: {
+                            level: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      where: (t, { eq }) => eq(t.id, tournamentId),
+    })
+
+    if (!tournament) {
+      throw notFound()
+    }
+
+    const updates = tournament.tournamentDivisions.flatMap((division) => {
+      const weights = division.teams.map(({ id, team: { players } }) => ({
+        id,
+        weight: sum(players.map(({ profile: { level } }) => level?.order ?? 0)),
+        rank: sum(players.map(({ profile: { rank } }) => rank)),
+      }))
+
+      const ordered = orderBy(weights, ["weight", "rank"], ["desc", "asc"])
+
+      return ordered.map(({ id }, idx) => ({
+        id,
+        seed: idx + 1,
+      }))
+    })
+
+    await db.transaction(async (txn) => {
+      await Promise.all(
+        updates.map(({ id, seed }) =>
+          txn
+            .update(tournamentDivisionTeams)
+            .set({ seed })
+            .where(eq(tournamentDivisionTeams.id, id))
+        )
+      )
+    })
+
+    return {
+      success: true,
+    }
+  })
+
+export const generatePoolsMutationOptions = () =>
+  mutationOptions({
+    mutationFn: (data: z.infer<typeof generatePoolsSchema>) =>
+      generatePoolsFn({ data }),
   })

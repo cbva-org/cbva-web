@@ -9,6 +9,7 @@ import { Modal } from "@/components/base/modal"
 import { title } from "@/components/base/primitives"
 import { ProfileName } from "@/components/profiles/name"
 import { ProfilePhoto } from "@/components/profiles/photo"
+import { levelsQueryOptions } from "@/data/levels"
 import {
   searchProfilesQueryOptions,
   searchProfilesSchema,
@@ -17,7 +18,6 @@ import { teamsQueryOptions } from "@/data/teams"
 import { addTeamOptions } from "@/data/tournaments/teams"
 import type { Division, PlayerProfile, TournamentDivision } from "@/db/schema"
 import { getTournamentDivisionDisplay } from "@/hooks/tournament"
-import { levelsQueryOptions } from "@/data/levels"
 
 export type AddTeamFormProps = {
   tournamentId: number

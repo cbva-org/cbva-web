@@ -1,9 +1,5 @@
-import {
-  queryOptions,
-  type UseQueryOptions,
-  useQuery,
-} from "@tanstack/react-query"
-import { createServerFn, useServerFn } from "@tanstack/react-start"
+import { queryOptions } from "@tanstack/react-query"
+import { createServerFn } from "@tanstack/react-start"
 import { findPaged } from "@/db"
 
 async function readTeams({
@@ -41,7 +37,7 @@ async function readTeams({
           eq(teams.tournamentDivisionId, tournamentDivisionId),
           or(eq(teams.status, "confirmed"), eq(teams.status, "registered"))
         ),
-      orderBy: (teams, { asc }) => asc(teams.finish),
+      orderBy: (t, { asc }) => [asc(t.finish), asc(t.seed)],
     },
   })
 }
@@ -58,16 +54,11 @@ export const getTeams = createServerFn({
   )
   .handler(async ({ data }) => await readTeams(data))
 
-export const teamsQueryOptions = <Out = Awaited<ReturnType<typeof getTeams>>>(
+export const teamsQueryOptions = (
   tournamentDivisionId: number,
-  pagination: { page: number; pageSize: number } = { page: 1, pageSize: 50 },
-  options: Omit<
-    UseQueryOptions<Awaited<ReturnType<typeof getTeams>>, unknown, Out>,
-    "queryFn" | "queryKey"
-  > = {}
+  pagination: { page: number; pageSize: number } = { page: 1, pageSize: 50 }
 ) =>
   queryOptions({
-    ...options,
     queryKey: ["teams", tournamentDivisionId],
     queryFn: () =>
       getTeams({
@@ -77,26 +68,3 @@ export const teamsQueryOptions = <Out = Awaited<ReturnType<typeof getTeams>>>(
         },
       }),
   })
-
-export function useTeams(
-  tournamentDivisionId: number,
-  pagination: { page: number; pageSize: number } = { page: 1, pageSize: 50 },
-  options: Omit<
-    UseQueryOptions<Awaited<ReturnType<typeof readTeams>>, unknown>,
-    "queryFn" | "queryKey"
-  > = {}
-) {
-  const fetchTeams = useServerFn(getTeams)
-
-  return useQuery({
-    ...options,
-    queryKey: ["teams", tournamentDivisionId],
-    queryFn: () =>
-      fetchTeams({
-        data: {
-          tournamentDivisionId,
-          pagination,
-        },
-      }),
-  })
-}

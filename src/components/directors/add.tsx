@@ -1,39 +1,44 @@
-import { EditIcon, XIcon } from "lucide-react";
-import { useState } from "react";
-import { DialogTrigger } from "react-aria-components";
-import z from "zod";
-import { useDirectors, useInsertTournamentDirector } from "@/data/directors";
-import { Button } from "../base/button";
-import { useAppForm } from "../base/form";
-import { Modal } from "../base/modal";
-import { title } from "../base/primitives";
+import { useQuery } from "@tanstack/react-query"
+import { EditIcon, XIcon } from "lucide-react"
+import { useState } from "react"
+import { DialogTrigger } from "react-aria-components"
+import z from "zod"
+import {
+  directorsQueryOptions,
+  useInsertTournamentDirector,
+} from "@/data/directors"
+import { Button } from "../base/button"
+import { useAppForm } from "../base/form"
+import { Modal } from "../base/modal"
+import { title } from "../base/primitives"
 
 export type DirectorsModalProps = {
-  tournamentId: number;
-  existingDirectorIds: number[];
-};
+  tournamentId: number
+  existingDirectorIds: number[]
+}
 
 const schema = z.object({
   directorId: z.number(),
-});
+})
 
 export function AddDirector({
   tournamentId,
   existingDirectorIds,
 }: DirectorsModalProps) {
-  const [isOpen, setOpen] = useState(false);
+  const [isOpen, setOpen] = useState(false)
 
   const { mutate: insertTournamentDirector, failureReason } =
-    useInsertTournamentDirector();
+    useInsertTournamentDirector()
 
-  const { data: options } = useDirectors({
+  const { data: options } = useQuery({
+    ...directorsQueryOptions(),
     select: (data) =>
       data.map((d) => ({
         value: d.id,
         display: `${d.profile.preferredName} ${d.profile.lastName}`,
         additionalText: "ope",
       })),
-  });
+  })
 
   const form = useAppForm({
     defaultValues: {
@@ -51,14 +56,14 @@ export function AddDirector({
         },
         {
           onSuccess: () => {
-            setOpen(false);
+            setOpen(false)
 
-            formApi.reset();
+            formApi.reset()
           },
-        },
-      );
+        }
+      )
     },
-  });
+  })
 
   return (
     <DialogTrigger isOpen={isOpen} onOpenChange={setOpen}>
@@ -87,9 +92,9 @@ export function AddDirector({
 
           <form
             onSubmit={(e) => {
-              e.preventDefault();
+              e.preventDefault()
 
-              form.handleSubmit();
+              form.handleSubmit()
             }}
           >
             {failureReason && (
@@ -111,7 +116,7 @@ export function AddDirector({
                   field={field}
                   options={
                     options?.filter(
-                      (v) => !existingDirectorIds.includes(v.value),
+                      (v) => !existingDirectorIds.includes(v.value)
                     ) || []
                   }
                   autoFocus={true}
@@ -139,5 +144,5 @@ export function AddDirector({
         </div>
       </Modal>
     </DialogTrigger>
-  );
+  )
 }

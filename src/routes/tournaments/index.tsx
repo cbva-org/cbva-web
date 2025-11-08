@@ -100,9 +100,8 @@ function RouteComponent() {
                 },
               })
             }}
-          >
-            Past Tournaments Only
-          </Checkbox>
+            label={<>Past Tournaments Only</>}
+          />
           <Link className={button()} to="/tournaments" search={{}}>
             Clear Filters
           </Link>

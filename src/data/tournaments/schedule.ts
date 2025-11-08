@@ -1,4 +1,5 @@
 import { mutationOptions } from "@tanstack/react-query"
+import { notFound } from "@tanstack/react-router"
 import { createServerFn } from "@tanstack/react-start"
 import type z from "zod"
 
@@ -33,7 +34,7 @@ export const duplicateTournamentFn = createServerFn({ method: "POST" })
     })
 
     if (!template) {
-      throw new Error("NOT_FOUND")
+      throw notFound()
     }
 
     const values = createTournamentSchema

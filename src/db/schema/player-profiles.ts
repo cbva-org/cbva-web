@@ -33,6 +33,7 @@ export const playerProfiles = pgTable(
     }),
     ratedPoints: doublePrecision().notNull().default(0),
     juniorsPoints: doublePrecision().notNull().default(0),
+    rank: integer(),
     bio: text(),
     imageSource: text(),
     heightFeet: integer(),

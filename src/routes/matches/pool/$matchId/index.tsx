@@ -1,27 +1,28 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import clsx from "clsx";
-import { MinusIcon, PlusIcon } from "lucide-react";
-import { tv } from "tailwind-variants";
-import { Button } from "@/components/base/button";
-import { subtitle, title } from "@/components/base/primitives";
-import { Tab, TabList, TabPanel, Tabs } from "@/components/base/tabs";
-import { poolMatchQueryOptions } from "@/data/matches";
-import { DefaultLayout } from "@/layouts/default";
-import { playerNames } from "@/utils/profiles";
-import { isNotNull } from "@/utils/types";
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { createFileRoute, notFound } from "@tanstack/react-router"
+import clsx from "clsx"
+import { MinusIcon, PlusIcon } from "lucide-react"
+import { tv } from "tailwind-variants"
+
+import { Button } from "@/components/base/button"
+import { subtitle, title } from "@/components/base/primitives"
+import { Tab, TabList, TabPanel, Tabs } from "@/components/base/tabs"
+import { poolMatchQueryOptions } from "@/data/matches"
+import { DefaultLayout } from "@/layouts/default"
+import { playerNames } from "@/utils/profiles"
+import { isNotNull } from "@/utils/types"
 
 export const Route = createFileRoute("/matches/pool/$matchId/")({
   loader: async ({ params: { matchId }, context: { queryClient } }) => {
     const match = await queryClient.ensureQueryData(
-      poolMatchQueryOptions(Number.parseInt(matchId, 10)),
-    );
+      poolMatchQueryOptions(Number.parseInt(matchId, 10))
+    )
 
     if (!match) {
-      throw new Error("NOT_FOUND");
+      throw notFound()
     }
 
-    return match;
+    return match
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -34,8 +35,8 @@ export const Route = createFileRoute("/matches/pool/$matchId/")({
               .filter(isNotNull)
               .map(({ team }) =>
                 playerNames(team.players.map(({ profile }) => profile)).join(
-                  " & ",
-                ),
+                  " & "
+                )
               )
               .join(" vs ")}`,
           },
@@ -43,7 +44,7 @@ export const Route = createFileRoute("/matches/pool/$matchId/")({
       : undefined,
   }),
   component: RouteComponent,
-});
+})
 
 const scoreStyles = tv({
   base: "bg-blue-500 text-white h-36 w-36 rounded-md flex items-center justify-center text-5xl font-bold",
@@ -53,16 +54,16 @@ const scoreStyles = tv({
       b: "bg-red-500",
     },
   },
-});
+})
 
 function RouteComponent() {
-  const { matchId } = Route.useParams();
+  const { matchId } = Route.useParams()
 
   const { data } = useSuspenseQuery(
-    poolMatchQueryOptions(Number.parseInt(matchId, 10)),
-  );
+    poolMatchQueryOptions(Number.parseInt(matchId, 10))
+  )
 
-  const isDone = data?.winnerId;
+  const isDone = data?.winnerId
 
   return (
     <DefaultLayout>
@@ -78,14 +79,14 @@ function RouteComponent() {
                   "text-center max-w-lg leading-tight",
                   isDone &&
                     data?.winnerId === data?.teamAId &&
-                    "font-normal text-gray-500",
+                    "font-normal text-gray-500"
                 ),
               })}
             >
               {data?.teamA?.team.players
                 .map(
                   ({ profile: { firstName, preferredName, lastName } }) =>
-                    `${preferredName || firstName} ${lastName}`,
+                    `${preferredName || firstName} ${lastName}`
                 )
                 .join(" & ")}
             </span>
@@ -99,14 +100,14 @@ function RouteComponent() {
                   "text-center max-w-lg leading-tight",
                   isDone &&
                     data?.winnerId === data?.teamBId &&
-                    "font-normal text-gray-500",
+                    "font-normal text-gray-500"
                 ),
               })}
             >
               {data?.teamB?.team.players
                 .map(
                   ({ profile: { firstName, preferredName, lastName } }) =>
-                    `${preferredName || firstName} ${lastName}`,
+                    `${preferredName || firstName} ${lastName}`
                 )
                 .join(" & ")}
             </span>
@@ -163,5 +164,5 @@ function RouteComponent() {
           ))}
       </Tabs>
     </DefaultLayout>
-  );
+  )
 }

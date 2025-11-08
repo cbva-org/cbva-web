@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuItem } from "@/components/base/dropdown-menu"
 import type { Division, TournamentDivision } from "@/db/schema"
 
 import { AddTeamForm } from "./add-team"
+import { CalculateSeedsForm } from "./calculate-seeds"
 import { DuplicateForm } from "./duplicate"
 
 export type TournamentAdminControlsProps = {
@@ -13,7 +14,7 @@ export type TournamentAdminControlsProps = {
   division: TournamentDivision & { division: Division }
 }
 
-type ModalKind = "duplicate" | "add-team"
+type ModalKind = "duplicate" | "add-team" | "calc-seeds" | "gen-pools"
 
 export function TournamentControls({
   tournamentId,
@@ -50,6 +51,12 @@ export function TournamentControls({
             Add Team
           </DropdownMenuItem>
         )}
+
+        {canUpdate && (
+          <DropdownMenuItem onPress={() => setActiveModal("calc-seeds")}>
+            Calculate Seeds
+          </DropdownMenuItem>
+        )}
       </DropdownMenu>
 
       <DuplicateForm
@@ -68,6 +75,17 @@ export function TournamentControls({
         isOpen={activeModal === "add-team"}
         onOpenChange={(open) => {
           const next = open ? "add-team" : undefined
+
+          setActiveModal(next)
+        }}
+      />
+
+      <CalculateSeedsForm
+        tournamentId={tournamentId}
+        division={division}
+        isOpen={activeModal === "calc-seeds"}
+        onOpenChange={(open) => {
+          const next = open ? "calc-seeds" : undefined
 
           setActiveModal(next)
         }}

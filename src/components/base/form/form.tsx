@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 
 import { type AlertProps, Alert as BaseAlert } from "@/components/base/alert"
 import { Button, type ButtonProps } from "@/components/base/button"
-
+import { CheckboxField } from "./fields/checkbox"
 import { AsyncComboBoxField, ComboBoxField } from "./fields/combo-box"
 import { DateField } from "./fields/date"
 import { DatePickerField } from "./fields/date-picker"
@@ -18,7 +18,7 @@ import { TextAreaField } from "./fields/text-area"
 import { TimeField } from "./fields/time"
 
 function Alert({ className, ...props }: AlertProps) {
-  return <BaseAlert className={clsx("mb-2", className)} {...props} />
+  return <BaseAlert className={className} {...props} />
 }
 
 function Footer({
@@ -97,6 +97,7 @@ export const { useAppForm } = createFormHook({
     Text: TextField,
     Password: PasswordField,
     TextArea: TextAreaField,
+    Checkbox: CheckboxField,
     Number: NumberField,
     Select: SelectField,
     ComboBox: ComboBoxField,

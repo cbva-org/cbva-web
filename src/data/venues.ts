@@ -1,9 +1,7 @@
 import {
   type QueryKey,
   queryOptions,
-  type UseQueryOptions,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
 import { createServerFn, useServerFn } from "@tanstack/react-start"
@@ -26,22 +24,6 @@ export const venuesQueryOptions = () =>
     queryKey: ["venues"],
     queryFn: () => getVenues(),
   })
-
-export function useVenues(
-  // options: Omit<UseQueryOptions<Venue[], unknown>, "queryFn" | "queryKey">,
-  options: Omit<
-    UseQueryOptions<Awaited<ReturnType<typeof readVenues>>, unknown>,
-    "queryFn" | "queryKey"
-  > = {}
-) {
-  const fetchVenues = useServerFn(getVenues)
-
-  return useQuery({
-    ...options,
-    queryKey: ["venues"],
-    queryFn: () => fetchVenues(),
-  })
-}
 
 export const updateVenueFn = createServerFn({ method: "POST" })
   .inputValidator(({ directions, description }: UpdateVenue) => ({

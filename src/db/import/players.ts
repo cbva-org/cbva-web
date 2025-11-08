@@ -54,6 +54,7 @@ export async function importPlayers(levels: Map<string, number>) {
       levelId: levels.get(mapDivision(user.rating)),
       ratedPoints: user.ratedPoints,
       juniorsPoints: user.juniorsPoints,
+      rank: user.rank,
       externalRef: user.id,
     }))
 

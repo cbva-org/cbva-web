@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query"
+import { notFound } from "@tanstack/react-router"
 import { createServerFn, useServerFn } from "@tanstack/react-start"
 import z from "zod"
 
@@ -80,7 +81,7 @@ async function readProfile(id: number, viewerId: Viewer["id"]) {
   })
 
   if (!result) {
-    throw new Error("NOT_FOUND")
+    throw notFound()
   }
 
   return result

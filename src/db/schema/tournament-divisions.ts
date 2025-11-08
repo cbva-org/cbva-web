@@ -14,6 +14,7 @@ import { divisions } from "./divisions"
 import { pools } from "./pools"
 import { genderEnum } from "./shared"
 import { teams } from "./teams"
+import { tournamentDivisionTeams } from "./tournament-division-teams"
 import { tournaments } from "./tournaments"
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
@@ -73,7 +74,7 @@ export const tournamentDivisionRelations = relations(
       fields: [tournamentDivisions.divisionId],
       references: [divisions.id],
     }),
-    teams: many(teams),
+    teams: many(tournamentDivisionTeams),
     pools: many(pools),
   })
 )
