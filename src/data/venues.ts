@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { createServerFn, useServerFn } from "@tanstack/react-start"
-
+import { requirePermissions } from "@/auth/shared"
 import { db, type UpdateVenue, venues } from "@/db"
 
 async function readVenues() {
@@ -26,6 +26,11 @@ export const venuesQueryOptions = () =>
   })
 
 export const updateVenueFn = createServerFn({ method: "POST" })
+  .middleware([
+    requirePermissions({
+      venues: ["update"],
+    }),
+  ])
   .inputValidator(({ directions, description }: UpdateVenue) => ({
     directions,
     description,

@@ -11,6 +11,7 @@ import {
   createTournamentDirectorSchema,
   tournamentDirectors,
 } from "@/db/schema"
+import { requirePermissions } from "@/auth/shared"
 
 async function readDirectors() {
   return await db.query.directors.findMany({
@@ -72,6 +73,11 @@ export function useInsertTournamentDirector() {
 }
 
 export const deleteTournamentDirectorFn = createServerFn({ method: "POST" })
+  .middleware([
+    requirePermissions({
+      tournament: ["update"],
+    }),
+  ])
   .inputValidator(
     ({ id, tournamentId }: { id: number; tournamentId: number }) => ({
       id,

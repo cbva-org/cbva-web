@@ -2,7 +2,7 @@ import { mutationOptions } from "@tanstack/react-query"
 import { notFound } from "@tanstack/react-router"
 import { createServerFn } from "@tanstack/react-start"
 import type z from "zod"
-
+import { requirePermissions } from "@/auth/shared"
 import { db } from "@/db/connection"
 import {
   type CreateTournamentDirector,
@@ -22,6 +22,11 @@ const duplicateTournamentSchema = selectTournamentSchema.pick({
 type DuplicateTournamentParams = z.infer<typeof duplicateTournamentSchema>
 
 export const duplicateTournamentFn = createServerFn({ method: "POST" })
+  .middleware([
+    requirePermissions({
+      tournament: ["create"],
+    }),
+  ])
   .inputValidator(duplicateTournamentSchema)
   .handler(async ({ data: { id, date } }) => {
     const template = await db.query.tournaments.findFirst({

@@ -4,6 +4,7 @@ import {
   createMiddleware,
   createServerFn,
 } from "@tanstack/react-start"
+import { setResponseStatus } from "@tanstack/react-start/server"
 
 import { authClient } from "./client"
 import type { Permissions, Role } from "./permissions"
@@ -105,4 +106,137 @@ export function roleHasPermission<P extends Permissions>(
     permissions,
     role,
   })
+}
+
+/**
+ * Creates a middleware that ensures the logged-in user has the specified permissions.
+ *
+ * @param permissions - The permissions to check (e.g., { tournament: ["create", "update"] })
+ * @param options - Optional configuration
+ * @param options.requireAuth - If true, requires user to be authenticated (default: true)
+ * @param options.onUnauthorized - Custom error message or handler (default: "Unauthorized")
+ *
+ * @example
+ * ```typescript
+ * export const createTournamentFn = createServerFn({ method: "POST" })
+ *   .middleware([
+ *     authMiddleware,
+ *     requirePermissions({ tournament: ["create"] })
+ *   ])
+ *   .handler(async ({ context, data }) => {
+ *     // User is guaranteed to have tournament:create permission
+ *     // context.viewer is typed and available
+ *   })
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Require multiple permissions
+ * export const updateVenueFn = createServerFn({ method: "POST" })
+ *   .middleware([
+ *     authMiddleware,
+ *     requirePermissions({ venues: ["update"] })
+ *   ])
+ *   .handler(async ({ context }) => {
+ *     // User has venues:update permission
+ *   })
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Custom error message
+ * export const deleteContentFn = createServerFn({ method: "POST" })
+ *   .middleware([
+ *     authMiddleware,
+ *     requirePermissions(
+ *       { content: ["delete"] },
+ *       { onUnauthorized: "You do not have permission to delete content" }
+ *     )
+ *   ])
+ *   .handler(async ({ context }) => {
+ *     // User has content:delete permission
+ *   })
+ * ```
+ */
+export function requirePermissions<P extends Permissions>(permissions: P) {
+  return createMiddleware()
+    .middleware([authMiddleware])
+    .server(async ({ next, context }) => {
+      const { viewer } = context
+
+      if (!viewer) {
+        setResponseStatus(401)
+
+        throw new Error("Unauthorized")
+      }
+
+      if (viewer) {
+        const hasPermission = roleHasPermission(viewer.role, permissions)
+
+        if (!hasPermission) {
+          setResponseStatus(403)
+
+          throw new Error("Forbidden")
+        }
+      }
+
+      return await next({ context })
+    })
+}
+
+/**
+ * Creates a middleware that ensures the logged-in user has one of the specified roles.
+ *
+ * @param roles - Array of allowed roles (e.g., ["admin", "td"])
+ * @param options - Optional configuration
+ * @param options.requireAuth - If true, requires user to be authenticated (default: true)
+ * @param options.onUnauthorized - Custom error message (default: "Unauthorized")
+ *
+ * @example
+ * ```typescript
+ * export const adminOnlyFn = createServerFn({ method: "POST" })
+ *   .middleware([
+ *     authMiddleware,
+ *     requireRole(["admin"])
+ *   ])
+ *   .handler(async ({ context }) => {
+ *     // User is guaranteed to be an admin
+ *   })
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Allow multiple roles
+ * export const tournamentManagementFn = createServerFn({ method: "POST" })
+ *   .middleware([
+ *     authMiddleware,
+ *     requireRole(["admin", "td"])
+ *   ])
+ *   .handler(async ({ context }) => {
+ *     // User is either admin or td
+ *   })
+ * ```
+ */
+export function requireRole(roles: Role[]) {
+  return createMiddleware()
+    .middleware([authMiddleware])
+    .server(async ({ next, context }) => {
+      const { viewer } = context
+
+      if (!viewer) {
+        setResponseStatus(401)
+
+        throw new Error("Unauthorized")
+      }
+
+      if (viewer && !roles.includes(viewer.role)) {
+        setResponseStatus(403)
+
+        throw new Error(
+          `Forbidden: requires one of the following roles: ${roles.join(", ")}`
+        )
+      }
+
+      return await next({ context })
+    })
 }

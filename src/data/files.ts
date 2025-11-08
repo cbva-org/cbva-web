@@ -1,10 +1,15 @@
 import { createServerFn } from "@tanstack/react-start"
-
+import { requirePermissions } from "@/auth/shared"
 import { eq } from "@/db"
 import { db } from "@/db/connection"
 import { createFileSchema, files, selectFileSchema } from "@/db/schema/files"
 
 export const uploadFileServerFn = createServerFn({ method: "POST" })
+  .middleware([
+    requirePermissions({
+      files: ["create"],
+    }),
+  ])
   .inputValidator((data) => {
     if (!(data instanceof FormData)) {
       throw new Error("Expected FormData")

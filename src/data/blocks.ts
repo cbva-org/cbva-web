@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
-
+import { requirePermissions } from "@/auth/shared"
 import { db } from "@/db/connection"
 import { blocks, createBlockSchema, selectPageSchema } from "@/db/schema"
 
@@ -24,6 +24,11 @@ export const contentPageBlocksQueryOptions = (path: string) =>
   })
 
 export const updatePageFn = createServerFn({ method: "POST" })
+  .middleware([
+    requirePermissions({
+      content: ["update"],
+    }),
+  ])
   .inputValidator(createBlockSchema)
   .handler(async ({ data }) => {
     await db

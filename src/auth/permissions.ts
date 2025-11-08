@@ -5,6 +5,7 @@ export const statement = {
   tournament: ["create", "update", "delete", "teehee"],
   venues: ["create", "update", "delete"],
   content: ["update"],
+  files: ["create", "delete"],
   ...defaultStatements,
 } as const
 

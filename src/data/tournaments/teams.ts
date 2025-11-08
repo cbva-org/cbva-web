@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start"
 import { setResponseStatus } from "@tanstack/react-start/server"
 import { eq, inArray, sql } from "drizzle-orm"
 import z from "zod"
+import { requirePermissions } from "@/auth/shared"
 import { db } from "@/db/connection"
 import {
   levels,
@@ -23,6 +24,11 @@ const addTeamSchema = z.object({
 type AddTeamParams = z.infer<typeof addTeamSchema>
 
 export const addTeamFn = createServerFn({ method: "POST" })
+  .middleware([
+    requirePermissions({
+      tournament: ["update"],
+    }),
+  ])
   .inputValidator(addTeamSchema)
   .handler(async ({ data: { tournamentDivisionId, players } }) => {
     // Find teams in the tournament division that have all the specified players
@@ -99,6 +105,11 @@ export const calculateSeedsSchema = selectTournamentSchema
   })
 
 const calculateSeedsFn = createServerFn()
+  .middleware([
+    requirePermissions({
+      tournament: ["update"],
+    }),
+  ])
   .inputValidator(calculateSeedsSchema)
   .handler(async ({ data: { id: tournamentId, overwrite } }) => {
     const tournament = await db.query.tournaments.findFirst({
