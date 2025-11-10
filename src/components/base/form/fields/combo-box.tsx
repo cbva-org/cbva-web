@@ -39,7 +39,11 @@ export function ComboBoxField<T extends Key>({
       isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
       isDisabled={!Boolean(options) || isDisabled}
     >
-      {(item) => <ComboBoxItem id={item.value}>{item.display}</ComboBoxItem>}
+      {(item) => (
+        <ComboBoxItem id={item.value}>
+          {item.beforeDisplay} {item.display}
+        </ComboBoxItem>
+      )}
     </ComboBox>
   )
 }

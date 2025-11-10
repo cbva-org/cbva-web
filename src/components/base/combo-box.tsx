@@ -1,6 +1,6 @@
 import { Link, type LinkOptions, useRouter } from "@tanstack/react-router"
 import { ChevronDown, XIcon } from "lucide-react"
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useRef } from "react"
 import {
   ComboBox as AriaComboBox,
   type ComboBoxProps as AriaComboBoxProps,

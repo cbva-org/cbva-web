@@ -172,7 +172,16 @@ export function AddTeamForm({
                                   preferredName,
                                   firstName,
                                   lastName,
+                                  ...profile
                                 }) => ({
+                                  beforeDisplay: (
+                                    <ProfilePhoto
+                                      preferredName={preferredName}
+                                      firstName={firstName}
+                                      lastName={lastName}
+                                      {...profile}
+                                    />
+                                  ),
                                   display: `${preferredName || firstName} ${lastName}`,
                                   value: id,
                                 })

@@ -21,14 +21,17 @@ export const admin = ac.newRole({
   tournament: ["create", "update", "delete"],
   venues: ["create", "update", "delete"],
   content: ["update"],
+  files: ["create", "delete"],
   ...adminAc.statements,
 })
 
 export const td = ac.newRole({
   tournament: ["create", "update"],
   venues: ["update"],
+  files: ["create", "delete"],
 })
 
 export const user = ac.newRole({
   tournament: [],
+  files: ["create", "delete"],
 })

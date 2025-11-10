@@ -1,6 +1,6 @@
-import clsx from "clsx";
-import { Check, ChevronDown } from "lucide-react";
-import type { ReactNode } from "react";
+import clsx from "clsx"
+import { Check, ChevronDown } from "lucide-react"
+import type { ReactNode } from "react"
 import {
   Select as AriaSelect,
   Button,
@@ -11,30 +11,31 @@ import {
   Popover,
   type SelectProps,
   SelectValue,
-} from "react-aria-components";
-import { tv } from "tailwind-variants";
-import { focusRing } from "@/components/base/utils";
+} from "react-aria-components"
+import { tv } from "tailwind-variants"
+import { focusRing } from "@/components/base/utils"
 import {
   Description,
   Errors,
   fieldGroupStyles,
   inputStyles,
   Label,
-} from "./form/fields/shared";
+} from "./form/fields/shared"
 
 export type Option<Value extends Key> = {
-  value: Value;
-  display: string;
-  link?: LinkOptions;
-};
+  value: Value
+  display: string
+  link?: LinkOptions
+  beforeDisplay?: ReactNode
+}
 
 export type SelectFieldProps<Value extends Key> = SelectProps<Option<Value>> & {
-  label?: ReactNode;
-  description?: ReactNode;
-  name?: string;
-  isInvalid?: boolean;
-  options: Option<Value>[];
-};
+  label?: ReactNode
+  description?: ReactNode
+  name?: string
+  isInvalid?: boolean
+  options: Option<Value>[]
+}
 
 export const itemStyles = tv({
   base: "group flex text-popover-foreground items-center gap-4 cursor-default select-none py-2 pl-3 pr-1 rounded-lg outline outline-0 text-sm forced-color-adjust-none",
@@ -54,7 +55,7 @@ export const itemStyles = tv({
       className: "bg-gray-100",
     },
   ],
-});
+})
 
 export const popoverStyles = tv({
   base: "bg-white forced-colors:bg-[Canvas] shadow-2xl rounded-xl bg-clip-padding border border-black/10 text-popover-foreground",
@@ -66,7 +67,7 @@ export const popoverStyles = tv({
       true: "animate-out fade-out placement-bottom:slide-out-to-top-1 placement-top:slide-out-to-bottom-1 placement-left:slide-out-to-right-1 placement-right:slide-out-to-left-1 ease-in duration-150",
     },
   },
-});
+})
 
 export function Select<Value extends Key>({
   label,
@@ -85,7 +86,7 @@ export function Select<Value extends Key>({
       name={name}
       onOpenChange={(open) => {
         if (!open && onBlur) {
-          onBlur();
+          onBlur()
         }
       }}
       isInvalid={isInvalid}
@@ -100,12 +101,12 @@ export function Select<Value extends Key>({
                 className,
                 focusRing(render),
                 fieldGroupStyles(render),
-                inputStyles(render),
+                inputStyles(render)
               )
             }
             onBlur={() => {
               if (!isOpen && onBlur) {
-                onBlur();
+                onBlur()
               }
             }}
           >
@@ -119,7 +120,7 @@ export function Select<Value extends Key>({
           <Popover
             className={composeRenderProps(
               "min-w-(--trigger-width)",
-              (className, render) => popoverStyles({ ...render, className }),
+              (className, render) => popoverStyles({ ...render, className })
             )}
           >
             <ListBox
@@ -145,5 +146,5 @@ export function Select<Value extends Key>({
         </>
       )}
     </AriaSelect>
-  );
+  )
 }
