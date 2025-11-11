@@ -23,12 +23,24 @@ export const tournamentDivisionRequirements = pgTable(
 	],
 );
 
-export const selectTournamentDivisionRequirementSchema = createSelectSchema(tournamentDivisionRequirements);
-export const createTournamentDivisionRequirementSchema = createInsertSchema(tournamentDivisionRequirements).omit({
+export const selectTournamentDivisionRequirementSchema = createSelectSchema(
+	tournamentDivisionRequirements,
+);
+export const createTournamentDivisionRequirementSchema = createInsertSchema(
+	tournamentDivisionRequirements,
+).omit({
 	id: true,
 });
-export const updateTournamentDivisionRequirementSchema = createUpdateSchema(tournamentDivisionRequirements);
+export const updateTournamentDivisionRequirementSchema = createUpdateSchema(
+	tournamentDivisionRequirements,
+);
 
-export type TournamentDivisionRequirement = z.infer<typeof selectTournamentDivisionRequirementSchema>;
-export type CreateTournamentDivisionRequirement = z.infer<typeof createTournamentDivisionRequirementSchema>;
-export type UpdateTournamentDivisionRequirement = z.infer<typeof updateTournamentDivisionRequirementSchema>;
+export type TournamentDivisionRequirement = z.infer<
+	typeof selectTournamentDivisionRequirementSchema
+>;
+export type CreateTournamentDivisionRequirement = z.infer<
+	typeof createTournamentDivisionRequirementSchema
+>;
+export type UpdateTournamentDivisionRequirement = z.infer<
+	typeof updateTournamentDivisionRequirementSchema
+>;

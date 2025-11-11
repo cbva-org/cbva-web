@@ -1,0 +1,1 @@
+ALTER TABLE "pools" ADD CONSTRAINT "pool_tournament_division_name_unique" UNIQUE("tournament_division_id","name");

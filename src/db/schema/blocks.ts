@@ -5,10 +5,10 @@ import { z } from "zod";
 import { richText } from "./shared";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
-  createSchemaFactory({ zodInstance: z });
+	createSchemaFactory({ zodInstance: z });
 
 export const pages = pgTable("pages", {
-  path: text().primaryKey(),
+	path: text().primaryKey(),
 });
 
 export const selectPageSchema = createSelectSchema(pages);
@@ -20,11 +20,11 @@ export type CreatePage = z.infer<typeof createPageSchema>;
 export type UpdatePage = z.infer<typeof updatePageSchema>;
 
 export const blocks = pgTable("blocks", {
-  key: text().primaryKey(),
-  content: richText(),
-  page: text()
-    .notNull()
-    .references(() => pages.path),
+	key: text().primaryKey(),
+	content: richText(),
+	page: text()
+		.notNull()
+		.references(() => pages.path),
 });
 
 export const selectBlockSchema = createSelectSchema(blocks);

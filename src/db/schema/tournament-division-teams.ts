@@ -1,75 +1,75 @@
-import { relations } from "drizzle-orm"
+import { relations } from "drizzle-orm";
 import {
-  doublePrecision,
-  integer,
-  pgTable,
-  serial,
-  text,
-  uuid,
-} from "drizzle-orm/pg-core"
-import { createSchemaFactory } from "drizzle-zod"
-import { z } from "zod"
+	doublePrecision,
+	integer,
+	pgTable,
+	serial,
+	text,
+	uuid,
+} from "drizzle-orm/pg-core";
+import { createSchemaFactory } from "drizzle-zod";
+import { z } from "zod";
 
-import { poolTeams } from "./pool-teams"
-import { teamStatusEnum } from "./shared"
-import { teams } from "./teams"
-import { tournamentDivisions } from "./tournament-divisions"
+import { poolTeams } from "./pool-teams";
+import { teamStatusEnum } from "./shared";
+import { teams } from "./teams";
+import { tournamentDivisions } from "./tournament-divisions";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
-  createSchemaFactory({ zodInstance: z })
+	createSchemaFactory({ zodInstance: z });
 
 export const tournamentDivisionTeams = pgTable("tournament_division_teams", {
-  id: serial().primaryKey(),
-  tournamentDivisionId: integer()
-    .notNull()
-    .references(() => tournamentDivisions.id),
-  teamId: integer()
-    .notNull()
-    .references(() => teams.id),
-  seed: integer(),
-  finish: integer(),
-  pointsEarned: doublePrecision(),
-  ratingEarned: text(),
-  status: teamStatusEnum().notNull().default("registered"),
-  externalRef: uuid().unique(),
-})
+	id: serial().primaryKey(),
+	tournamentDivisionId: integer()
+		.notNull()
+		.references(() => tournamentDivisions.id),
+	teamId: integer()
+		.notNull()
+		.references(() => teams.id),
+	seed: integer(),
+	finish: integer(),
+	pointsEarned: doublePrecision(),
+	ratingEarned: text(),
+	status: teamStatusEnum().notNull().default("registered"),
+	externalRef: uuid().unique(),
+});
 
 export const selectTournamentDivisionTeamSchema = createSelectSchema(
-  tournamentDivisionTeams
-)
+	tournamentDivisionTeams,
+);
 export const createTournamentDivisionTeamSchema = createInsertSchema(
-  tournamentDivisionTeams
+	tournamentDivisionTeams,
 ).omit({
-  id: true,
-})
+	id: true,
+});
 export const updateTournamentDivisionTeamSchema = createUpdateSchema(
-  tournamentDivisionTeams
-)
+	tournamentDivisionTeams,
+);
 
 export type TournamentDivisionTeam = z.infer<
-  typeof selectTournamentDivisionTeamSchema
->
+	typeof selectTournamentDivisionTeamSchema
+>;
 export type CreateTournamentDivisionTeam = z.infer<
-  typeof createTournamentDivisionTeamSchema
->
+	typeof createTournamentDivisionTeamSchema
+>;
 export type UpdateTournamentDivisionTeam = z.infer<
-  typeof updateTournamentDivisionTeamSchema
->
+	typeof updateTournamentDivisionTeamSchema
+>;
 
 export const tournamentDivisionTeamsRelations = relations(
-  tournamentDivisionTeams,
-  ({ one }) => ({
-    team: one(teams, {
-      fields: [tournamentDivisionTeams.teamId],
-      references: [teams.id],
-    }),
-    tournamentDivision: one(tournamentDivisions, {
-      fields: [tournamentDivisionTeams.tournamentDivisionId],
-      references: [tournamentDivisions.id],
-    }),
-    poolTeam: one(poolTeams, {
-      fields: [tournamentDivisionTeams.id],
-      references: [poolTeams.teamId],
-    }),
-  })
-)
+	tournamentDivisionTeams,
+	({ one }) => ({
+		team: one(teams, {
+			fields: [tournamentDivisionTeams.teamId],
+			references: [teams.id],
+		}),
+		tournamentDivision: one(tournamentDivisions, {
+			fields: [tournamentDivisionTeams.tournamentDivisionId],
+			references: [tournamentDivisions.id],
+		}),
+		poolTeam: one(poolTeams, {
+			fields: [tournamentDivisionTeams.id],
+			references: [poolTeams.teamId],
+		}),
+	}),
+);

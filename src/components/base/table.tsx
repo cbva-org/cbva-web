@@ -30,7 +30,10 @@ export { TableBody } from "react-aria-components";
 export function Table(props: TableProps) {
 	return (
 		<ResizableTableContainer className="w-full overflow-auto relative border bg-white rounded-lg">
-			<AriaTable {...props} className="border-collapse w-full min-w-full bg-white" />
+			<AriaTable
+				{...props}
+				className="border-collapse w-full min-w-full bg-white"
+			/>
 		</ResizableTableContainer>
 	);
 }

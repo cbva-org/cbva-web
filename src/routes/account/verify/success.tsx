@@ -2,16 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useNotLoggedInRedirect, useRedirect, useViewer } from "@/hooks/auth";
 
 export const Route = createFileRoute("/account/verify/success")({
-  component: RouteComponent,
+	component: RouteComponent,
 });
 
 function RouteComponent() {
-  const viewer = useViewer();
+	const viewer = useViewer();
 
-  useNotLoggedInRedirect("/log-in");
+	useNotLoggedInRedirect("/log-in");
 
-  useRedirect("/account/setup", viewer !== undefined && !viewer?.role);
-  useRedirect("/account", Boolean(viewer?.role));
+	useRedirect("/account/setup", viewer !== undefined && !viewer?.role);
+	useRedirect("/account", Boolean(viewer?.role));
 
-  return <div />;
+	return <div />;
 }

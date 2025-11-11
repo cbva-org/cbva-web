@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { date, integer, pgTable, serial, text, time } from "drizzle-orm/pg-core";
+import {
+	date,
+	integer,
+	pgTable,
+	serial,
+	text,
+	time,
+} from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 import { tournamentDirectors } from "./tournament-directors";

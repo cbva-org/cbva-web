@@ -3,28 +3,28 @@ import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
-  createSchemaFactory({ zodInstance: z });
+	createSchemaFactory({ zodInstance: z });
 
 export const bytea = customType<{ data: Buffer }>({
-  dataType() {
-    return "bytea";
-  },
-  toDriver(value: Buffer) {
-    return value;
-  },
-  fromDriver(value: unknown) {
-    return value as Buffer;
-  },
+	dataType() {
+		return "bytea";
+	},
+	toDriver(value: Buffer) {
+		return value;
+	},
+	fromDriver(value: unknown) {
+		return value as Buffer;
+	},
 });
 
 export const files = pgTable("files", {
-  id: serial().primaryKey(),
-  bytes: bytea().notNull(),
+	id: serial().primaryKey(),
+	bytes: bytea().notNull(),
 });
 
 export const selectFileSchema = createSelectSchema(files);
 export const createFileSchema = createInsertSchema(files).omit({
-  id: true,
+	id: true,
 });
 export const updateFileSchema = createUpdateSchema(files);
 

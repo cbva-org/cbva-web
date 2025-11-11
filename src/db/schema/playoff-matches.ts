@@ -1,5 +1,15 @@
 import { relations, sql } from "drizzle-orm";
-import { type AnyPgColumn, check, index, integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+	type AnyPgColumn,
+	check,
+	index,
+	integer,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+	uuid,
+} from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 
@@ -52,9 +62,11 @@ export const playoffMatches = pgTable(
 );
 
 export const selectPlayoffMatchSchema = createSelectSchema(playoffMatches);
-export const createPlayoffMatchSchema = createInsertSchema(playoffMatches).omit({
-	id: true,
-});
+export const createPlayoffMatchSchema = createInsertSchema(playoffMatches).omit(
+	{
+		id: true,
+	},
+);
 export const updatePlayoffMatchSchema = createUpdateSchema(playoffMatches);
 
 export type PlayoffMatch = z.infer<typeof selectPlayoffMatchSchema>;

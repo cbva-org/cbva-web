@@ -5,33 +5,33 @@ import { RegisterUserForm } from "@/components/users/register-user-form";
 import { DefaultLayout } from "@/layouts/default";
 
 export const Route = createFileRoute("/sign-up")({
-  head: () => ({
-    meta: [
-      {
-        title: "CBVA Sign Up",
-      },
-    ],
-  }),
-  component: RouteComponent,
+	head: () => ({
+		meta: [
+			{
+				title: "CBVA Sign Up",
+			},
+		],
+	}),
+	component: RouteComponent,
 });
 
 function RouteComponent() {
-  return (
-    <DefaultLayout>
-      <div className="text-center flex flex-col space-y-6 max-w-xl mx-auto">
-        <h1 className={title({ size: "lg" })}>
-          SIGN UP TO BECOME A CBVA MEMBER
-        </h1>
+	return (
+		<DefaultLayout>
+			<div className="text-center flex flex-col space-y-6 max-w-xl mx-auto">
+				<h1 className={title({ size: "lg" })}>
+					SIGN UP TO BECOME A CBVA MEMBER
+				</h1>
 
-        <p>
-          Already have an account?{" "}
-          <Link to="/log-in" className="underline hover:no-underline">
-            Log in
-          </Link>
-        </p>
-      </div>
+				<p>
+					Already have an account?{" "}
+					<Link to="/log-in" className="underline hover:no-underline">
+						Log in
+					</Link>
+				</p>
+			</div>
 
-      <RegisterUserForm className="bg-white rounded-lg p-8 w-full max-w-md mx-auto" />
-    </DefaultLayout>
-  );
+			<RegisterUserForm className="bg-white rounded-lg p-8 w-full max-w-md mx-auto" />
+		</DefaultLayout>
+	);
 }

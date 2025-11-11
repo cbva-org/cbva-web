@@ -13,17 +13,17 @@ import { projects, todos } from "./projects";
 import { teamPlayerRelations, teamPlayers } from "./team-players";
 import { teamRelations, teams } from "./teams";
 import {
-  tournamentDirectorRelations,
-  tournamentDirectors,
+	tournamentDirectorRelations,
+	tournamentDirectors,
 } from "./tournament-directors";
 import { tournamentDivisionRequirements } from "./tournament-division-requirements";
 import {
-  tournamentDivisionTeams,
-  tournamentDivisionTeamsRelations,
+	tournamentDivisionTeams,
+	tournamentDivisionTeamsRelations,
 } from "./tournament-division-teams";
 import {
-  tournamentDivisionRelations,
-  tournamentDivisions,
+	tournamentDivisionRelations,
+	tournamentDivisions,
 } from "./tournament-divisions";
 import { tournamentRelations, tournaments } from "./tournaments";
 import { venues } from "./venues";
@@ -50,43 +50,43 @@ export * from "./tournaments";
 export * from "./venues";
 
 export const tables = {
-  blocks,
-  directors,
-  divisions,
-  levels,
-  matchSets,
-  pages,
-  playerProfiles,
-  playoffMatches,
-  poolMatches,
-  pools,
-  poolTeams,
-  projects,
-  teamPlayers,
-  teams,
-  todos,
-  tournamentDirectors,
-  tournamentDivisionRequirements,
-  tournamentDivisions,
-  tournamentDivisionTeams,
-  tournaments,
-  users,
-  venues,
+	blocks,
+	directors,
+	divisions,
+	levels,
+	matchSets,
+	pages,
+	playerProfiles,
+	playoffMatches,
+	poolMatches,
+	pools,
+	poolTeams,
+	projects,
+	teamPlayers,
+	teams,
+	todos,
+	tournamentDirectors,
+	tournamentDivisionRequirements,
+	tournamentDivisions,
+	tournamentDivisionTeams,
+	tournaments,
+	users,
+	venues,
 };
 
 export const relationships = {
-  directorRelations,
-  divisionRelations,
-  matchSetsRelations,
-  playerProfileRelations,
-  playoffMatchRelations,
-  poolMatchRelations,
-  poolRelations,
-  poolTeamsRelations,
-  teamPlayerRelations,
-  teamRelations,
-  tournamentDirectorRelations,
-  tournamentDivisionRelations,
-  tournamentDivisionTeamsRelations,
-  tournamentRelations,
+	directorRelations,
+	divisionRelations,
+	matchSetsRelations,
+	playerProfileRelations,
+	playoffMatchRelations,
+	poolMatchRelations,
+	poolRelations,
+	poolTeamsRelations,
+	teamPlayerRelations,
+	teamRelations,
+	tournamentDirectorRelations,
+	tournamentDivisionRelations,
+	tournamentDivisionTeamsRelations,
+	tournamentRelations,
 };

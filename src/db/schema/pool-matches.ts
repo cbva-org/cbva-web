@@ -1,5 +1,14 @@
 import { relations, sql } from "drizzle-orm";
-import { check, index, integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+	check,
+	index,
+	integer,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+	uuid,
+} from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 

@@ -1,99 +1,99 @@
-import { queryOptions } from "@tanstack/react-query"
-import { createServerFn } from "@tanstack/react-start"
+import { queryOptions } from "@tanstack/react-query";
+import { createServerFn } from "@tanstack/react-start";
 
-import { eq } from "drizzle-orm"
-import { db } from "@/db/connection"
-import { poolMatches } from "@/db/schema"
+import { eq } from "drizzle-orm";
+import { db } from "@/db/connection";
+import { poolMatches } from "@/db/schema";
 
 export const getPoolMatch = createServerFn({
-  method: "GET",
+	method: "GET",
 })
-  .inputValidator((input: { id: number }) => input)
-  .handler(async ({ data: { id } }) => {
-    return await db.query.poolMatches.findFirst({
-      where: eq(poolMatches.id, id),
-      with: {
-        sets: true,
-        teamA: {
-          with: {
-            team: {
-              with: {
-                players: {
-                  with: {
-                    profile: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        teamB: {
-          with: {
-            team: {
-              with: {
-                players: {
-                  with: {
-                    profile: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-  })
+	.inputValidator((input: { id: number }) => input)
+	.handler(async ({ data: { id } }) => {
+		return await db.query.poolMatches.findFirst({
+			where: eq(poolMatches.id, id),
+			with: {
+				sets: true,
+				teamA: {
+					with: {
+						team: {
+							with: {
+								players: {
+									with: {
+										profile: true,
+									},
+								},
+							},
+						},
+					},
+				},
+				teamB: {
+					with: {
+						team: {
+							with: {
+								players: {
+									with: {
+										profile: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+	});
 
 export const poolMatchQueryOptions = (id: number) =>
-  queryOptions({
-    queryKey: ["pool_match", id],
-    queryFn: () => getPoolMatch({ data: { id } }),
-  })
+	queryOptions({
+		queryKey: ["pool_match", id],
+		queryFn: () => getPoolMatch({ data: { id } }),
+	});
 
 export const getPoolMatchSet = createServerFn({
-  method: "GET",
+	method: "GET",
 })
-  .inputValidator((input: { id: number }) => input)
-  .handler(async ({ data: { id } }) => {
-    return await db.query.matchSets.findFirst({
-      where: eq(poolMatches.id, id),
-      with: {
-        poolMatch: {
-          with: {
-            teamA: {
-              with: {
-                team: {
-                  with: {
-                    players: {
-                      with: {
-                        profile: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            teamB: {
-              with: {
-                team: {
-                  with: {
-                    players: {
-                      with: {
-                        profile: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-  })
+	.inputValidator((input: { id: number }) => input)
+	.handler(async ({ data: { id } }) => {
+		return await db.query.matchSets.findFirst({
+			where: eq(poolMatches.id, id),
+			with: {
+				poolMatch: {
+					with: {
+						teamA: {
+							with: {
+								team: {
+									with: {
+										players: {
+											with: {
+												profile: true,
+											},
+										},
+									},
+								},
+							},
+						},
+						teamB: {
+							with: {
+								team: {
+									with: {
+										players: {
+											with: {
+												profile: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+	});
 
 export const poolMatchSetQueryOptions = (id: number) =>
-  queryOptions({
-    queryKey: ["pool_match_set", id],
-    queryFn: () => getPoolMatchSet({ data: { id } }),
-  })
+	queryOptions({
+		queryKey: ["pool_match_set", id],
+		queryFn: () => getPoolMatchSet({ data: { id } }),
+	});

@@ -1,228 +1,228 @@
 import {
-  queryOptions,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query"
-import { notFound } from "@tanstack/react-router"
-import { createServerFn, useServerFn } from "@tanstack/react-start"
-import z from "zod"
+	queryOptions,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/react-query";
+import { notFound } from "@tanstack/react-router";
+import { createServerFn, useServerFn } from "@tanstack/react-start";
+import z from "zod";
 
-import type { Viewer } from "@/auth"
-import { getViewer } from "@/auth/server"
-import { db } from "@/db/connection"
+import type { Viewer } from "@/auth";
+import { getViewer } from "@/auth/server";
+import { db } from "@/db/connection";
 import {
-  type CreatePlayerProfile,
-  createPlayerProfileSchema,
-  playerProfiles,
-  selectPlayerProfileSchema,
-  updatePlayerProfileSchema,
-} from "@/db/schema/player-profiles"
-import { genderSchema } from "@/db/schema/shared"
-import { isNotNull, isNotNullOrUndefined } from "@/utils/types"
+	type CreatePlayerProfile,
+	createPlayerProfileSchema,
+	playerProfiles,
+	selectPlayerProfileSchema,
+	updatePlayerProfileSchema,
+} from "@/db/schema/player-profiles";
+import { genderSchema } from "@/db/schema/shared";
+import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 async function readViewerProfiles(userId: Viewer["id"]) {
-  return await db.query.playerProfiles.findMany({
-    where: (t, { eq }) => eq(t.userId, userId),
-  })
+	return await db.query.playerProfiles.findMany({
+		where: (t, { eq }) => eq(t.userId, userId),
+	});
 }
 
 const getViewerProfiles = createServerFn({
-  method: "GET",
+	method: "GET",
 }).handler(async () => {
-  const viewer = await getViewer()
+	const viewer = await getViewer();
 
-  if (!viewer) {
-    throw new Error("UNAUTHENTICATED")
-  }
+	if (!viewer) {
+		throw new Error("UNAUTHENTICATED");
+	}
 
-  return await readViewerProfiles(viewer.id)
-})
+	return await readViewerProfiles(viewer.id);
+});
 
 export const viewerProfileQueryOptions = () =>
-  queryOptions({
-    queryKey: ["viewer_profiles"],
-    queryFn: () => getViewerProfiles(),
-  })
+	queryOptions({
+		queryKey: ["viewer_profiles"],
+		queryFn: () => getViewerProfiles(),
+	});
 
 export const insertPlayerProfileFn = createServerFn({ method: "POST" })
-  .inputValidator(createPlayerProfileSchema)
-  .handler(async ({ data }) => {
-    const viewer = await getViewer()
+	.inputValidator(createPlayerProfileSchema)
+	.handler(async ({ data }) => {
+		const viewer = await getViewer();
 
-    if (!viewer) {
-      throw new Error("UNAUTHENTICATED")
-    }
+		if (!viewer) {
+			throw new Error("UNAUTHENTICATED");
+		}
 
-    await db.insert(playerProfiles).values({
-      ...data,
-      userId: viewer.id,
-    })
-  })
+		await db.insert(playerProfiles).values({
+			...data,
+			userId: viewer.id,
+		});
+	});
 
 export function useInsertPlayerProfile() {
-  const mutationFn = useServerFn(insertPlayerProfileFn)
-  const queryClient = useQueryClient()
+	const mutationFn = useServerFn(insertPlayerProfileFn);
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (input: CreatePlayerProfile) => {
-      return mutationFn({ data: input })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["viewer_profiles"],
-      })
-    },
-  })
+	return useMutation({
+		mutationFn: async (input: CreatePlayerProfile) => {
+			return mutationFn({ data: input });
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["viewer_profiles"],
+			});
+		},
+	});
 }
 
 async function readProfile(id: number, viewerId: Viewer["id"]) {
-  const result = await db.query.playerProfiles.findFirst({
-    where: (t, { eq, and }) => and(eq(t.id, id), eq(t.userId, viewerId)),
-  })
+	const result = await db.query.playerProfiles.findFirst({
+		where: (t, { eq, and }) => and(eq(t.id, id), eq(t.userId, viewerId)),
+	});
 
-  if (!result) {
-    throw notFound()
-  }
+	if (!result) {
+		throw notFound();
+	}
 
-  return result
+	return result;
 }
 
 const getProfile = createServerFn({
-  method: "GET",
+	method: "GET",
 })
-  .inputValidator(selectPlayerProfileSchema.pick({ id: true }))
-  .handler(async ({ data: { id } }) => {
-    const viewer = await getViewer()
+	.inputValidator(selectPlayerProfileSchema.pick({ id: true }))
+	.handler(async ({ data: { id } }) => {
+		const viewer = await getViewer();
 
-    if (!viewer) {
-      throw new Error("UNAUTHENTICATED")
-    }
+		if (!viewer) {
+			throw new Error("UNAUTHENTICATED");
+		}
 
-    return await readProfile(id, viewer.id)
-  })
+		return await readProfile(id, viewer.id);
+	});
 
 export const profileQueryOptions = (id: number) =>
-  queryOptions({
-    queryKey: ["profile", id],
-    queryFn: () => getProfile({ data: { id } }),
-  })
+	queryOptions({
+		queryKey: ["profile", id],
+		queryFn: () => getProfile({ data: { id } }),
+	});
 
 export const updatePlayerProfileFn = createServerFn({ method: "POST" })
-  .inputValidator(updatePlayerProfileSchema)
-  .handler(async ({ data }) => {
-    const viewer = await getViewer()
+	.inputValidator(updatePlayerProfileSchema)
+	.handler(async ({ data }) => {
+		const viewer = await getViewer();
 
-    if (!viewer) {
-      throw new Error("UNAUTHENTICATED")
-    }
+		if (!viewer) {
+			throw new Error("UNAUTHENTICATED");
+		}
 
-    const {
-      preferredName,
-      gender,
-      bio,
-      imageSource,
-      heightFeet,
-      heightInches,
-      dominantArm,
-      preferredRole,
-      preferredSide,
-      club,
-      highSchoolGraduationYear,
-      collegeTeam,
-      collegeTeamYearsParticipated,
-    } = data
+		const {
+			preferredName,
+			gender,
+			bio,
+			imageSource,
+			heightFeet,
+			heightInches,
+			dominantArm,
+			preferredRole,
+			preferredSide,
+			club,
+			highSchoolGraduationYear,
+			collegeTeam,
+			collegeTeamYearsParticipated,
+		} = data;
 
-    const [result] = await db
-      .update(playerProfiles)
-      .set({
-        preferredName,
-        gender,
-        bio,
-        imageSource,
-        heightFeet,
-        heightInches,
-        dominantArm,
-        preferredRole,
-        preferredSide,
-        club,
-        highSchoolGraduationYear,
-        collegeTeam,
-        collegeTeamYearsParticipated,
-      })
-      .returning({
-        id: playerProfiles.id,
-      })
+		const [result] = await db
+			.update(playerProfiles)
+			.set({
+				preferredName,
+				gender,
+				bio,
+				imageSource,
+				heightFeet,
+				heightInches,
+				dominantArm,
+				preferredRole,
+				preferredSide,
+				club,
+				highSchoolGraduationYear,
+				collegeTeam,
+				collegeTeamYearsParticipated,
+			})
+			.returning({
+				id: playerProfiles.id,
+			});
 
-    return result
-  })
+		return result;
+	});
 
 export function useUpdatePlayerProfile() {
-  const mutationFn = useServerFn(updatePlayerProfileFn)
-  const queryClient = useQueryClient()
+	const mutationFn = useServerFn(updatePlayerProfileFn);
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (input: CreatePlayerProfile) => {
-      return mutationFn({ data: input })
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: ["viewer_profiles"],
-      })
+	return useMutation({
+		mutationFn: async (input: CreatePlayerProfile) => {
+			return mutationFn({ data: input });
+		},
+		onSuccess: (data) => {
+			queryClient.invalidateQueries({
+				queryKey: ["viewer_profiles"],
+			});
 
-      queryClient.invalidateQueries({
-        queryKey: ["profile", data.id],
-      })
-    },
-  })
+			queryClient.invalidateQueries({
+				queryKey: ["profile", data.id],
+			});
+		},
+	});
 }
 
 export const searchProfilesSchema = z.object({
-  name: z.string().min(3),
-  gender: genderSchema.optional(),
-  levels: z.array(z.number().nonoptional()).optional(),
-})
+	name: z.string().min(3),
+	gender: genderSchema.optional(),
+	levels: z.array(z.number().nonoptional()).optional(),
+});
 
 export const searchProfiles = createServerFn({
-  method: "GET",
+	method: "GET",
 })
-  .inputValidator(searchProfilesSchema)
-  .handler(async ({ data: { name, gender, levels } }) => {
-    const profiles = await db.query.playerProfiles.findMany({
-      limit: 25,
-      where: (t, { and, ilike, eq, inArray, sql }) => {
-        const filters = [
-          ilike(
-            sql`
+	.inputValidator(searchProfilesSchema)
+	.handler(async ({ data: { name, gender, levels } }) => {
+		const profiles = await db.query.playerProfiles.findMany({
+			limit: 25,
+			where: (t, { and, ilike, eq, inArray, sql }) => {
+				const filters = [
+					ilike(
+						sql`
             CASE
               WHEN ${t.preferredName} IS NOT NULL
               THEN ${t.preferredName} || ' ' || ${t.lastName}
               ELSE ${t.firstName} || ' ' || ${t.lastName}
             END
             `,
-            `%${name}%`
-          ),
-          gender ? eq(t.gender, gender) : null,
-          levels ? inArray(t.levelId, levels) : null,
-        ].filter(isNotNull)
+						`%${name}%`,
+					),
+					gender ? eq(t.gender, gender) : null,
+					levels ? inArray(t.levelId, levels) : null,
+				].filter(isNotNull);
 
-        return and(...filters)
-      },
-    })
+				return and(...filters);
+			},
+		});
 
-    return profiles
-  })
+		return profiles;
+	});
 
 export const searchProfilesQueryOptions = (
-  filter: z.infer<typeof searchProfilesSchema>,
-  signal?: AbortSignal
+	filter: z.infer<typeof searchProfilesSchema>,
+	signal?: AbortSignal,
 ) =>
-  queryOptions({
-    queryKey: ["searchProfiles", JSON.stringify(filter)],
-    queryFn: ({ signal: queryFnSignal }) =>
-      searchProfiles({
-        data: filter,
-        signal: AbortSignal.any(
-          [signal, queryFnSignal].filter(isNotNullOrUndefined)
-        ),
-      }),
-  })
+	queryOptions({
+		queryKey: ["searchProfiles", JSON.stringify(filter)],
+		queryFn: ({ signal: queryFnSignal }) =>
+			searchProfiles({
+				data: filter,
+				signal: AbortSignal.any(
+					[signal, queryFnSignal].filter(isNotNullOrUndefined),
+				),
+			}),
+	});
