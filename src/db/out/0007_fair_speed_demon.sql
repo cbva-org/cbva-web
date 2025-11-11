@@ -1,0 +1,1 @@
+ALTER TABLE "pool_matches" ALTER COLUMN "scheduled_time" SET DATA TYPE time;

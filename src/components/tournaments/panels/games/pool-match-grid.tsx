@@ -87,7 +87,7 @@ export function PoolMatchGrid({
 					<Link to="/matches/pool/$matchId" params={{ matchId: id.toString() }}>
 						{sets.length > 1 ? "Match" : "Game"} {matchNumber}
 					</Link>
-					{sets.some(({ status }) => status === 'in_progress') ? (
+					{sets.some(({ status }) => status === "in_progress") ? (
 						<Button
 							size="sm"
 							className="rounded-sm px-2"

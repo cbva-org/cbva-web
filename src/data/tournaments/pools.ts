@@ -8,8 +8,8 @@ import z from "zod";
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
-  CreateMatchSet,
-  CreatePoolMatch,
+	CreateMatchSet,
+	CreatePoolMatch,
 	CreatePoolTeam,
 	matchSets,
 	poolMatches,
@@ -115,131 +115,144 @@ export const createPoolsMutationOptions = () =>
 	});
 
 const POOL_MATCH_SETTINGS = {
-  3: {
-    sets: [
-      21,
-      21,
-      15
-    ],
-    matches: [
-      [1, 3],
-      [2, 3],
-      [1, 2],
-    ]
+	3: {
+		sets: [21, 21, 15],
+		matches: [
+			[1, 3],
+			[2, 3],
+			[1, 2],
+		],
 	},
-  4: {
-    sets: [28],
-    matches: [
-      [1, 3],
-      [2, 4],
-      [1, 4],
-      [2, 3],
-      [3, 4],
-      [1, 2],
-    ]
-  },
-  5: {
-    sets: [21],
-    matches: [
-      [3, 5],
-      [1, 4],
-      [2, 5],
-      [1, 3],
-      [2, 4],
-      [1, 5],
-      [2, 3],
-      [4, 5],
-      [1, 2],
-      [3, 4],
-    ]
+	4: {
+		sets: [28],
+		matches: [
+			[1, 3],
+			[2, 4],
+			[1, 4],
+			[2, 3],
+			[3, 4],
+			[1, 2],
+		],
+	},
+	5: {
+		sets: [21],
+		matches: [
+			[3, 5],
+			[1, 4],
+			[2, 5],
+			[1, 3],
+			[2, 4],
+			[1, 5],
+			[2, 3],
+			[4, 5],
+			[1, 2],
+			[3, 4],
+		],
 	},
 };
 
 export const createPoolMatchesSchema = selectTournamentDivisionSchema
-  .pick({
-    id: true
-  })
-  .extend({
-    overwrite: z.boolean()
-  })
+	.pick({
+		id: true,
+	})
+	.extend({
+		overwrite: z.boolean(),
+	});
 
 export const createPoolMatchesFn = createServerFn()
-  .middleware([
-    requirePermissions({
-      tournament: ["update"],
-    }),
-  ])
-  .inputValidator(createPoolMatchesSchema)
-  .handler(async ({ data: { id: tournamentDivisionId, overwrite } }) => {
-    const division = await db.query.tournamentDivisions.findFirst({
-      with: {
-        tournament: {
-          columns: {
-            startTime: true,
-          }
-        },
-        pools: {
-          with: {
-            teams: true
-          }
-        }
-      },
-      where: (t, { eq }) => eq(t.id, tournamentDivisionId)
-    })
+	.middleware([
+		requirePermissions({
+			tournament: ["update"],
+		}),
+	])
+	.inputValidator(createPoolMatchesSchema)
+	.handler(async ({ data: { id: tournamentDivisionId, overwrite } }) => {
+		const division = await db.query.tournamentDivisions.findFirst({
+			with: {
+				tournament: {
+					columns: {
+						startTime: true,
+					},
+				},
+				pools: {
+					with: {
+						teams: true,
+					},
+				},
+			},
+			where: (t, { eq }) => eq(t.id, tournamentDivisionId),
+		});
 
-    if (!division) {
-      throw notFound()
-    }
+		if (!division) {
+			throw notFound();
+		}
 
-    // const pools = await db.query.pools.findMany({
-    //   with: {
-    //     teams: true,
-    //   },
-    //   where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId)
-    // })
+		// const pools = await db.query.pools.findMany({
+		//   with: {
+		//     teams: true,
+		//   },
+		//   where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId)
+		// })
 
-    if (overwrite) {
-      await db
+		if (overwrite) {
+			await db
 				.delete(poolMatches)
 				// TODO: consider delete pool matches where pool.tournamentDivisionId eq to ensure no dangling matches
-				.where(inArray(poolMatches.poolId, division.pools.map(({id}) => id)));
-    }
+				.where(
+					inArray(
+						poolMatches.poolId,
+						division.pools.map(({ id }) => id),
+					),
+				);
+		}
 
-    const matchValues: CreatePoolMatch[] = []
-    const setValues: CreateMatchSet[] = []
+		const matchValues: CreatePoolMatch[] = [];
 
-    for (const { id, teams } of division.pools) {
-      const { sets, matches } = [3, 4, 5].includes(teams.length) ?  POOL_MATCH_SETTINGS[teams.length as 3 | 4 | 5] : {
-        /* TODO: fallback to permutations */
-        sets: [],
-        matches: []
-      }
+		const poolMatchSetsSettings: { [id: number]: number[] } = {};
 
-      for (const [matchIdx, [teamAId, teamBId]] of matches.entries()) {
-        matchValues.push({
-          poolId: id,
-          matchNumber: matchIdx + 1,
-          teamAId,
-          teamBId,
-          scheduledTime: matchIdx === 0 ? division.tournament.startTime : null,
-        })
+		for (const { id, teams } of division.pools) {
+			const { sets, matches } = [3, 4, 5].includes(teams.length)
+				? POOL_MATCH_SETTINGS[teams.length as 3 | 4 | 5]
+				: {
+						/* TODO: fallback to permutations */
+						sets: [],
+						matches: [],
+					};
 
-        setValues.push(...sets.map((winScore, setIdx) => ({
-          poolMatchId: sql``,
-          setNumber: setIdx + 1,
-          winScore
-        })))
-      }
-    }
+			poolMatchSetsSettings[id] = sets;
 
-    await db.insert(poolMatches).values(matchValues)
-    await db.insert(matchSets).values(setValues)
+			for (const [matchIdx, [teamAId, teamBId]] of matches.entries()) {
+				matchValues.push({
+					poolId: id,
+					matchNumber: matchIdx + 1,
+					teamAId,
+					teamBId,
+					scheduledTime: matchIdx === 0 ? division.tournament.startTime : null,
+				});
+			}
+		}
 
-    return {
-      success: true as true
-    }
-  })
+		// Create pool matches first and get their IDs
+		const createdMatches = await db
+			.insert(poolMatches)
+			.values(matchValues)
+			.returning({ id: poolMatches.id, poolId: poolMatches.poolId });
 
+		// Now create match sets with correct poolMatchId references
+		const setValues: CreateMatchSet[] = createdMatches.flatMap(({ id, poolId }) =>
+			poolMatchSetsSettings[poolId].map((winScore, setIdx) => ({
+				poolMatchId: id,
+				setNumber: setIdx + 1,
+				winScore,
+			})),
+		);
+
+		await db.insert(matchSets).values(setValues);
+
+		return {
+			success: true as true,
+		};
+	});
 
 export const createPoolMatchesMutationOptions = () =>
 	mutationOptions({

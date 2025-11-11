@@ -108,7 +108,7 @@ export function getPoolStats({
 		const { teamAId, teamBId, winnerId, sets } = match;
 
 		if (teamAId === null || teamBId === null || winnerId === null) {
-		  return undefined
+			return undefined;
 
 			// continue;
 		}

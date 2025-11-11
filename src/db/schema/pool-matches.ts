@@ -52,7 +52,7 @@ export const poolMatches = pgTable(
 		unique("pool_matches_pool_id_match_number").on(
 			table.poolId,
 			table.matchNumber,
-		)
+		),
 	],
 );
 

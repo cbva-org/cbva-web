@@ -69,7 +69,8 @@ export function CreatePoolMatchesForm({
 				<h3 className={title({ size: "sm" })}>Create Pool Matches</h3>
 
 				<p className="text-sm text-gray-700 mb-6">
-					Create matches for all pools in this tournament. If you want to recreate pools entirely, select{" "}
+					Create matches for all pools in this tournament. If you want to
+					recreate pools entirely, select{" "}
 					<span className="font-semibold italic">Overwrite existing</span>.
 				</p>
 
