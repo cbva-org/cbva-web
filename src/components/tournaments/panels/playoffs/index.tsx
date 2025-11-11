@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { TabPanel } from "@/components/base/tabs"
 import { playoffsQueryOptions } from "@/data/playoffs"
-import type { Tournament, TournamentDivision } from "@/db"
+import type { Tournament, TournamentDivision } from "@/db/schema"
 import { Bracket } from "./bracket"
 
 export function PlayoffsPanel({

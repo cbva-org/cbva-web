@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
-
 import { UnderConstruction } from "@/components/under-construction"
 import { DefaultLayout } from "@/layouts/default"
 
-export const Route = createFileRoute("/juniors")({
+export const Route = createFileRoute("/juniors/leaderboard")({
   component: RouteComponent,
 })
 

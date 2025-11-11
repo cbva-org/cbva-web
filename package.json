@@ -1,5 +1,5 @@
 {
-  "name": "tanstack-start-db-projects-example",
+  "name": "@cbva/web",
   "private": true,
   "type": "module",
   "scripts": {
@@ -27,8 +27,6 @@
     "@react-aria/i18n": "^3.12.13",
     "@tailwindcss/vite": "^4.1.16",
     "@tanstack/query-core": "^5.90.5",
-    "@tanstack/query-db-collection": "^0.2.39",
-    "@tanstack/react-db": "^0.1.38",
     "@tanstack/react-form": "^1.23.8",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-router": "^1.134.4",

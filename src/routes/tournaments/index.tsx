@@ -8,7 +8,12 @@ import { Pagination } from "@/components/base/pagination"
 import { FilterDivisions } from "@/components/tournaments/filters/divisions"
 import { FilterGender } from "@/components/tournaments/filters/gender"
 import { tournamentsQueryOptions } from "@/data/tournaments"
-import type { Division, Tournament, TournamentDivision, Venue } from "@/db"
+import type {
+  Division,
+  Tournament,
+  TournamentDivision,
+  Venue,
+} from "@/db/schema"
 import { getTournamentDivisionDisplay } from "@/hooks/tournament"
 import { DefaultLayout } from "@/layouts/default"
 

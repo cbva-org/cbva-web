@@ -1,7 +1,7 @@
-import type { PlayerProfile } from "@/db";
+import type { PlayerProfile } from "@/db/schema"
 
 export function playerNames(players: PlayerProfile[]): string[] {
-  return players.map(playerName);
+  return players.map(playerName)
 }
 
 export function playerName({
@@ -9,5 +9,5 @@ export function playerName({
   firstName,
   lastName,
 }: PlayerProfile): string {
-  return `${preferredName || firstName} ${lastName}`;
+  return `${preferredName || firstName} ${lastName}`
 }

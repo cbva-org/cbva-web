@@ -1,8 +1,4 @@
-import {
-  createLink,
-  type LinkProps,
-  useLinkProps,
-} from "@tanstack/react-router"
+import { createLink } from "@tanstack/react-router"
 import { ChevronDownIcon, MenuIcon } from "lucide-react"
 import type { ReactNode } from "react"
 import {

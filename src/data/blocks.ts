@@ -1,8 +1,13 @@
-import { queryOptions } from "@tanstack/react-query"
+import { mutationOptions, queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import { requirePermissions } from "@/auth/shared"
 import { db } from "@/db/connection"
-import { blocks, createBlockSchema, selectPageSchema } from "@/db/schema"
+import {
+  blocks,
+  type CreateBlock,
+  createBlockSchema,
+  selectPageSchema,
+} from "@/db/schema"
 
 export const getPageBlocks = createServerFn()
   .inputValidator(
@@ -40,4 +45,9 @@ export const updatePageFn = createServerFn({ method: "POST" })
           content: data.content,
         },
       })
+  })
+
+export const updateContentBlockMutationOptions = () =>
+  mutationOptions({
+    mutationFn: (data: CreateBlock) => updatePageFn({ data }),
   })

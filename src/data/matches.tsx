@@ -1,7 +1,9 @@
-import { queryOptions } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
+import { queryOptions } from "@tanstack/react-query"
+import { createServerFn } from "@tanstack/react-start"
 
-import { db, eq, poolMatches } from "@/db";
+import { eq } from "drizzle-orm"
+import { db } from "@/db/connection"
+import { poolMatches } from "@/db/schema"
 
 export const getPoolMatch = createServerFn({
   method: "GET",
@@ -39,14 +41,14 @@ export const getPoolMatch = createServerFn({
           },
         },
       },
-    });
-  });
+    })
+  })
 
 export const poolMatchQueryOptions = (id: number) =>
   queryOptions({
     queryKey: ["pool_match", id],
     queryFn: () => getPoolMatch({ data: { id } }),
-  });
+  })
 
 export const getPoolMatchSet = createServerFn({
   method: "GET",
@@ -87,11 +89,11 @@ export const getPoolMatchSet = createServerFn({
           },
         },
       },
-    });
-  });
+    })
+  })
 
 export const poolMatchSetQueryOptions = (id: number) =>
   queryOptions({
     queryKey: ["pool_match_set", id],
     queryFn: () => getPoolMatchSet({ data: { id } }),
-  });
+  })

@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from "react"
-import type { PlayoffMatch } from "@/db"
+import type { PlayoffMatch } from "@/db/schema"
 import { isNotNull } from "@/utils/types"
 import type { MatchTeam } from "../../games/pool-match-grid"
 import { MatchEdge } from "./match-edge"

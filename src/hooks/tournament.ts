@@ -1,7 +1,7 @@
-import type { Division, Level, TournamentDivision } from "@/db";
+import type { Division, Level, TournamentDivision } from "@/db/schema"
 
 export function getLevelDisplay(level: Level | null) {
-  return (level?.abbreviated || level?.name)?.toUpperCase() || "N";
+  return (level?.abbreviated || level?.name)?.toUpperCase() || "N"
 }
 
 export function getTournamentDivisionDisplay({
@@ -9,7 +9,7 @@ export function getTournamentDivisionDisplay({
   gender,
   division: { maxAge, name },
 }: Pick<TournamentDivision, "name" | "teamSize" | "gender"> & {
-  division: Pick<Division, "maxAge" | "name">;
+  division: Pick<Division, "maxAge" | "name">
 }) {
   let display = maxAge
     ? gender === "male"
@@ -17,15 +17,15 @@ export function getTournamentDivisionDisplay({
       : "Girl's"
     : gender === "male"
       ? "Men's"
-      : "Women's";
+      : "Women's"
 
-  display += ` ${name === "open" ? "Open" : name.toUpperCase()}`;
+  display += ` ${name === "open" ? "Open" : name.toUpperCase()}`
 
   if (teamSize === 4) {
-    display += " quads";
+    display += " quads"
   } else if (teamSize === 6) {
-    display += " sixes";
+    display += " sixes"
   }
 
-  return display;
+  return display
 }

@@ -1,8 +1,8 @@
 // lexical-editor.ts
 
-import { createHeadlessEditor } from "@lexical/headless";
-import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
-import { JSDOM } from "jsdom";
+import { createHeadlessEditor } from "@lexical/headless"
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html"
+import { JSDOM } from "jsdom"
 import {
   $createParagraphNode,
   $createTextNode,
@@ -10,22 +10,22 @@ import {
   $insertNodes,
   type EditorState,
   type LexicalEditor,
-} from "lexical";
-import { marked } from "marked";
-import { EDITOR_CONFIG_DEFAULTS } from "@/components/base/rich-text-editor/config";
-import { db } from "../connection";
-import { blocks, type CreateBlock } from "../schema";
-import type { LexicalState } from "../schema/shared";
+} from "lexical"
+import { marked } from "marked"
+import { EDITOR_CONFIG_DEFAULTS } from "@/components/base/rich-text-editor/config"
+import { db } from "../connection"
+import { blocks, type CreateBlock } from "../schema"
+import type { LexicalState } from "../schema/shared"
 
 export class LexicalEditorService {
-  private editor: LexicalEditor;
+  private editor: LexicalEditor
 
   constructor() {
     this.editor = createHeadlessEditor({
       ...EDITOR_CONFIG_DEFAULTS,
       namespace: "MyEditor",
       onError: (error) => console.error("Lexical error:", error),
-    });
+    })
   }
 
   // Inject HTML string into the editor
@@ -34,63 +34,63 @@ export class LexicalEditorService {
       this.editor.update(() => {
         try {
           // Parse HTML string
-          const dom = new JSDOM(htmlString);
-          const document = dom.window.document;
+          const dom = new JSDOM(htmlString)
+          const document = dom.window.document
 
           // Clear existing content
-          const root = $getRoot();
-          root.clear();
+          const root = $getRoot()
+          root.clear()
 
           // Generate nodes from DOM and insert them
-          const nodes = $generateNodesFromDOM(this.editor, document);
-          $insertNodes(nodes);
+          const nodes = $generateNodesFromDOM(this.editor, document)
+          $insertNodes(nodes)
 
           // Add an empty paragraph if no content was inserted
           if (nodes.length === 0) {
-            const paragraph = $createParagraphNode();
-            paragraph.append($createTextNode(""));
-            root.append(paragraph);
+            const paragraph = $createParagraphNode()
+            paragraph.append($createTextNode(""))
+            root.append(paragraph)
           }
 
-          resolve();
+          resolve()
         } catch (error) {
-          reject(error);
+          reject(error)
         }
-      });
-    });
+      })
+    })
   }
 
   // Get current editor state as JSON
   getEditorStateJSON(): LexicalState {
     const state = this.editor.getEditorState().read(() => {
-      return this.editor.getEditorState().toJSON();
-    });
+      return this.editor.getEditorState().toJSON()
+    })
 
-    return state as LexicalState;
+    return state as LexicalState
   }
 
   // Get current content as HTML
   getEditorHTML(): string {
-    let html = "";
+    let html = ""
 
     this.editor.getEditorState().read(() => {
-      html = $generateHtmlFromNodes(this.editor);
-    });
+      html = $generateHtmlFromNodes(this.editor)
+    })
 
-    return html;
+    return html
   }
 
   // Update editor with JSON state
   updateEditorFromJSON(stateJSON: string): void {
-    const editorState = this.editor.parseEditorState(stateJSON);
-    this.editor.setEditorState(editorState);
+    const editorState = this.editor.parseEditorState(stateJSON)
+    this.editor.setEditorState(editorState)
   }
 
   // Subscribe to changes
   onUpdate(callback: (editorState: EditorState) => void): () => void {
     return this.editor.registerUpdateListener(({ editorState }) => {
-      callback(editorState);
-    });
+      callback(editorState)
+    })
   }
 }
 
@@ -237,23 +237,45 @@ With 25+ AAA rated players points are increased 30%
 | 5th | - |
 `,
   },
-];
+  {
+    path: "sanctioning",
+    key: "sanctioning",
+    content: `Menʼs Open/AAA/AA/A and Women’s Open/AAA/AA divisions: require a minimum of twelve (12) teams AND minimum eight (8) players whose rating equals the tournament division (for example, 8+ AA-rated players in AA division tourney).
+
+    Women's A division: requires a minimum of eight (8) teams AND minimum four (4) players with an A or a B rating (for example, 2+ A-rated players and 2 B-rated players).
+
+    Men's B/Unrated: require a minimum of eight (8) teams AND minimum eight (8) players whose rating equals the tournament division (for example, 8+ B-rated players in B division tourney), OR a minimum of sixteen (16) teams, regardless of the players' ratings.
+
+    Women's B division: require a minimum of four (4) teams AND minimum two (2) players whose rating equals the tournament division (for example, 2+ B-rated players in tourney), OR a minimum of eight (8) teams, regardless of the players' ratings.
+
+    Women's Unrated division: require a minimum of four (4) teams.
+
+    Tournaments must meet the listed sanctioning requirements in order to be "sanctioned" as the division. If a tournament does not meet these requirements, it is downgraded.
+
+    For Open/AAA/AA/A divisions with eight (8) or more teams but less than twelve (12) teams, OR twelve (12) or more teams but less than eight (8) players whose rating equals the tournament division, the division will be downgraded to the next highest level where the minimum number of player ratings is met.
+
+    For Men's B divisions with eight (8) to sixteen (16) teams but less than eight (8) B players, the division will be downgraded to the Unrated.
+
+    If a tournament has less than eight (8) teams, it will not be sanctioned and no ratings will be awarded. (With the exception of the Women's B)
+`,
+  },
+]
 
 export async function seedRatingsPage() {
-  const editor = new LexicalEditorService();
+  const editor = new LexicalEditorService()
 
-  const serializedSeeds: CreateBlock[] = [];
+  const serializedSeeds: CreateBlock[] = []
 
   for (const { path, key, content } of seeds) {
-    await editor.injectHTML(await Promise.resolve(marked.parse(content)));
-    const state = editor.getEditorStateJSON();
+    await editor.injectHTML(await Promise.resolve(marked.parse(content)))
+    const state = editor.getEditorStateJSON()
 
     serializedSeeds.push({
       page: path,
       key,
       content: state,
-    });
+    })
   }
 
-  await db.insert(blocks).values(serializedSeeds);
+  await db.insert(blocks).values(serializedSeeds).onConflictDoNothing()
 }

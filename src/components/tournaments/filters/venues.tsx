@@ -3,7 +3,7 @@ import { linkOptions } from "@tanstack/react-router"
 import { Label } from "react-aria-components"
 import { ComboBox, ComboBoxItem } from "@/components/base/combo-box"
 import { venuesQueryOptions } from "@/data/venues"
-import type { Venue } from "@/db"
+import type { Venue } from "@/db/schema"
 
 type Key = Venue["id"]
 

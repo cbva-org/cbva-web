@@ -11,8 +11,8 @@ import {
 } from "@/components/base/table"
 import { TabPanel } from "@/components/base/tabs"
 import { ProfileName } from "@/components/profiles/name"
-import { poolsQueryOptions, usePools } from "@/data/pools"
-import type { Tournament, TournamentDivision } from "@/db"
+import { poolsQueryOptions } from "@/data/pools"
+import type { Tournament, TournamentDivision } from "@/db/schema"
 import { getPoolStats, usePoolMatchResults } from "@/hooks/matches"
 
 export function PoolsPanel({

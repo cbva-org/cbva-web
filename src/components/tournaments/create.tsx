@@ -14,7 +14,7 @@ import { Button } from "@/components/base/button"
 import { useAppForm } from "@/components/base/form"
 import { divisionsQueryOptions } from "@/data/divisions"
 import { venuesQueryOptions } from "@/data/venues"
-import type { CreateTournament } from "@/db"
+import type { CreateTournament } from "@/db/schema"
 
 const schema = z.object({
   name: z.string().optional(),

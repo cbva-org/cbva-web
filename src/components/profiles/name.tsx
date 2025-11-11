@@ -1,4 +1,4 @@
-import type { PlayerProfile } from "@/db";
+import type { PlayerProfile } from "@/db/schema"
 
 export function ProfileName({
   preferredName,
@@ -11,5 +11,5 @@ export function ProfileName({
       <span className="hidden sm:inline-block">{lastName}</span>
       <span className="sm:hidden">{lastName.slice(0, 1)}.</span>
     </span>
-  );
+  )
 }

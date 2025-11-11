@@ -7,6 +7,7 @@ import type { Division, TournamentDivision } from "@/db/schema"
 
 import { AddTeamForm } from "./add-team"
 import { CalculateSeedsForm } from "./calculate-seeds"
+import { CreatePoolsForm } from "./create-pools"
 import { DuplicateForm } from "./duplicate"
 
 export type TournamentAdminControlsProps = {
@@ -47,15 +48,17 @@ export function TournamentControls({
         )}
 
         {canUpdate && (
-          <DropdownMenuItem onPress={() => setActiveModal("add-team")}>
-            Add Team
-          </DropdownMenuItem>
-        )}
-
-        {canUpdate && (
-          <DropdownMenuItem onPress={() => setActiveModal("calc-seeds")}>
-            Calculate Seeds
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem onPress={() => setActiveModal("add-team")}>
+              Add Team
+            </DropdownMenuItem>
+            <DropdownMenuItem onPress={() => setActiveModal("gen-pools")}>
+              Create Pools
+            </DropdownMenuItem>
+            <DropdownMenuItem onPress={() => setActiveModal("calc-seeds")}>
+              Calculate Seeds
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenu>
 
@@ -75,6 +78,17 @@ export function TournamentControls({
         isOpen={activeModal === "add-team"}
         onOpenChange={(open) => {
           const next = open ? "add-team" : undefined
+
+          setActiveModal(next)
+        }}
+      />
+
+      <CreatePoolsForm
+        tournamentId={tournamentId}
+        division={division}
+        isOpen={activeModal === "gen-pools"}
+        onOpenChange={(open) => {
+          const next = open ? "gen-pools" : undefined
 
           setActiveModal(next)
         }}

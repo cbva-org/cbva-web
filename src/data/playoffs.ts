@@ -4,7 +4,7 @@ import {
   useQuery,
 } from "@tanstack/react-query"
 import { createServerFn, useServerFn } from "@tanstack/react-start"
-import { db } from "@/db"
+import { db } from "@/db/connection"
 
 async function readPlayoffs({
   tournamentDivisionId,

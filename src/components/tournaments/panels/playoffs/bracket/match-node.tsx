@@ -4,7 +4,7 @@ import { CircleDot } from "lucide-react";
 import { tv } from "tailwind-variants";
 
 import { Button } from "@/components/base/button";
-import type { MatchSet, PlayoffMatch } from "@/db";
+import type { MatchSet, PlayoffMatch } from "@/db/schema";
 import { isNotNull } from "@/utils/types";
 import type { MatchTeam } from "../../games/pool-match-grid";
 import { useActiveTeam, useSetActiveTeam } from ".";

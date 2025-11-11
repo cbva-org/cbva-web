@@ -10,7 +10,7 @@ import {
   useInsertPlayerProfile,
   useUpdatePlayerProfile,
 } from "@/data/profiles";
-import type { CreatePlayerProfile } from "@/db";
+import type { CreatePlayerProfile } from "@/db/schema";
 
 const schema = z.object({
   firstName: z

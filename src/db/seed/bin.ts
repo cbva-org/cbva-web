@@ -14,6 +14,9 @@ async function main() {
       {
         path: "juniors",
       },
+      {
+        path: "sanctioning",
+      },
     ])
     .onConflictDoNothing()
 

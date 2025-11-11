@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
-import { findPaged } from "@/db"
+import { findPaged } from "@/db/pagination"
 
 async function readTeams({
   tournamentDivisionId,

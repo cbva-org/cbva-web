@@ -6,7 +6,8 @@ import {
 } from "@tanstack/react-query"
 import { createServerFn, useServerFn } from "@tanstack/react-start"
 import { requirePermissions } from "@/auth/shared"
-import { db, type UpdateVenue, venues } from "@/db"
+import { db } from "@/db/connection"
+import { type UpdateVenue, venues } from "@/db/schema"
 
 async function readVenues() {
   return await db.query.venues.findMany({

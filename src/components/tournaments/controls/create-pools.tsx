@@ -1,33 +1,33 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Alert } from "@/components/base/alert"
+
 import { Button } from "@/components/base/button"
 import { useAppForm } from "@/components/base/form"
 import { Modal } from "@/components/base/modal"
 import { title } from "@/components/base/primitives"
 import { teamsQueryOptions } from "@/data/teams"
 import {
-  calculateSeedsMutationOptions,
-  calculateSeedsSchema,
-} from "@/data/tournaments/teams"
+  createPoolsMutationOptions,
+  createPoolsSchema,
+} from "@/data/tournaments/pools"
 import type { Division, TournamentDivision } from "@/db/schema"
 
-export type CalculateSeedsFormProps = {
+export type CreatePoolsFormProps = {
   tournamentId: number
   division: TournamentDivision & { division: Division }
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function CalculateSeedsForm({
+export function CreatePoolsForm({
   tournamentId,
   division,
   onOpenChange,
   ...props
-}: CalculateSeedsFormProps) {
+}: CreatePoolsFormProps) {
   const queryClient = useQueryClient()
 
   const { mutate, failureReason } = useMutation({
-    ...calculateSeedsMutationOptions(),
+    ...createPoolsMutationOptions(),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: teamsQueryOptions(division.id).queryKey,
@@ -37,7 +37,7 @@ export function CalculateSeedsForm({
     },
   })
 
-  const schema = calculateSeedsSchema.pick({
+  const schema = createPoolsSchema.pick({
     overwrite: true,
   })
 
@@ -60,11 +60,11 @@ export function CalculateSeedsForm({
   return (
     <Modal {...props} onOpenChange={onOpenChange}>
       <div className="p-3 flex flex-col space-y-4 relative">
-        <h3 className={title({ size: "sm" })}>Calculate Seeds</h3>
+        <h3 className={title({ size: "sm" })}>Create Pools</h3>
 
         <p className="text-sm text-gray-700 mb-6">
-          Calculate seeds for each division in this tournament. If you want to
-          reset the seeds entirely, select{" "}
+          Create pools for each division in this tournament. If you want to
+          recreate pools entirely, select{" "}
           <span className="font-semibold italic">Overwrite existing</span>.
         </p>
 
@@ -79,7 +79,7 @@ export function CalculateSeedsForm({
           {failureReason && (
             <form.AppForm>
               <form.Alert
-                title={"Unable to set seeds"}
+                title={"Unable to create pools"}
                 description={failureReason.message}
               />
             </form.AppForm>
@@ -96,7 +96,7 @@ export function CalculateSeedsForm({
             <form.Footer>
               <Button onPress={() => onOpenChange(false)}>Cancel</Button>
 
-              <form.SubmitButton>Calculate</form.SubmitButton>
+              <form.SubmitButton>Create</form.SubmitButton>
             </form.Footer>
           </form.AppForm>
         </form>

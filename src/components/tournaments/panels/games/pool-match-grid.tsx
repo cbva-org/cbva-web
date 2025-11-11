@@ -11,7 +11,7 @@ import type {
   PoolTeam,
   Team,
   TournamentDivisionTeam,
-} from "@/db";
+} from "@/db/schema";
 import { isNotNull } from "@/utils/types";
 
 export const scoreTextStyles = tv({

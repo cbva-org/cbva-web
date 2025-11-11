@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
 
-import { db } from "@/db"
+import { db } from "@/db/connection"
 
 export const getLevelsSchema = z.object({
   division: z.number().optional(),

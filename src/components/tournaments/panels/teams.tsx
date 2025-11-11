@@ -11,7 +11,7 @@ import {
 } from "@/components/base/table"
 import { TabPanel } from "@/components/base/tabs"
 import { teamsQueryOptions } from "@/data/teams"
-import type { TournamentDivision } from "@/db"
+import type { TournamentDivision } from "@/db/schema"
 import { getLevelDisplay } from "@/hooks/tournament"
 import { playerName } from "@/utils/profiles"
 
