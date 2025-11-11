@@ -19,6 +19,7 @@ import {
 	applyMatchSetAction,
 	updateScoreMutationOptions,
 } from "@/data/tournaments/matches";
+import { dbg } from "@/utils/dbg";
 
 export const Route = createFileRoute("/matches/pool/$matchId/")({
 	loader: async ({ params: { matchId }, context: { queryClient } }) => {
@@ -64,6 +65,15 @@ const scoreStyles = tv({
 	},
 });
 
+// TODOs:
+//
+// - Start match
+// - Undo complete match (subtrack 1 from winning score and change status)
+// - Side switch modal
+// - Serve order tracker
+//
+// - Referees for permission
+
 function RouteComponent() {
 	const { matchId } = Route.useParams();
 
@@ -71,24 +81,26 @@ function RouteComponent() {
 
 	const poolMatchQuery = poolMatchQueryOptions(Number.parseInt(matchId, 10));
 
-	const { mutate } = useMutation({
+	const { mutate, isPending } = useMutation({
 		// TODO: optimistically update score
 		...updateScoreMutationOptions(),
 		onSuccess: () => {
-			//  queryClient.invalidateQueries({
-			// 	queryKey: poolMatchQuery.queryKey
-			// })
+			queryClient.invalidateQueries({
+			  queryKey: poolMatchQuery.queryKey
+			})
 		},
 	});
 
 	const makeUpdateScoreHandler =
 		(action: "increment" | "decrement") =>
 		(matchSetId: number, teamA: boolean) => {
-			mutate({
+			const actionPayload = {
 				id: matchSetId,
 				action,
 				teamA,
-			});
+			};
+
+			mutate(actionPayload);
 
 			queryClient.setQueryData(poolMatchQuery.queryKey, (data) => {
 				if (!data) {
@@ -98,7 +110,9 @@ function RouteComponent() {
 				return {
 					...data,
 					sets: data?.sets.map((set) =>
-						set.id === matchSetId ? applyMatchSetAction(set) : set,
+						set.id === matchSetId
+							? applyMatchSetAction(actionPayload, set)
+							: set,
 					),
 				};
 			});
@@ -107,9 +121,11 @@ function RouteComponent() {
 	const handleIncrement = makeUpdateScoreHandler("increment");
 	const handleDecrement = makeUpdateScoreHandler("decrement");
 
-	const { data } = useSuspenseQuery(poolMatchQuery);
+	const { data, isLoading } = useSuspenseQuery(poolMatchQuery);
 
-	const isDone = data?.winnerId;
+	const isDone = data?.status === 'completed';
+
+	const isActionDisabled = isLoading || isPending
 
 	return (
 		<DefaultLayout>
@@ -193,12 +209,18 @@ function RouteComponent() {
 										>
 											{score ?? "-"}
 										</div>
-										{!isDone && (
+										{s.status === 'in_progress' && (
 											<div className="flex flex-col gap-3 justify-center">
-												<Button onPress={() => handleIncrement(s.id, i === 0)}>
+												<Button
+													onPress={() => handleIncrement(s.id, i === 0)}
+													isDisabled={isActionDisabled}
+												>
 													<PlusIcon size={28} />
 												</Button>
-												<Button onPress={() => handleDecrement(s.id, i === 0)}>
+												<Button
+													onPress={() => handleDecrement(s.id, i === 0)}
+													isDisabled={isActionDisabled}
+												>
 													<MinusIcon size={28} />
 												</Button>
 											</div>
