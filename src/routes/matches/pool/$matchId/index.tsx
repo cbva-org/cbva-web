@@ -130,15 +130,13 @@ function RouteComponent() {
 		data?.sets[0]?.id,
 	);
 
-	console.log(activeTabKey);
-
 	const isDone = data?.status === "completed";
 
 	const isActionDisabled = isLoading || isPending;
 
 	return (
 		<DefaultLayout>
-			{data && (
+			{data && activeTabKey && (
 				<TournamentDirectorMatchControls
 					matchId={data.id}
 					setId={activeTabKey}

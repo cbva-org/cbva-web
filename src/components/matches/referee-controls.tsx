@@ -11,14 +11,19 @@ import {
 import type { MatchSet, PoolMatch } from "@/db/schema";
 import { Button } from "../base/button";
 import { title } from "../base/primitives";
+import type { MatchTeam } from "../tournaments/panels/games/pool-match-grid";
+import { ServeOrderTracker } from "./serve-order-tracker";
 import { SideSwitchModal } from "./side-switch";
 
 export function RefereeControls({
-	// match,
+	match,
 	set,
 	queryKey,
 }: {
-	match: PoolMatch;
+	match: PoolMatch & {
+		teamA?: Omit<MatchTeam, "poolTeam"> | null;
+		teamB?: Omit<MatchTeam, "poolTeam"> | null;
+	};
 	set: MatchSet;
 	queryKey: QueryKey;
 }) {
@@ -58,6 +63,14 @@ export function RefereeControls({
 			)}
 
 			{set.status === "in_progress" && <SideSwitchModal {...set} />}
+
+			{match.teamA && match.teamB && (
+				<ServeOrderTracker
+					setId={set.id}
+					teamA={match.teamA}
+					teamB={match.teamB}
+				/>
+			)}
 		</div>
 	);
 }
