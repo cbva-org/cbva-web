@@ -64,7 +64,7 @@ export function RefereeControls({
 
 			{set.status === "in_progress" && <SideSwitchModal {...set} />}
 
-			{match.teamA && match.teamB && (
+			{set.status === "in_progress" && match.teamA && match.teamB && (
 				<ServeOrderTracker
 					setId={set.id}
 					teamA={match.teamA}

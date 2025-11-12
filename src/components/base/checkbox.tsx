@@ -36,7 +36,7 @@ export function CheckboxGroup(props: CheckboxGroupProps) {
 	);
 }
 
-const checkboxStyles = tv({
+export const checkboxStyles = tv({
 	base: "flex gap-2 items-center group text-sm transition relative",
 	variants: {
 		isDisabled: {
@@ -46,7 +46,7 @@ const checkboxStyles = tv({
 	},
 });
 
-const boxStyles = tv({
+export const boxStyles = tv({
 	extend: focusRing,
 	base: "w-5 h-5 shrink-0 rounded-sm flex items-center justify-center border-2 transition",
 	variants: {

@@ -1,9 +1,10 @@
 import { useLocalStorageState } from "ahooks";
 import clsx from "clsx";
 import { UndoIcon } from "lucide-react";
-import { useState } from "react";
 import { ToggleButton } from "react-aria-components";
+
 import { Button } from "../base/button";
+import { boxStyles } from "../base/checkbox";
 import { ProfileName } from "../profiles/name";
 import type { MatchTeam } from "../tournaments/panels/games/pool-match-grid";
 
@@ -20,17 +21,12 @@ export function ServeOrderTracker({
 		length: teamA.team.players.length + teamB.team.players.length,
 	}).map(() => null);
 
-	const [order, setOrder] = useState<(number | null)[]>(defaultOrder);
-
-	// const [order, setOrder] = useLocalStorageState<(number | null)[]>(
-	// 	`set/${setId}/serve-order`,
-	// 	{
-	// 		defaultValue: () =>
-	// 			Array.from({
-	// 				length: teamA.team.players.length + teamB.team.players.length,
-	// 			}).map(() => null),
-	// 	},
-	// );
+	const [order, setOrder] = useLocalStorageState<(number | null)[]>(
+		`set/${setId}/serve-order`,
+		{
+			defaultValue: () => defaultOrder,
+		},
+	);
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -50,6 +46,7 @@ export function ServeOrderTracker({
 					<div key={team.id} className="flex flex-col gap-2">
 						{team.team.players.map(({ profile }) => {
 							const position = order.indexOf(profile.id);
+							const selected = position !== -1;
 
 							const complete = order.every((v) => v !== null);
 							const lastChosen = [...order].reverse().find((v) => v !== null);
@@ -63,10 +60,10 @@ export function ServeOrderTracker({
 								<ToggleButton
 									key={profile.id}
 									className={clsx(
-										"px-2 py-1 border border-gray-300 rounded-md ",
-										order.find((id) => profile.id === id)
+										"flex flex-row gap-2",
+										selected
 											? "border-gray-700"
-											: "disabled:cursor-not-allowed disabled:text-gray-600 disabled:border-gray-100",
+											: "disabled:cursor-not-allowed disabled:text-gray-600",
 										complete ? "cursor-default" : "cursor-pointer",
 									)}
 									isDisabled={otherTeamIsNext}
@@ -82,8 +79,12 @@ export function ServeOrderTracker({
 										}
 									}}
 								>
-									<span className="mr-2">
-										{position === -1 ? "-" : position + 1}
+									<span
+										className={boxStyles({
+											isDisabled: !selected && otherTeamIsNext,
+										})}
+									>
+										{position === -1 ? null : position + 1}
 									</span>
 									<ProfileName {...profile} />
 								</ToggleButton>
