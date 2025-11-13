@@ -90,21 +90,21 @@ export function PoolsPanel({
 										return (
 											<TableRow key={id}>
 												<TableCell>
-													{finish ?? (stats || {})[teamId]?.rank ?? "-"}
+													{finish ?? stats?.[teamId]?.rank ?? "-"}
 												</TableCell>
 												<TableCell>{seed ?? "-"}</TableCell>
 												<TableCell>
 													<span className="flex flex-col md:flex-row gap-1">
 														{players.map(({ profile }, i) => (
-															<>
-																<ProfileName key={profile.id} {...profile} />{" "}
+															<span key={profile.id}>
+																<ProfileName {...profile} />{" "}
 																{i === players.length - 1 ? null : (
 																	<span className="hidden md:inline-block">
 																		{" "}
 																		&{" "}
 																	</span>
 																)}
-															</>
+															</span>
 														))}
 													</span>
 												</TableCell>

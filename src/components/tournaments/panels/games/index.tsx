@@ -141,6 +141,7 @@ export function GamesPanel({
 				{visiblePools.map((pool) => (
 					<div
 						key={pool.id}
+						data-pool={pool.id}
 						className="flex flex-col space-y-6 bg-content-background-alt px-3 md:rounded-lg overflow-hidden"
 					>
 						<h2

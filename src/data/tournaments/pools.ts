@@ -1,24 +1,24 @@
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
-import range from "lodash/range";
 import { eq, inArray } from "drizzle-orm";
+import range from "lodash/range";
 import z from "zod";
 
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
-	CreateMatchSet,
-	CreatePoolMatch,
-	CreatePoolTeam,
+	type CreateMatchSet,
+	type CreatePoolMatch,
+	type CreatePoolTeam,
 	matchSets,
 	poolMatches,
 	pools,
 	poolTeams,
 	selectTournamentDivisionSchema,
 } from "@/db/schema";
-import { snake } from "@/lib/snake-draft";
 import { badRequest, notFound } from "@/lib/responses";
+import { snake } from "@/lib/snake-draft";
 
 export const createPoolsSchema = selectTournamentDivisionSchema
 	.pick({
@@ -147,7 +147,7 @@ const POOL_MATCH_SETTINGS = {
 
 export const createPoolMatchesSchema = selectTournamentDivisionSchema
 	.pick({
-		id: true,
+		tournamentId: true,
 	})
 	.extend({
 		overwrite: z.boolean(),
@@ -160,8 +160,10 @@ export const createPoolMatchesFn = createServerFn()
 		}),
 	])
 	.inputValidator(createPoolMatchesSchema)
-	.handler(async ({ data: { id: tournamentDivisionId, overwrite } }) => {
-		const division = await db.query.tournamentDivisions.findFirst({
+	.handler(async ({ data: { tournamentId, overwrite } }) => {
+		console.log(tournamentId);
+
+		const divisions = await db.query.tournamentDivisions.findMany({
 			with: {
 				tournament: {
 					columns: {
@@ -174,12 +176,8 @@ export const createPoolMatchesFn = createServerFn()
 					},
 				},
 			},
-			where: (t, { eq }) => eq(t.id, tournamentDivisionId),
+			where: (t, { eq }) => eq(t.tournamentId, tournamentId),
 		});
-
-		if (!division) {
-			throw notFound();
-		}
 
 		// const pools = await db.query.pools.findMany({
 		//   with: {
@@ -195,7 +193,7 @@ export const createPoolMatchesFn = createServerFn()
 				.where(
 					inArray(
 						poolMatches.poolId,
-						division.pools.map(({ id }) => id),
+						divisions.flatMap((division) => division.pools.map(({ id }) => id)),
 					),
 				);
 		}
@@ -204,25 +202,31 @@ export const createPoolMatchesFn = createServerFn()
 
 		const poolMatchSetsSettings: { [id: number]: number[] } = {};
 
-		for (const { id, teams } of division.pools) {
-			const { sets, matches } = [3, 4, 5].includes(teams.length)
-				? POOL_MATCH_SETTINGS[teams.length as 3 | 4 | 5]
-				: {
-						/* TODO: fallback to permutations */
-						sets: [],
-						matches: [],
-					};
+		for (const division of divisions) {
+			for (const { id, teams } of division.pools) {
+				const { sets, matches } = [3, 4, 5].includes(teams.length)
+					? POOL_MATCH_SETTINGS[teams.length as 3 | 4 | 5]
+					: {
+							/* TODO: fallback to permutations */
+							sets: [],
+							matches: [],
+						};
 
-			poolMatchSetsSettings[id] = sets;
+				poolMatchSetsSettings[id] = sets;
 
-			for (const [matchIdx, [teamAId, teamBId]] of matches.entries()) {
-				matchValues.push({
-					poolId: id,
-					matchNumber: matchIdx + 1,
-					teamAId,
-					teamBId,
-					scheduledTime: matchIdx === 0 ? division.tournament.startTime : null,
-				});
+				for (const [matchIdx, [teamASeed, teamBSeed]] of matches.entries()) {
+					const teamAId = teams.find((team) => teamASeed === team.seed)?.teamId;
+					const teamBId = teams.find((team) => teamBSeed === team.seed)?.teamId;
+
+					matchValues.push({
+						poolId: id,
+						matchNumber: matchIdx + 1,
+						teamAId,
+						teamBId,
+						scheduledTime:
+							matchIdx === 0 ? division.tournament.startTime : null,
+					});
+				}
 			}
 		}
 

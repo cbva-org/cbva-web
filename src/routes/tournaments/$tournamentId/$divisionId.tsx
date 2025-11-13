@@ -27,7 +27,6 @@ import { teamsQueryOptions } from "@/data/teams";
 import { tournamentQueryOptions } from "@/data/tournaments";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { DefaultLayout } from "@/layouts/default";
-import { dbg } from "@/utils/dbg";
 
 const dateFormatter = new DateFormatter("EN-US", {
 	dateStyle: "short",
@@ -106,7 +105,7 @@ function RouteComponent() {
 		...poolsQueryOptions({
 			tournamentDivisionId: activeDivision.id,
 		}),
-		select: (data) => dbg(data).some((pool) => pool.matches.length > 0),
+		select: (data) => data.some((pool) => pool.matches.length > 0),
 	});
 
 	const { data: hasPlayoffs } = useQuery({

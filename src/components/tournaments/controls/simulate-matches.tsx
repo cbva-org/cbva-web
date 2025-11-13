@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
@@ -7,28 +6,28 @@ import { title } from "@/components/base/primitives";
 import { poolsQueryOptions } from "@/data/pools";
 import { teamsQueryOptions } from "@/data/teams";
 import {
-	createPoolMatchesMutationOptions,
-	createPoolMatchesSchema,
-} from "@/data/tournaments/pools";
+	simulateMatchesMutationOptions,
+	simulateMatchesSchema,
+} from "@/data/tournaments/matches";
 import type { Division, TournamentDivision } from "@/db/schema";
 
-export type CreatePoolMatchesFormProps = {
+export type SimulateMatchesFormProps = {
 	tournamentId: number;
 	division: TournamentDivision & { division: Division };
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
 };
 
-export function CreatePoolMatchesForm({
+export function SimulateMatchesForm({
 	tournamentId,
 	division,
 	onOpenChange,
 	...props
-}: CreatePoolMatchesFormProps) {
+}: SimulateMatchesFormProps) {
 	const queryClient = useQueryClient();
 
 	const { mutate, failureReason } = useMutation({
-		...createPoolMatchesMutationOptions(),
+		...simulateMatchesMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: teamsQueryOptions(division.id).queryKey,
@@ -43,22 +42,17 @@ export function CreatePoolMatchesForm({
 		},
 	});
 
-	const schema = createPoolMatchesSchema.pick({
-		overwrite: true,
-	});
+	const schema = simulateMatchesSchema.pick({});
 
 	const form = useAppForm({
-		defaultValues: {
-			overwrite: false,
-		},
+		defaultValues: {},
 		validators: {
 			onMount: schema,
 			onChange: schema,
 		},
-		onSubmit: ({ value: { overwrite } }) => {
+		onSubmit: () => {
 			mutate({
 				tournamentId,
-				overwrite,
 			});
 		},
 	});
@@ -66,12 +60,11 @@ export function CreatePoolMatchesForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Create Pool Matches</h3>
+				<h3 className={title({ size: "sm" })}>Simulate Matches</h3>
 
 				<p className="text-sm text-gray-700 mb-6">
-					Create matches for all pools in this tournament. If you want to
-					recreate pools entirely, select{" "}
-					<span className="font-semibold italic">Overwrite existing</span>.
+					Simulate all pending games by randomly setting scores to valid
+					completed scores.
 				</p>
 
 				<form
@@ -85,24 +78,17 @@ export function CreatePoolMatchesForm({
 					{failureReason && (
 						<form.AppForm>
 							<form.Alert
-								title={"Unable to create pools"}
+								title={"Unable to simulate matches"}
 								description={failureReason.message}
 							/>
 						</form.AppForm>
 					)}
 
-					<form.AppField
-						name="overwrite"
-						children={(field) => (
-							<field.Checkbox label="Overwrite existing" field={field} />
-						)}
-					/>
-
 					<form.AppForm>
 						<form.Footer>
 							<Button onPress={() => onOpenChange(false)}>Cancel</Button>
 
-							<form.SubmitButton>Create</form.SubmitButton>
+							<form.SubmitButton>Submit</form.SubmitButton>
 						</form.Footer>
 					</form.AppForm>
 				</form>

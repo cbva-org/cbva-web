@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+
 import type { MatchSet } from "@/db/schema";
-import { isSetDone } from "@/lib/matches";
 import { Button } from "../base/button";
 import { Modal } from "../base/modal";
 import { title } from "../base/primitives";
