@@ -1,3 +1,4 @@
+import { createLink } from "@tanstack/react-router";
 import {
 	composeRenderProps,
 	Tab as RACTab,
@@ -79,6 +80,8 @@ export function Tab(props: TabProps) {
 		/>
 	);
 }
+
+export const TabLink = createLink(Tab);
 
 const tabPanelStyles = tv({
 	extend: focusRing,

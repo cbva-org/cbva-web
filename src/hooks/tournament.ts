@@ -52,8 +52,6 @@ export function useTournamentDivisionName(
 		tournamentDivisionId,
 	);
 
-	console.log(division);
-
 	if (!division) {
 		return null;
 	}

@@ -27,7 +27,7 @@ export const Route = createFileRoute("/tournaments/$tournamentId/")({
 		const activeDivision = tournament.tournamentDivisions[0];
 
 		throw redirect({
-			to: "/tournaments/$tournamentId/$divisionId",
+			to: "/tournaments/$tournamentId/$divisionId/{-$tab}",
 			params: {
 				tournamentId,
 				divisionId: activeDivision.id.toString(),

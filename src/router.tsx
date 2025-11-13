@@ -11,8 +11,8 @@ export function getRouter() {
 		routeTree,
 		context: { queryClient: queryClient },
 		defaultPreload: "intent",
-		Wrap: (props: { children: React.ReactNode }) => {
-			return <Provider>{props.children}</Provider>;
-		},
+		// Wrap: (props: { children: React.ReactNode }) => {
+		// 	return <Provider>{props.children}</Provider>;
+		// },
 	});
 }

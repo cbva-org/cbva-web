@@ -26,7 +26,7 @@ export function GamesPanel({
 	tournamentDivisionId: TournamentDivision["id"];
 }) {
 	const search = useSearch({
-		from: "/tournaments/$tournamentId/$divisionId",
+		from: "/tournaments/$tournamentId/$divisionId/{-$tab}",
 	});
 
 	const state = useRouterState();

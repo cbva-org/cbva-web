@@ -174,7 +174,7 @@ function TournamentListItem({
 			<div className="w-full px-2 py-1 bg-navbar-background text-navbar-foreground">
 				<Link
 					className="font-semibold hover:underline w-full flex flex-col"
-					to="/tournaments/$tournamentId/$divisionId"
+					to="/tournaments/$tournamentId/$divisionId/{-$tab}"
 					params={{ tournamentId: id.toString() }}
 				>
 					{name && <span className="font-semibold text-lg">{name}</span>}
@@ -195,7 +195,7 @@ function TournamentListItem({
 							<li key={tdid} className="px-2 py-0.5">
 								<Link
 									className="underline text-navbar-background hover:no-underline w-full inline-block"
-									to="/tournaments/$tournamentId/$divisionId"
+									to="/tournaments/$tournamentId/$divisionId/{-$tab}"
 									params={{
 										tournamentId: id.toString(),
 										divisionId: tdid.toString(),

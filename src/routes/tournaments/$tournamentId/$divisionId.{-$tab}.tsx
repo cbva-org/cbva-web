@@ -5,7 +5,7 @@ import {
 } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, linkOptions } from "@tanstack/react-router";
 import clsx from "clsx";
 import { CheckIcon } from "lucide-react";
 import { match, P } from "ts-pattern";
@@ -14,7 +14,7 @@ import {
 	DropdownMenuItemLink,
 } from "@/components/base/dropdown-menu";
 import { subtitle, title } from "@/components/base/primitives";
-import { Tab, TabList, Tabs } from "@/components/base/tabs";
+import { TabLink, TabList, Tabs } from "@/components/base/tabs";
 import { TournamentControls } from "@/components/tournaments/controls";
 import { GamesPanel } from "@/components/tournaments/panels/games";
 import { InformationPanel } from "@/components/tournaments/panels/information";
@@ -156,6 +156,17 @@ function RouteComponent() {
 		)
 		.exhaustive();
 
+	const tabLinkProps = (tab: string) =>
+		linkOptions({
+			preload: "intent",
+			to: "/tournaments/$tournamentId/$divisionId/{-$tab}",
+			params: {
+				tournamentId,
+				divisionId,
+				tab,
+			},
+		});
+
 	return (
 		<DefaultLayout classNames={{ content: "bg-white relative" }}>
 			<TournamentControls
@@ -186,7 +197,7 @@ function RouteComponent() {
 						{tournament.tournamentDivisions.map(({ id, ...division }) => (
 							<DropdownMenuItemLink
 								key={id}
-								to="/tournaments/$tournamentId/$divisionId"
+								to="/tournaments/$tournamentId/$divisionId/{-$tab}"
 								params={{
 									tournamentId,
 									divisionId: id.toString(),
@@ -204,25 +215,43 @@ function RouteComponent() {
 					</DropdownMenu>
 				</div>
 
-				<Tabs defaultSelectedKey={tabParam || "info"}>
+				<Tabs selectedKey={tabParam || "info"}>
 					<div className="overflow-x-auto">
 						<TabList
 							aria-label="Tournament Overview"
 							className="px-6 min-w-max"
 						>
-							<Tab id="info">Information</Tab>
-							<Tab id="teams" isDisabled={!hasTeams}>
+							<TabLink id="info" {...tabLinkProps("info")}>
+								Information
+							</TabLink>
+							<TabLink
+								id="teams"
+								{...tabLinkProps("teams")}
+								isDisabled={!hasTeams}
+							>
 								Teams
-							</Tab>
-							<Tab id="pools" isDisabled={!hasPools}>
+							</TabLink>
+							<TabLink
+								id="pools"
+								{...tabLinkProps("pools")}
+								isDisabled={!hasPools}
+							>
 								Pools
-							</Tab>
-							<Tab id="games" isDisabled={!hasGames}>
+							</TabLink>
+							<TabLink
+								id="games"
+								{...tabLinkProps("games")}
+								isDisabled={!hasGames}
+							>
 								Games
-							</Tab>
-							<Tab id="playoffs" isDisabled={!hasPlayoffs}>
+							</TabLink>
+							<TabLink
+								id="playoffs"
+								{...tabLinkProps("teams")}
+								isDisabled={!hasPlayoffs}
+							>
 								Playoffs
-							</Tab>
+							</TabLink>
 						</TabList>
 					</div>
 					<InformationPanel {...tournament} />

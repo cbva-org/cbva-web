@@ -145,7 +145,7 @@ function RouteComponent() {
 
 			<Link
 				className="absolute top-6 left-6 flex flex-row space-x-2 items-center"
-				to="/tournaments/$tournamentId/$divisionId"
+				to="/tournaments/$tournamentId/$divisionId/{-$tab}"
 				params={{
 					tournamentId: data?.pool.tournamentDivision.tournamentId.toString(),
 					divisionId: data?.pool.tournamentDivisionId.toString(),

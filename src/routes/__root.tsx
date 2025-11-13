@@ -8,6 +8,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type * as React from "react";
 import { viewerIdQueryOptions, viewerQueryOptions } from "@/auth/shared";
+import { Provider } from "@/providers";
 import appCss from "../styles.css?url";
 
 interface RouterContext {
@@ -57,7 +58,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<HeadContent />
 			</head>
 			<body>
-				{children}
+				<Provider>{children}</Provider>
 				<Scripts />
 			</body>
 		</html>
