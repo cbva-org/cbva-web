@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { snake } from "./snake-draft";
+import { snake, snake2 } from "./snake-draft";
 
 describe("getSnakeDraft", () => {
 	test("works for different pool sizes", () => {
@@ -187,5 +187,113 @@ describe("getSnakeDraft", () => {
 
 			expect(got, `spots=${spots} buckets=${buckets}`).toStrictEqual(want);
 		}
+	});
+});
+
+describe("snake2", () => {
+	test("works for different pool sizes", () => {
+		const cases = [
+			{
+				spots: 10,
+				buckets: 2,
+				want: [
+					{ id: 1, participants: [1, 4, 5, 8, 9].map((id) => ({ id })) },
+					{ id: 2, participants: [2, 3, 6, 7, 10].map((id) => ({ id })) },
+				],
+			},
+			{
+				spots: 15,
+				buckets: 3,
+				want: [
+					{ id: 1, participants: [1, 6, 7, 12, 13].map((id) => ({ id })) },
+					{ id: 2, participants: [2, 5, 8, 11, 14].map((id) => ({ id })) },
+					{ id: 3, participants: [3, 4, 9, 10, 15].map((id) => ({ id })) },
+				],
+			},
+			{
+				spots: 20,
+				buckets: 4,
+				want: [
+					{ id: 1, participants: [1, 8, 9, 16, 17].map((id) => ({ id })) },
+					{ id: 2, participants: [2, 7, 10, 15, 18].map((id) => ({ id })) },
+					{ id: 3, participants: [3, 6, 11, 14, 19].map((id) => ({ id })) },
+					{ id: 4, participants: [4, 5, 12, 13, 20].map((id) => ({ id })) },
+				],
+			},
+		];
+
+		for (const { spots, buckets, want } of cases) {
+			const participants = Array.from({ length: spots }, (_, i) => ({
+				id: i + 1,
+			}));
+			const bucketObjects = Array.from({ length: buckets }, (_, i) => ({
+				id: i + 1,
+			}));
+			const got = snake2(participants, bucketObjects);
+
+			expect(got).toStrictEqual(want);
+		}
+	});
+
+	test("works for odd numbers", () => {
+		const cases = [
+			{
+				spots: 9,
+				buckets: 2,
+				want: [
+					{ id: 1, participants: [1, 4, 5, 8, 9].map((id) => ({ id })) },
+					{ id: 2, participants: [2, 3, 6, 7].map((id) => ({ id })) },
+				],
+			},
+			{
+				spots: 13,
+				buckets: 3,
+				want: [
+					{ id: 1, participants: [1, 6, 7, 12, 13].map((id) => ({ id })) },
+					{ id: 2, participants: [2, 5, 8, 11].map((id) => ({ id })) },
+					{ id: 3, participants: [3, 4, 9, 10].map((id) => ({ id })) },
+				],
+			},
+			{
+				spots: 17,
+				buckets: 4,
+				want: [
+					{ id: 1, participants: [1, 8, 9, 16, 17].map((id) => ({ id })) },
+					{ id: 2, participants: [2, 7, 10, 15].map((id) => ({ id })) },
+					{ id: 3, participants: [3, 6, 11, 14].map((id) => ({ id })) },
+					{ id: 4, participants: [4, 5, 12, 13].map((id) => ({ id })) },
+				],
+			},
+		];
+
+		for (const { spots, buckets, want } of cases) {
+			const participants = Array.from({ length: spots }, (_, i) => ({
+				id: i + 1,
+			}));
+			const bucketObjects = Array.from({ length: buckets }, (_, i) => ({
+				id: i + 1,
+			}));
+			const got = snake2(participants, bucketObjects);
+
+			expect(got, `spots=${spots} buckets=${buckets}`).toStrictEqual(want);
+		}
+	});
+
+	test("snake playoffs", () => {
+		// const input = [
+		//   {
+		// 		id: 'a',
+		// 		teams: [
+		// 		  {
+		// 				id: 1,
+		// 				finish: 1,
+		// 			},
+		// 			{
+		// 			}
+		// 		]
+		// 	},
+		// 	{
+		// 	}
+		// ]
 	});
 });

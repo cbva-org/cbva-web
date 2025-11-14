@@ -21,7 +21,7 @@ import {
 } from "@/db/schema";
 import { getPoolStats } from "@/hooks/matches";
 import { badRequest } from "@/lib/responses";
-import { snake } from "@/lib/snake-draft";
+import { snake, snake2 } from "@/lib/snake-draft";
 
 export const createPoolsSchema = selectTournamentDivisionSchema
 	.pick({
