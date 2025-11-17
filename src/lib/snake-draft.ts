@@ -28,6 +28,34 @@ export function snake(spots: number, buckets: number): number[][] {
 	return result;
 }
 
+export function snakeDraft(seeds: number[], buckets: number): number[][] {
+	const spots = seeds.length;
+	const result: number[][] = Array.from({ length: buckets }, () => []);
+	const rounds = Math.ceil(spots / buckets);
+
+	let currentSpot = 0;
+
+	for (let round = 0; round < rounds; round++) {
+		if (round % 2 === 0) {
+			for (let bucket = 0; bucket < buckets; bucket++) {
+				if (currentSpot < spots) {
+					result[bucket].push(seeds[currentSpot]);
+					currentSpot++;
+				}
+			}
+		} else {
+			for (let bucket = buckets - 1; bucket >= 0; bucket--) {
+				if (currentSpot < spots) {
+					result[bucket].push(seeds[currentSpot]);
+					currentSpot++;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
 export function snake2<P extends { id: number }, B extends { id: number }>(
 	participants: P[],
 	buckets: B[],

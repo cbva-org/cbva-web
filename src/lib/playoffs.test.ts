@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { buildFirstRound, draftPlayoffs, seedPlayoffs } from "./playoffs";
+import {
+	buildFirstRound,
+	draftPlayoffs,
+	iterativeSnakeDraft,
+	seedPlayoffs,
+} from "./playoffs";
 
 describe("seedPlayoffs", () => {
 	test("can seed varying pool sizes and team counts", () => {
@@ -226,15 +231,64 @@ describe("draftPlayoffs", () => {
 describe("buildFirstRound", () => {
 	test("round of 16", () => {
 		expect(buildFirstRound(16)).toStrictEqual([
+			// -- //
+			// 1, 4, 5, 8, 9
 			[1, 16],
 			[9, 8],
 			[5, 12],
 			[13, 4],
-			// ---
+			// -- //
+			// 2, 3, 6, 7, 10, 11, 14, 15
 			[3, 14],
 			[11, 6],
 			[7, 10],
 			[15, 2],
+			// -- //
+		]);
+	});
+});
+
+describe("iterativeSnakeDraft", () => {
+	test("round of 4", () => {
+		expect(iterativeSnakeDraft([1, 2, 3, 4])).toStrictEqual([
+			[1, 4],
+			[3, 2],
+		]);
+	});
+
+	test("round of 8", () => {
+		const got = iterativeSnakeDraft([1, 2, 3, 4, 5, 6, 7, 8]);
+
+		console.log(got);
+
+		expect(got).toStrictEqual([
+			[1, 8],
+			[5, 4],
+			// ---
+			[3, 6],
+			[7, 2],
+		]);
+	});
+
+	test("round of 16", () => {
+		const got = iterativeSnakeDraft([
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+		]);
+
+		console.log(got);
+
+		expect(got).toStrictEqual([
+			// -- //
+			[1, 16],
+			[9, 8],
+			[5, 12],
+			[13, 4],
+			// -- //
+			[3, 14],
+			[11, 6],
+			[7, 10],
+			[15, 2],
+			// -- //
 		]);
 	});
 });

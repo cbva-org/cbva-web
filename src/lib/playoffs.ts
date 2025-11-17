@@ -2,6 +2,7 @@ import chunk from "lodash/chunk";
 import orderBy from "lodash/orderBy";
 
 import type { PlayoffMatch, Pool, PoolTeam } from "@/db/schema";
+import { snake, snakeDraft } from "./snake-draft";
 
 const shapes = [
 	// | Pool # | Court # | First Place Team | Seed | Second Place Team | Seed |
@@ -551,34 +552,32 @@ export function createPlayoffBracket(
 	// 3.
 }
 
-export function buildFirstRound(spots: number) {
-	// TODO: snake draft matches for the first round of playoffs. Look at the comment for ordering and observe how team a vs team b slots area also alternating
+export function iterativeSnakeDraft(seeds: number[]): [number, number][] {
+	console.log("iterativeSnakeDraft -> ", seeds);
 
-	// 1
-	// 16
-	//
-	// 9
-	// 8
-	//
-	// 5
-	// 12
-	//
-	// 13
-	// 4
-	//
-	// ---
-	//
-	// 3
-	// 14
-	//
-	// 11
-	// 6
-	//
-	// 7
-	// 10
-	//
-	// 15
-	// 2
+	let [top, bottom] = snakeDraft(seeds, 2);
 
-	return null;
+	console.log("chunks.length", bottom.length);
+
+	bottom = chunk(bottom, 2).flatMap((c) => c.reverse());
+
+	if (seeds.length === 4) {
+		console.log("top.concat(bottom)", top, bottom);
+
+		const got = chunk(top.concat(bottom), 2);
+
+		console.log("!>", got);
+
+		return got as [number, number][];
+	}
+
+	console.log("?>", [top, bottom]);
+
+	return [top, bottom].flatMap((side) => {
+		side.sort();
+
+		console.log("->", side);
+
+		return iterativeSnakeDraft(side);
+	});
 }
