@@ -1,7 +1,7 @@
 import chunk from "lodash/chunk";
 import orderBy from "lodash/orderBy";
 
-import type { Pool, PoolTeam } from "@/db/schema";
+import type { PlayoffMatch, Pool, PoolTeam } from "@/db/schema";
 
 const shapes = [
 	// | Pool # | Court # | First Place Team | Seed | Second Place Team | Seed |
@@ -331,42 +331,54 @@ export function draftPlayoffs(
 	})[],
 	count: number,
 ) {
-	const teams = orderBy(
-		pools.flatMap(({ name, teams }) =>
-			teams.map((team) => ({
-				id: team.id,
-				finish: team.finish,
-				pool: name,
-			})),
-		),
-		["finish", "pool"],
-		["asc", "asc"],
-	).map((t, i) => ({ ...t, seed: i + 1 }));
+	// const teams = orderBy(
+	// 	pools.flatMap(({ name, teams }) =>
+	// 		teams.map((team) => ({
+	// 			id: team.id,
+	// 			finish: team.finish,
+	// 			pool: name,
+	// 		})),
+	// 	),
+	// 	["finish", "pool"],
+	// 	["asc", "asc"],
+	// ).map((t, i) => ({ ...t, seed: i + 1 }));
 
-	const poolCount = pools.length;
+	// const poolCount = pools.length;
 
 	const trimmedCount = count - (count % pools.length);
 	const roundedCount = trimmedCount - (trimmedCount % 2);
 
-	const bracket = snakePlayoffs(
-		roundedCount,
-		pools.map(({ id }) => id),
-	);
+	// const seeds = seedPlayoffs(roundedCount, pools.length);
 
-	const matches: {
-		matchNumber: number;
-		aSeed: { poolId: number; seed: number };
-		bSeed: { poolId: number; seed: number };
-	}[] = [];
+	// const matches: {
+	// 	matchNumber: number;
+	// 	aSeed: { poolId: number; seed: number };
+	// 	bSeed: { poolId: number; seed: number };
+	// }[] = [];
 
-	const bracketShape = shapes.find(({ pools }) => pools.length === poolCount);
+	// const bracketShape = shapes.find(({ pools }) => pools.length === poolCount);
 
-	console.log(bracketShape);
+	// console.log(bracketShape);
+
+	// const matches: PlayoffMatch[] = [];
+
+	return makeNode(roundedCount, 1);
+
+	// while (node) {
+	// 	node = node;
+
+	// 	if (node.type === "game") {
+	// 		console.log(node);
+	// 		break;
+	// 	}
+	// }
+
+	// console.log(JSON.stringify(node, null, 2));
 
 	// for (const sideOfBracket of bracket) {
-	for (const match of bracket) {
-		console.log(match);
-	}
+	// for (const match of bracket) {
+	// 	console.log(match);
+	// }
 	// }
 
 	// const sidesOfBracket: {
@@ -380,34 +392,61 @@ export function draftPlayoffs(
 	// 	},
 	// ];
 
-	return [];
+	// return [];
 }
 
 export function seedPlayoffs(
 	size: number,
 	poolCount: number,
 ): { pool: number; seed: number }[] {
-	return Array.from({ length: Math.floor(size / poolCount) }).flatMap(
-		(_, i) => {
-			let pools: number[] = Array.from({ length: poolCount }).map((_, i) => i);
+	// Determine how many teams per pool make playoffs
+	const teamsPerPool = Math.floor(size / poolCount);
 
+	return Array.from({ length: teamsPerPool }).flatMap((_, i) => {
+		let pools: number[] = Array.from({ length: poolCount }).map((_, i) => i);
+
+		if (i % 2 === 1) {
+			pools.reverse();
+		}
+
+		if (poolCount % 2 === 0 && i > 0) {
 			if (i % 2 === 1) {
-				pools.reverse();
+				pools = chunk(pools, 2).flatMap(([a, b]) => [b, a]);
 			}
 
-			if (poolCount % 2 === 0 && i > 0) {
-				if (i % 2 === 1) {
-					pools = chunk(pools, 2).flatMap(([a, b]) => [b, a]);
-				}
-
-				if ((i === 3 || i % 2 === 0) && poolCount % 4 === 0) {
-					pools = chunk(pools, 4).flatMap(([a, b, c, d]) => [d, c, b, a]);
-				}
+			if ((i === 3 || i % 2 === 0) && poolCount % 4 === 0) {
+				pools = chunk(pools, 4).flatMap(([a, b, c, d]) => [d, c, b, a]);
 			}
+		}
 
-			return pools.map((p) => ({ pool: p, seed: i + 1 }));
-		},
-	);
+		return pools.map((p) => ({ pool: p, seed: i + 1 }));
+	});
+}
+
+export type PlayoffNode =
+	| { type: "team"; seed: number }
+	| { type: "game"; n: number; a: PlayoffNode; b: PlayoffNode };
+
+function makeNode(size: number, n: number): PlayoffNode {
+	const depth = Math.floor(Math.log2(n)) + 1;
+	const dist = 2 ** depth - n;
+
+	if (n + 1 > size) {
+		return { type: "team", seed: dist };
+	}
+
+	const smaller = n + dist * 2 - 1;
+
+	const bigger = 2 ** (depth + 1) - dist;
+
+	const [even, odd] = smaller % 2 === 0 ? [smaller, bigger] : [bigger, smaller];
+
+	return {
+		type: "game",
+		n,
+		a: makeNode(size, odd),
+		b: makeNode(size, even),
+	};
 }
 
 export function snakePlayoffs(

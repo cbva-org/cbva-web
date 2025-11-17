@@ -14,6 +14,8 @@ import {
 	pools,
 	selectTournamentDivisionSchema,
 } from "@/db/schema";
+import type { PlayoffNode } from "@/lib/playoffs";
+import { draftPlayoffs } from "@/lib/playoffs";
 import { badRequest } from "@/lib/responses";
 import { snake, snake2 } from "@/lib/snake-draft";
 
@@ -61,137 +63,133 @@ const createPlayoffsFn = createServerFn()
 				["asc", "asc"],
 			);
 
-			const trimmedCount = count - (count % pools.length);
-			const roundedCount = trimmedCount - (trimmedCount % 2);
+			// const trimmedCount = count - (count % pools.length);
+			// const roundedCount = trimmedCount - (trimmedCount % 2);
 
-			const draft = snake2(teams.slice(0, roundedCount), [
-				{
-					id: 0,
-				},
-				{
-					id: 1,
-				},
-			]);
+			const bracket = draftPlayoffs(pools, count);
 
-			console.log(teams, JSON.stringify(draft, null, 2));
+			console.log(JSON.stringify(bracket, null, 2));
 
-			// 1 -> bye
-			// 16
-			//
-			// 9
-			// 8
-			//
-			// 5
-			// 12
-			//
-			// 13
-			// 4
-			//
-			// ---
-			//
-			// 3
-			// 14
-			//
-			// 11
-			// 6
-			//
-			// 7
-			// 10
-			//
-			// 15
-			// 2 -> bye
+			// Generate playoffMatches from the bracket
+			const matches = generatePlayoffMatchesFromBracket(
+				bracket,
+				tournamentDivisionId,
+			);
 
-			// The top qualifiers out of each pool advance to the playoffs.
-			//
-			// First and Second place teams should always be cross bracketed
-			//
-			// ● Example: 1st place team in pool #1 would go in the top bracket and 2nd  place team in pool #1 would go in the bottom bracket.
+			// Insert playoff matches into the database
+			const matchInserts: CreatePlayoffMatch[] = [];
+			if (overwrite) {
+				// Delete existing playoff matches if overwrite is true
+				await db
+					.delete(playoffMatches)
+					.where(eq(playoffMatches.tournamentDivisionId, tournamentDivisionId));
+			}
 
-			// ...
+			// console.log(matches);
 
-			// if (overwrite) {
-			// 	await db
-			// 		.delete(playoffMatches)
-			// 		.where(eq(playoffMatches.tournamentDivisionId, tournamentDivisionId));
-			// }
-
-			// // Sort teams by pool and finish position
-			// const firstPlaceTeams = teams
-			// 	.filter((team) => team.finish === 1)
-			// 	.sort((a, b) => a.poolId - b.poolId);
-
-			// const secondPlaceTeams = teams
-			// 	.filter((team) => team.finish === 2)
-			// 	.sort((a, b) => a.poolId - b.poolId);
-
-			// // Cross-bracket: 1st place teams go in top bracket, 2nd place in bottom
-			// const bracketTeams = [...firstPlaceTeams, ...secondPlaceTeams];
-
-			// // Create playoff matches using snake draft
-			// const bracket = snake(bracketTeams.length, count);
-
-			// const matchInserts: CreatePlayoffMatch[] = [];
-			// const setInserts: CreateMatchSet[] = [];
-
-			// for (let i = 0; i < bracket.length; i++) {
-			// 	const matchTeams = bracket[i];
-
-			// 	if (matchTeams.length !== 2) {
-			// 		// Skip incomplete matches (byes)
-			// 		continue;
-			// 	}
-
-			// 	const match: CreatePlayoffMatch = {
-			// 		tournamentDivisionId,
-			// 		round: 1,
-			// 		matchNumber: i + 1,
-			// 		teamAId: matchTeams[0].id,
-			// 		teamBId: matchTeams[1].id,
-			// 	};
-
-			// 	matchInserts.push(match);
-
-			// 	// Create match sets based on match kind
-			// 	let setCount = 1;
-			// 	if (matchKind === "best-of-3") {
-			// 		setCount = 3;
-			// 	}
-
-			// 	for (let setNum = 1; setNum <= setCount; setNum++) {
-			// 		const set: CreateMatchSet = {
-			// 			playoffMatchId: 0, // Will be updated after match insert
-			// 			setNumber: setNum,
-			// 			teamAScore: null,
-			// 			teamBScore: null,
-			// 		};
-			// 		setInserts.push(set);
-			// 	}
-			// }
-
-			// // Insert matches and sets
-			// for (const match of matchInserts) {
-			// 	const [insertedMatch] = await db
+			// if (matches.length > 0) {
+			// 	matchInserts = await db
 			// 		.insert(playoffMatches)
-			// 		.values(match)
-			// 		.returning({ id: playoffMatches.id });
-
-			// 	// Update sets with the correct match ID
-			// 	for (const set of setInserts.filter((s) => s.playoffMatchId === 0)) {
-			// 		set.playoffMatchId = insertedMatch.id;
-			// 	}
+			// 		.values(matches)
+			// 		.returning();
 			// }
 
-			// // Insert all sets
-			// if (setInserts.length > 0) {
-			// 	await db.insert(matchSets).values(setInserts);
-			// }
-
-			return { success: true /*matchesCreated: matchInserts.length*/ };
+			return { success: true, matchesCreated: matchInserts.length };
 		},
 	);
+
+function generatePlayoffMatchesFromBracket(
+	bracket: PlayoffNode,
+	tournamentDivisionId: number,
+): CreatePlayoffMatch[] {
+	const matches: CreatePlayoffMatch[] = [];
+
+	let matchNumber = 1;
+
+	function traverseNode(node: PlayoffNode, round: string): number | null {
+		if (node.type === "team") {
+			// Return the seed for team nodes
+			return node.seed;
+		}
+
+		// For game nodes, recursively process both sides
+		const aSeed = traverseNode(node.a, getNextRound(round));
+		const bSeed = traverseNode(node.b, getNextRound(round));
+
+		// Create a match for this game node
+		const match: CreatePlayoffMatch = {
+			tournamentDivisionId,
+			round,
+			matchNumber: matchNumber++,
+			teamAPreviousMatchId: null,
+			teamBPreviousMatchId: null,
+			status: "scheduled",
+		};
+
+		matches.push(match);
+
+		// Return the match number for parent nodes to reference
+		return matchNumber - 1;
+	}
+
+	// Start traversal from the root node
+	traverseNode(bracket, "Finals");
+
+	return matches;
+}
+
+function getNextRound(round: string): string {
+	const roundOrder = [
+		"Finals",
+		"Semifinals",
+		"Quarterfinals",
+		"Round of 16",
+		"Round of 32",
+	];
+
+	const currentIndex = roundOrder.indexOf(round);
+
+	return currentIndex >= 0 && currentIndex < roundOrder.length - 1
+		? roundOrder[currentIndex + 1]
+		: `Round ${roundOrder.length - currentIndex}`;
+}
 
 export const createPlayoffsMutationOptions = () =>
 	mutationOptions({
 		mutationFn: (data: z.infer<typeof createPlayoffsSchema>) =>
 			createPlayoffsFn({ data }),
 	});
+
+// AGENTS: leave the comments below this in tact
+//
+// 1 -> bye
+// 16
+//
+// 9
+// 8
+//
+// 5
+// 12
+//
+// 13
+// 4
+//
+// ---
+//
+// 3
+// 14
+//
+// 11
+// 6
+//
+// 7
+// 10
+//
+// 15
+// 2 -> bye
+
+// The top qualifiers out of each pool advance to the playoffs.
+//
+// First and Second place teams should always be cross bracketed
+//
+// ● Example: 1st place team in pool #1 would go in the top bracket and 2nd  place team in pool #1 would go in the bottom bracket.
