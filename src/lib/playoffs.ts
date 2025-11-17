@@ -507,12 +507,17 @@ export function snakePlayoffs(
 
 export function createPlayoffBracket(
 	pools: Pool[],
-	teams: number,
-	wildcards: number,
+	teamCount: number,
+	wildcardCount: number,
 ) {
 	// - Seed teams
-	// - Calculate number that would make it two full rounds: 12 teams -> 16, 17 -> 32
-	// - Create list of matches, placing teams via snake draft filling teamA slots first then teamB, but flip a and b spots in second half of bracket
+	const seeds = seedPlayoffs(teamCount, pools.length);
+
+	// - Find number that would make it two full rounds [1, 2, 4, 8, 16, 32, 64, ...]: 12 teams -> 16, 17 -> 32
+	const roundSeeds = 2 ** Math.ceil(Math.log2(teamCount + wildcardCount));
+
+	// - Create list of matches
+
 	// - Create the following rounds until the finals
 	// - Advance teams in matches with no opponent
 	//
@@ -544,4 +549,36 @@ export function createPlayoffBracket(
 	// __
 	//
 	// 3.
+}
+
+export function buildFirstRound(spots: number) {
+	// TODO: snake draft matches for the first round of playoffs. Look at the comment for ordering and observe how team a vs team b slots area also alternating
+
+	// 1
+	// 16
+	//
+	// 9
+	// 8
+	//
+	// 5
+	// 12
+	//
+	// 13
+	// 4
+	//
+	// ---
+	//
+	// 3
+	// 14
+	//
+	// 11
+	// 6
+	//
+	// 7
+	// 10
+	//
+	// 15
+	// 2
+
+	return null;
 }

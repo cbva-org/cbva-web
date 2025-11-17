@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { draftPlayoffs, seedPlayoffs } from "./playoffs";
+import { buildFirstRound, draftPlayoffs, seedPlayoffs } from "./playoffs";
 
 describe("seedPlayoffs", () => {
 	test("can seed varying pool sizes and team counts", () => {
@@ -221,4 +221,20 @@ describe("draftPlayoffs", () => {
 	// 	// 	expect(topBracketSeeds).toEqual([1, 6]);
 	// 	// 	expect(bottomBracketSeeds).toEqual([2, 5, 4]);
 	// 	// });
+});
+
+describe("buildFirstRound", () => {
+	test("round of 16", () => {
+		expect(buildFirstRound(16)).toStrictEqual([
+			[1, 16],
+			[9, 8],
+			[5, 12],
+			[13, 4],
+			// ---
+			[3, 14],
+			[11, 6],
+			[7, 10],
+			[15, 2],
+		]);
+	});
 });
