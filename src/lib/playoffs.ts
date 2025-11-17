@@ -1,4 +1,6 @@
+import chunk from "lodash/chunk";
 import orderBy from "lodash/orderBy";
+
 import type { Pool, PoolTeam } from "@/db/schema";
 
 const shapes = [
@@ -341,6 +343,8 @@ export function draftPlayoffs(
 		["asc", "asc"],
 	).map((t, i) => ({ ...t, seed: i + 1 }));
 
+	const poolCount = pools.length;
+
 	const trimmedCount = count - (count % pools.length);
 	const roundedCount = trimmedCount - (trimmedCount % 2);
 
@@ -348,6 +352,16 @@ export function draftPlayoffs(
 		roundedCount,
 		pools.map(({ id }) => id),
 	);
+
+	const matches: {
+		matchNumber: number;
+		aSeed: { poolId: number; seed: number };
+		bSeed: { poolId: number; seed: number };
+	}[] = [];
+
+	const bracketShape = shapes.find(({ pools }) => pools.length === poolCount);
+
+	console.log(bracketShape);
 
 	// for (const sideOfBracket of bracket) {
 	for (const match of bracket) {
@@ -369,7 +383,34 @@ export function draftPlayoffs(
 	return [];
 }
 
-function snakePlayoffs(
+export function seedPlayoffs(
+	size: number,
+	poolCount: number,
+): { pool: number; seed: number }[] {
+	return Array.from({ length: Math.floor(size / poolCount) }).flatMap(
+		(_, i) => {
+			let pools: number[] = Array.from({ length: poolCount }).map((_, i) => i);
+
+			if (i % 2 === 1) {
+				pools.reverse();
+			}
+
+			if (poolCount % 2 === 0 && i > 0) {
+				if (i % 2 === 1) {
+					pools = chunk(pools, 2).flatMap(([a, b]) => [b, a]);
+				}
+
+				if ((i === 3 || i % 2 === 0) && poolCount % 4 === 0) {
+					pools = chunk(pools, 4).flatMap(([a, b, c, d]) => [d, c, b, a]);
+				}
+			}
+
+			return pools.map((p) => ({ pool: p, seed: i + 1 }));
+		},
+	);
+}
+
+export function snakePlayoffs(
 	size: number,
 	pools: number[],
 ): { poolId: number; seed: number }[] {
