@@ -10,10 +10,13 @@ import {
 	matchSets,
 	type PoolTeam,
 	playoffMatches,
+	selectPlayoffMatchSchema,
 	selectTournamentDivisionSchema,
 	tournamentDivisionTeams,
 } from "@/db/schema";
 import { draftPlayoffs, seedPlayoffs } from "@/lib/playoffs";
+import { notFound } from "@/lib/responses";
+import { dbg } from "@/utils/dbg";
 import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 export type MatchKind = "set-to-21" | "set-to-28" | "best-of-3";
@@ -93,7 +96,7 @@ export const createPlayoffsFn = createServerFn()
 								? txn
 										.update(tournamentDivisionTeams)
 										.set({
-											playoffsSeed: i + 1,
+											playoffsSeed: i + 1 <= teamCount ? i + 1 : null,
 										})
 										.where(eq(tournamentDivisionTeams.id, team.teamId))
 								: null,
@@ -106,17 +109,15 @@ export const createPlayoffsFn = createServerFn()
 
 					for (const match of round) {
 						if (match) {
-							const teamA: PoolTeam | null | undefined = isNotNullOrUndefined(
-								match.aSeed,
-							)
-								? seededTeams[match.aSeed - 1]
-								: null;
+							const teamA: PoolTeam | null | undefined =
+								isNotNullOrUndefined(match.aSeed) && match.aSeed <= teamCount
+									? seededTeams[match.aSeed - 1]
+									: null;
 
-							const teamB: PoolTeam | null | undefined = isNotNullOrUndefined(
-								match.bSeed,
-							)
-								? seededTeams[match.bSeed - 1]
-								: null;
+							const teamB: PoolTeam | null | undefined =
+								isNotNullOrUndefined(match.bSeed) && match.bSeed <= teamCount
+									? seededTeams[match.bSeed - 1]
+									: null;
 
 							const [{ id }] = await txn
 								.insert(playoffMatches)
@@ -258,3 +259,53 @@ export const createPlayoffsMutationOptions = () =>
 // First and Second place teams should always be cross bracketed
 //
 // ● Example: 1st place team in pool #1 would go in the top bracket and 2nd  place team in pool #1 would go in the bottom bracket.
+
+export const assignWildcardSchema = selectPlayoffMatchSchema
+	.pick({
+		id: true,
+	})
+	.extend({
+		teamId: z.number(),
+	});
+
+export const assignWildcardFn = createServerFn()
+	.middleware([
+		requirePermissions({
+			tournament: ["update"],
+		}),
+	])
+	.inputValidator(assignWildcardSchema)
+	.handler(async ({ data: { id: matchId, teamId } }) => {
+		const matches = await db
+			.select({
+				teamAId: playoffMatches.teamAId,
+				teamBId: playoffMatches.teamBId,
+			})
+			.from(playoffMatches)
+			.where(eq(playoffMatches.id, matchId))
+			.limit(1);
+
+		if (matches.length === 0) {
+			throw notFound();
+		}
+
+		const [{ teamAId, teamBId }] = matches;
+
+		await db
+			.update(playoffMatches)
+			.set({
+				teamAId: teamAId === null ? teamId : undefined,
+				teamBId: teamBId === null ? teamId : undefined,
+			})
+			.where(eq(playoffMatches.id, matchId));
+
+		return {
+			success: true,
+		};
+	});
+
+export const assignWildcardMutationOptions = () =>
+	mutationOptions({
+		mutationFn: (data: z.infer<typeof assignWildcardSchema>) =>
+			assignWildcardFn({ data }),
+	});

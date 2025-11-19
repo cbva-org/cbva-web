@@ -13,9 +13,15 @@ import {
 	ArrowUp,
 	ArrowUpLeft,
 } from "lucide-react";
-import { type ReactNode, type RefObject, useCallback, useMemo } from "react";
+import {
+	type ReactNode,
+	type RefObject,
+	useCallback,
+	useEffect,
+	useMemo,
+} from "react";
 import { Button } from "@/components/base/button";
-import type { BracketMatch } from ".";
+import { type BracketMatch, useBracketContext } from ".";
 
 export function Toolbar({
 	rounds,
@@ -108,38 +114,61 @@ export function Toolbar({
 
 	const nodesInitialized = useNodesInitialized();
 
+	const centerViewportAtNodeWithId = useCallback(
+		(id: number) => {
+			const target = controller.getNode(id.toString());
+			const bounds = container.current?.getBoundingClientRect();
+
+			if (target && bounds) {
+				// Use measured dimensions if available, otherwise use defaults
+				const nodeWidth = target.measured?.width ?? target.width ?? 400;
+				const nodeHeight = target.measured?.height ?? target.height ?? 200;
+
+				const zoom = 0.8;
+
+				// Calculate the horizontal center (node should be centered horizontally)
+				const targetX = target.position.x + nodeWidth / 2;
+
+				// Calculate Y position to place node at top with padding
+				// setCenter centers the viewport at the given point, so we need to offset by half the viewport height
+				const viewportHeightInFlowCoords = bounds.height / zoom;
+				const paddingInFlowCoords = topPadding / zoom;
+
+				// To place the node top at 'topPadding' from viewport top:
+				// The center point should be at: nodeTop + (viewportHeight / 2)
+				const targetY =
+					target.position.y +
+					viewportHeightInFlowCoords / 2 -
+					paddingInFlowCoords;
+
+				controller.setCenter(targetX, targetY, {
+					zoom: zoom,
+					duration: 800,
+				});
+			}
+		},
+		[controller, topPadding, container],
+	);
+
 	const centerViewportAtNode = (roundIdx: number, matchIdx: number) => {
-		const target = controller.getNode(rounds[roundIdx][matchIdx].id.toString());
-		const bounds = container.current?.getBoundingClientRect();
-
-		if (target && bounds) {
-			// Use measured dimensions if available, otherwise use defaults
-			const nodeWidth = target.measured?.width ?? target.width ?? 400;
-			const nodeHeight = target.measured?.height ?? target.height ?? 200;
-
-			const zoom = 0.8;
-
-			// Calculate the horizontal center (node should be centered horizontally)
-			const targetX = target.position.x + nodeWidth / 2;
-
-			// Calculate Y position to place node at top with padding
-			// setCenter centers the viewport at the given point, so we need to offset by half the viewport height
-			const viewportHeightInFlowCoords = bounds.height / zoom;
-			const paddingInFlowCoords = topPadding / zoom;
-
-			// To place the node top at 'topPadding' from viewport top:
-			// The center point should be at: nodeTop + (viewportHeight / 2)
-			const targetY =
-				target.position.y +
-				viewportHeightInFlowCoords / 2 -
-				paddingInFlowCoords;
-
-			controller.setCenter(targetX, targetY, {
-				zoom: zoom,
-				duration: 800,
-			});
-		}
+		centerViewportAtNodeWithId(rounds[roundIdx][matchIdx].id);
 	};
+
+	const {
+		state: { nodeIdToCenter },
+		setState,
+	} = useBracketContext();
+
+	useEffect(() => {
+		if (nodeIdToCenter) {
+			setState((state) => ({
+				...state,
+				nodeIdToCenter: null,
+			}));
+
+			centerViewportAtNodeWithId(nodeIdToCenter);
+		}
+	}, [nodeIdToCenter, setState, centerViewportAtNodeWithId]);
 
 	const centeredRound =
 		roundOfClosestNodeToCenter !== null

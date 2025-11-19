@@ -1,15 +1,17 @@
+import { useQuery } from "@tanstack/react-query";
 import { Handle, Position } from "@xyflow/react";
 import clsx from "clsx";
 import { CircleDot } from "lucide-react";
 import { tv } from "tailwind-variants";
-
 import { Button } from "@/components/base/button";
 import { TeamNames } from "@/components/teams/names";
+import { playoffsQueryOptions } from "@/data/playoffs";
 import type { MatchSet, PlayoffMatch } from "@/db/schema";
 import { formatOrdinals } from "@/lib/numbers";
 import { isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../../games/pool-match-grid";
-import { useActiveTeam, useSetActiveTeam } from ".";
+import { useActiveTeam, useSetActiveTeam, useSetNodeIdToCenter } from ".";
+import { Wildcard } from "./wildcard";
 
 export const scoreTextStyles = tv({
 	base: "p-3 text-center flex flex-col justify-center col-span-1 text-xl font-light border-gray-300",
@@ -55,14 +57,46 @@ export function MatchNode({
 		winnerId,
 		roundIdx,
 		matchNumber,
+		teamAPreviousMatchId,
+		teamBPreviousMatchId,
 		refetch,
+		tournamentDivisionId,
 	} = data;
 
 	const activeTeam = useActiveTeam();
 	const setActiveTeam = useSetActiveTeam();
 
+	const { data: teamAPreviousMatch } = useQuery({
+		...playoffsQueryOptions({ tournamentDivisionId }),
+		select: (data) => data.find(({ id }) => id === teamAPreviousMatchId),
+	});
+
+	const teamAPreviousMatchName = teamAPreviousMatch ? (
+		<>
+			{teamAPreviousMatch.sets.length === 1 ? "Game" : "Set"}{" "}
+			{teamAPreviousMatch.matchNumber}
+		</>
+	) : null;
+
+	const { data: teamBPreviousMatch } = useQuery({
+		...playoffsQueryOptions({ tournamentDivisionId }),
+		select: (data) => data.find(({ id }) => id === teamBPreviousMatchId),
+	});
+
+	const teamBPreviousMatchName = teamBPreviousMatch ? (
+		<>
+			{teamBPreviousMatch.sets.length > 1 ? "Match" : "Game"}{" "}
+			{teamBPreviousMatch.matchNumber}
+		</>
+	) : null;
+
+	const setNodeIdToCenter = useSetNodeIdToCenter();
+
 	return (
-		<div className="rounded-md overflow-hidden w-md border bg-white border-gray-300">
+		<div
+			className="rounded-md overflow-hidden w-md border bg-white border-gray-300"
+			data-id={data.id}
+		>
 			<div className="grid grid-cols-6 items-center border-b border-gray-300">
 				<div
 					className={clsx(
@@ -90,8 +124,6 @@ export function MatchNode({
 							Live
 						</Button>
 					) : null}
-
-					<span>{data.id}</span>
 				</div>
 
 				{sets.map((s) => (
@@ -108,8 +140,10 @@ export function MatchNode({
 							type: "MatchTeam" as const,
 						}
 					: {
-							id: (data.teamAPreviousMatchId ?? data.teamAPoolId) as number,
-							type: "TBD" as const,
+							id: (data.teamAPreviousMatchId ??
+								data.teamAPoolId ??
+								("a" as const)) as number | "a" | "b",
+							type: "tbd" as const,
 						},
 				isNotNullOrUndefined(teamB)
 					? {
@@ -118,8 +152,10 @@ export function MatchNode({
 							type: "MatchTeam" as const,
 						}
 					: {
-							id: (data.teamBPreviousMatchId ?? data.teamAPoolId) as number,
-							type: "TBD" as const,
+							id: (data.teamBPreviousMatchId ??
+								data.teamAPoolId ??
+								("b" as const)) as number | "a" | "b",
+							type: "tbd" as const,
 						},
 			].map((team, i) => (
 				<div
@@ -131,7 +167,11 @@ export function MatchNode({
 					role="none"
 					tabIndex={-1}
 					onMouseEnter={() => {
-						setActiveTeam(team.id);
+						if (typeof team.id === "number") {
+							setActiveTeam(team.id as number);
+						} else {
+							setActiveTeam(null);
+						}
 					}}
 					onMouseLeave={() => {
 						setActiveTeam(null);
@@ -150,22 +190,22 @@ export function MatchNode({
 					/>
 					<div
 						className={clsx(
-							"p-4 flex flex-row space-x-2 items-center",
+							"p-2 grid grid-cols-10 space-x-2 items-center",
 							sets.length > 1 ? "col-span-3" : "col-span-5",
 						)}
 					>
 						{team.type === "MatchTeam" && (
 							<span
-								className="mr-4"
+								className={clsx("col-span-1 text-center")}
 								title={`Seed ${team.playoffsSeed ?? "?"} in playoffs`}
 							>
-								{team.playoffsSeed}
+								{team.playoffsSeed ?? "WC"}
 							</span>
 						)}
 
 						<div
 							className={clsx(
-								"flex flex-col",
+								"flex flex-col col-span-9",
 								winnerId && winnerId === team.id && "font-bold",
 								winnerId && winnerId !== team.id && "text-gray-600",
 							)}
@@ -178,18 +218,37 @@ export function MatchNode({
 									separator="/"
 								/>
 							) : roundIdx === 0 ? (
-								"Wildcard"
+								<Wildcard
+									matchId={data.id}
+									a={team.id === "a"}
+									opponent={team.id === "a" ? teamB : teamA}
+								/>
 							) : (
-								"TBD"
+								<Button
+									className="px-4 self-start hover:underline"
+									variant="text"
+									onPress={() => {
+										console.log(team.id);
+
+										if (typeof team.id === "number") {
+											setNodeIdToCenter(team.id as number);
+										}
+									}}
+								>
+									Winner of{" "}
+									{team.id === teamAPreviousMatchId
+										? teamAPreviousMatchName
+										: teamBPreviousMatchName}
+								</Button>
 							)}
-							<div>
-								{team.type === "MatchTeam" && team.poolTeam?.finish && (
+							{team.type === "MatchTeam" && team.poolTeam?.finish && (
+								<div>
 									<span className="text-xs text-gray-500">
 										{formatOrdinals(team.poolTeam.finish)} in Pool{" "}
 										<span className="uppercase">{team.poolTeam.pool.name}</span>
 									</span>
-								)}
-							</div>
+								</div>
+							)}
 						</div>
 					</div>
 					{sets

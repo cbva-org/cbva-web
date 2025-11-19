@@ -48,7 +48,7 @@ export type MatchTeam = Pick<TournamentDivisionTeam, "id" | "playoffsSeed"> & {
 			>;
 		}[];
 	};
-	poolTeam: Pick<PoolTeam, "finish"> & { pool: Pick<Pool, "name"> };
+	poolTeam: Pick<PoolTeam, "seed" | "finish"> & { pool: Pick<Pool, "name"> };
 };
 
 export function PoolMatchGrid({

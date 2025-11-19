@@ -7,6 +7,7 @@ export type ProfileNameProps = Pick<
 	"id" | "preferredName" | "firstName" | "lastName"
 > & {
 	showFirst?: boolean;
+	link?: boolean;
 };
 
 export function ProfileName({
@@ -15,13 +16,10 @@ export function ProfileName({
 	firstName,
 	lastName,
 	showFirst = true,
+	link = true,
 }: ProfileNameProps) {
-	return (
-		<Link
-			to="/profile/$profileId"
-			params={{ profileId: id.toString() }}
-			className="hover:underline"
-		>
+	const content = (
+		<>
 			{showFirst ? `${preferredName ?? firstName} ` : null}
 
 			<span className={clsx(showFirst && "hidden sm:inline-block")}>
@@ -31,6 +29,20 @@ export function ProfileName({
 			{showFirst && (
 				<span className={clsx("sm:hidden")}>{lastName.slice(0, 1)}.</span>
 			)}
-		</Link>
+		</>
 	);
+
+	if (link) {
+		return (
+			<Link
+				to="/profile/$profileId"
+				params={{ profileId: id.toString() }}
+				className="hover:underline"
+			>
+				{content}
+			</Link>
+		);
+	}
+
+	return <span>{content}</span>;
 }

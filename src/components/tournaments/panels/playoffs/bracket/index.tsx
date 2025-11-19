@@ -36,8 +36,6 @@ function getBracketRounds(
 	map: MatchesMap,
 	match: BracketMatch,
 ): (BracketMatch & { midx: number })[][] {
-	console.log(map, match);
-
 	const rounds: (BracketMatch & { midx: number })[][] = [];
 
 	// Start with the finals match in round 0
@@ -87,8 +85,6 @@ function getBracketRounds(
 
 		currentRoundIndex++;
 	}
-
-	console.log("!", rounds);
 
 	return rounds;
 }
@@ -160,19 +156,13 @@ function buildNodeTree(map: MatchesMap): {
 
 	const finals = Object.values(map).find((match) => match.nextMatchId === null);
 
-	console.log("finals", finals);
-
 	if (!finals) {
 		throw new Error("Could not find finals match");
 	}
 
 	const rounds = getBracketRounds(map, finals);
 
-	console.log("rounds", rounds);
-
 	const nodes = getNodesFromRounds(rounds);
-
-	console.log("nodes", nodes);
 
 	return { nodes, rounds };
 }
@@ -188,13 +178,14 @@ export type BracketProps = {
 
 type BracketContextState = {
 	activeTeam: number | null;
+	nodeIdToCenter: number | null;
 };
 
 const BracketContext = createContext<{
 	state: BracketContextState;
 	setState: Dispatch<SetStateAction<BracketContextState>>;
 }>({
-	state: { activeTeam: null },
+	state: { activeTeam: null, nodeIdToCenter: null },
 	setState: () => {},
 });
 
@@ -215,12 +206,18 @@ export function useActiveTeam() {
 export function useSetActiveTeam() {
 	const { setState } = useBracketContext();
 
-	return (activeTeam: number | null) => setState({ activeTeam });
+	return (activeTeam: number | null) =>
+		setState((state) => ({ ...state, activeTeam }));
+}
+
+export function useSetNodeIdToCenter() {
+	const { setState } = useBracketContext();
+
+	return (nodeIdToCenter: number) =>
+		setState((state) => ({ ...state, nodeIdToCenter }));
 }
 
 function BracketFlow({ matches }: BracketProps) {
-	console.log("matches", matches);
-
 	const matchesMap = matches.reduce<{
 		[key: number]: BracketMatch;
 	}>((memo, match) => {
@@ -386,6 +383,7 @@ function BracketFlow({ matches }: BracketProps) {
 export function Bracket({ matches }: BracketProps) {
 	const [state, setState] = useState<BracketContextState>({
 		activeTeam: null,
+		nodeIdToCenter: null,
 	});
 
 	return (

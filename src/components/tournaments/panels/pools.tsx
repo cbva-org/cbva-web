@@ -25,6 +25,7 @@ export function PoolsPanel({
 	const { data } = useSuspenseQuery(
 		poolsQueryOptions({ tournamentDivisionId }),
 	);
+
 	const poolMatchResults = usePoolMatchResults(data);
 
 	const pools = useMemo(() => {

@@ -15,7 +15,7 @@ export function TeamNames({
 	}[];
 	orientation?: "row" | "col";
 	separator?: "/" | " & ";
-} & Pick<ProfileNameProps, "showFirst">) {
+} & Pick<ProfileNameProps, "link" | "showFirst">) {
 	return (
 		<span>
 			{players.map(({ profile }, i) => (

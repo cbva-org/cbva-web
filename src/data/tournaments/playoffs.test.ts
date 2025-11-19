@@ -98,6 +98,7 @@ describe("Generating playoffs", () => {
 		});
 
 		expect(matches).toHaveLength(4 + 4 + 2 + 1);
+
 		expect(
 			matches.filter(
 				(mat) =>
@@ -107,6 +108,7 @@ describe("Generating playoffs", () => {
 					mat.teamBPreviousMatchId !== null,
 			),
 		).toHaveLength(2);
+
 		expect(
 			matches.filter(
 				(mat) =>
@@ -116,6 +118,76 @@ describe("Generating playoffs", () => {
 					mat.teamBPreviousMatchId === null,
 			),
 		).toHaveLength(2);
+		expect(matches.filter((mat) => mat.nextMatchId === null)).toHaveLength(1);
+	});
+
+	test("adds slots for wildcards", async () => {
+		const tournamentInfo = await bootstrapTournament(db, {
+			date: "2025-01-01",
+			startTime: "09:00:00",
+			venue: 1,
+			divisions: [
+				{
+					division: "b",
+					gender: "male",
+					teams: 25,
+					pools: 5,
+				},
+			],
+			poolMatches: true,
+			simulatePoolMatches: true,
+		});
+
+		const tournamentDivisionId = tournamentInfo.divisions[0];
+
+		await createPlayoffsFn({
+			data: {
+				id: tournamentDivisionId,
+				teamCount: 10,
+				wildcardCount: 2,
+				matchKind: "set-to-28",
+				overwrite: false,
+			},
+		});
+
+		const matches = await db.query.playoffMatches.findMany({
+			with: {
+				teamA: {
+					with: {
+						poolTeam: true,
+					},
+				},
+				teamB: {
+					with: {
+						poolTeam: true,
+					},
+				},
+			},
+			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		});
+
+		expect(matches).toHaveLength(4 + 4 + 2 + 1);
+
+		expect(
+			matches.filter(
+				(mat) =>
+					mat.teamAId !== null &&
+					mat.teamAPreviousMatchId === null &&
+					mat.teamBId === null &&
+					mat.teamBPreviousMatchId !== null,
+			),
+		).toHaveLength(2);
+
+		expect(
+			matches.filter(
+				(mat) =>
+					mat.teamAId === null &&
+					mat.teamAPreviousMatchId !== null &&
+					mat.teamBId !== null &&
+					mat.teamBPreviousMatchId === null,
+			),
+		).toHaveLength(2);
+
 		expect(matches.filter((mat) => mat.nextMatchId === null)).toHaveLength(1);
 	});
 });
