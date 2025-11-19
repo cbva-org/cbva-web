@@ -4,13 +4,16 @@ import { CircleDot } from "lucide-react";
 import { tv } from "tailwind-variants";
 import { Button } from "@/components/base/button";
 import { ProfileName } from "@/components/profiles/name";
+import { TeamNames } from "@/components/teams/names";
 import type {
+	MatchRefTeam,
 	MatchSet,
 	PlayerProfile,
 	Pool,
 	PoolMatch,
 	PoolTeam,
 	Team,
+	TeamPlayer,
 	TournamentDivisionTeam,
 } from "@/db/schema";
 import { isNotNull } from "@/utils/types";
@@ -57,6 +60,7 @@ export function PoolMatchGrid({
 	matchNumber,
 	teamA,
 	teamB,
+	refTeams,
 	refetch,
 }: Pick<PoolMatch, "id" | "winnerId" | "matchNumber"> & {
 	sets: Pick<
@@ -72,6 +76,18 @@ export function PoolMatchGrid({
 	>[];
 	teamA: MatchTeam | null;
 	teamB: MatchTeam | null;
+	refTeams: (MatchRefTeam & {
+		team: TournamentDivisionTeam & {
+			team: Pick<Team, "id"> & {
+				players: {
+					profile: Pick<
+						PlayerProfile,
+						"id" | "preferredName" | "firstName" | "lastName"
+					>;
+				}[];
+			};
+		};
+	})[];
 	refetch: () => void;
 }) {
 	return (
@@ -85,7 +101,11 @@ export function PoolMatchGrid({
 							: "col-span-8 md:col-span-9",
 					)}
 				>
-					<Link to="/matches/pool/$matchId" params={{ matchId: id.toString() }}>
+					<Link
+						to="/matches/pool/$matchId"
+						className="hover:underline"
+						params={{ matchId: id.toString() }}
+					>
 						{sets.length > 1 ? "Match" : "Game"} {matchNumber}
 					</Link>
 					{sets.some(({ status }) => status === "in_progress") ? (
@@ -100,6 +120,17 @@ export function PoolMatchGrid({
 							Live
 						</Button>
 					) : null}
+					<div>
+						Refs:{" "}
+						{refTeams.map((refs) => (
+							<TeamNames
+								key={refs.id}
+								showFirst={false}
+								separator="/"
+								players={refs.team.team.players}
+							/>
+						))}
+					</div>
 				</div>
 				{sets.map((s) => (
 					<div

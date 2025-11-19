@@ -22,9 +22,7 @@ export function ProfileName({
 		<>
 			{showFirst ? `${preferredName ?? firstName} ` : null}
 
-			<span className={clsx(showFirst && "hidden sm:inline-block")}>
-				{lastName}
-			</span>
+			<span className={clsx(showFirst && "hidden sm:inline")}>{lastName}</span>
 
 			{showFirst && (
 				<span className={clsx("sm:hidden")}>{lastName.slice(0, 1)}.</span>

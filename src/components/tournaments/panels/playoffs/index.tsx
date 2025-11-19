@@ -13,8 +13,6 @@ export function PlayoffsPanel({
 		playoffsQueryOptions({ tournamentDivisionId }),
 	);
 
-	console.log(data);
-
 	return (
 		<TabPanel id="playoffs">
 			<Bracket matches={data || []} />

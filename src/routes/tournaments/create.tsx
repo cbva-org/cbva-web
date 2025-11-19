@@ -27,8 +27,6 @@ export const Route = createFileRoute("/tournaments/create")({
 				tournament: ["create"],
 			});
 
-		console.log(data);
-
 		if (!canCreate) {
 			throw redirect({
 				to: "/not-found",
@@ -36,8 +34,6 @@ export const Route = createFileRoute("/tournaments/create")({
 		}
 
 		if (templateId) {
-			console.log("hello");
-
 			queryClient.ensureQueryData(tournamentQueryOptions(templateId));
 		}
 	},

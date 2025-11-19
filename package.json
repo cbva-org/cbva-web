@@ -15,7 +15,6 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.3.14",
     "@internationalized/date": "^3.10.0",
     "@lexical/headless": "^0.38.2",
     "@lexical/html": "^0.38.2",
@@ -66,6 +65,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-react-aria-components": "^2.0.1",
     "ts-pattern": "^5.9.0",
+    "uuid": "^13.0.0",
     "vite-tsconfig-paths": "^5.1.4",
     "zod": "^4.1.12"
   },

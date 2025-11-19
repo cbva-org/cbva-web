@@ -19,8 +19,9 @@ import {
 	selectPoolSchema,
 	selectTournamentDivisionSchema,
 } from "@/db/schema";
+import { matchRefs } from "@/db/schema/match-ref-teams";
 import { getPoolStats } from "@/hooks/matches";
-import { badRequest } from "@/lib/responses";
+import { badRequest, internalServerError } from "@/lib/responses";
 import { snake } from "@/lib/snake-draft";
 
 export const createPoolsSchema = selectTournamentDivisionSchema
@@ -111,39 +112,87 @@ export const createPoolsMutationOptions = () =>
 			createPoolsFn({ data }),
 	});
 
-const POOL_MATCH_SETTINGS = {
+const POOL_MATCH_SETTINGS: {
+	[teamCount: number]: { sets: number[]; matches: [number, number, number][] };
+} = {
 	3: {
 		sets: [21, 21, 15],
 		matches: [
-			[1, 3],
-			[2, 3],
-			[1, 2],
+			[2, 3, 1],
+			[1, 3, 2],
+			[1, 2, 3],
 		],
 	},
 	4: {
 		sets: [28],
 		matches: [
-			[1, 3],
-			[2, 4],
-			[1, 4],
-			[2, 3],
-			[3, 4],
-			[1, 2],
+			[2, 4, 3],
+			[1, 3, 4],
+			[2, 3, 1],
+			[1, 4, 3],
+			[3, 4, 2],
+			[1, 2, 4],
 		],
 	},
 	5: {
 		sets: [21],
 		matches: [
-			[3, 5],
-			[1, 4],
-			[2, 5],
-			[1, 3],
-			[2, 4],
-			[1, 5],
-			[2, 3],
-			[4, 5],
-			[1, 2],
-			[3, 4],
+			[3, 5, 2],
+			[1, 4, 3],
+			[2, 5, 4],
+			[3, 1, 5],
+			[4, 2, 3],
+			[5, 1, 4],
+			[3, 2, 1],
+			[4, 5, 3],
+			[1, 2, 5],
+			[3, 4, 2],
+		],
+	},
+	6: {
+		sets: [21],
+		matches: [
+			[3, 4, 2],
+			[1, 5, 2],
+			[1, 6, 3],
+			[2, 5, 3],
+			[2, 4, 5],
+			[3, 6, 5],
+			[1, 4, 6],
+			[2, 3, 6],
+			[5, 6, 4],
+			[1, 3, 4],
+			[2, 6, 1],
+			[4, 5, 1],
+			[1, 2, 4],
+			[3, 5, 6],
+			[4, 6, 5],
+		],
+	},
+	7: {
+		sets: [21],
+		matches: [
+			[3, 4, 6],
+			[1, 5, 6],
+			[2, 7, 5],
+			[1, 6, 5],
+			[2, 5, 3],
+			[4, 7, 3],
+			[2, 4, 1],
+			[3, 6, 1],
+			[5, 7, 2],
+			[1, 4, 2],
+			[2, 3, 4],
+			[1, 7, 4],
+			[5, 6, 7],
+			[1, 3, 7],
+			[2, 6, 5],
+			[3, 7, 1],
+			[4, 5, 7],
+			[1, 2, 6],
+			[6, 7, 2],
+			[3, 5, 4],
+			[4, 6, 3],
 		],
 	},
 };
@@ -200,32 +249,56 @@ export const createPoolMatchesFn = createServerFn()
 		}
 
 		const matchValues: CreatePoolMatch[] = [];
+		const refValues: {
+			poolId: number;
+			matchNumber: number;
+			refTeamId: number;
+		}[] = [];
 
 		const poolMatchSetsSettings: { [id: number]: number[] } = {};
 
 		for (const division of divisions) {
 			for (const { id, teams } of division.pools) {
-				const { sets, matches } = [3, 4, 5].includes(teams.length)
-					? POOL_MATCH_SETTINGS[teams.length as 3 | 4 | 5]
-					: {
-							/* TODO: fallback to permutations */
-							sets: [],
-							matches: [],
-						};
+				if (![3, 4, 5, 6, 7].includes(teams.length)) {
+					throw badRequest("Invalid pool size; expected 3, 4, 5, 6, or 7.");
+				}
+
+				const { sets, matches } =
+					POOL_MATCH_SETTINGS[teams.length as 3 | 4 | 5 | 6 | 7];
 
 				poolMatchSetsSettings[id] = sets;
 
-				for (const [matchIdx, [teamASeed, teamBSeed]] of matches.entries()) {
+				for (const [
+					matchIdx,
+					[teamASeed, teamBSeed, refTeamSeed],
+				] of matches.entries()) {
 					const teamAId = teams.find((team) => teamASeed === team.seed)?.teamId;
 					const teamBId = teams.find((team) => teamBSeed === team.seed)?.teamId;
+					const refTeamId = teams.find(
+						(team) => refTeamSeed === team.seed,
+					)?.teamId;
+
+					if (!(teamAId && teamBId && refTeamId)) {
+						throw internalServerError(
+							`Could not find teams for seeds while creating pool matches; pool_size=${teams.length}`,
+						);
+					}
+
+					const matchNumber = matchIdx + 1;
 
 					matchValues.push({
 						poolId: id,
-						matchNumber: matchIdx + 1,
+						matchNumber,
 						teamAId,
 						teamBId,
 						scheduledTime:
 							matchIdx === 0 ? division.tournament.startTime : null,
+					});
+
+					refValues.push({
+						poolId: id,
+						matchNumber,
+						refTeamId,
 					});
 				}
 			}
@@ -235,7 +308,21 @@ export const createPoolMatchesFn = createServerFn()
 		const createdMatches = await db
 			.insert(poolMatches)
 			.values(matchValues)
-			.returning({ id: poolMatches.id, poolId: poolMatches.poolId });
+			.returning({
+				id: poolMatches.id,
+				poolId: poolMatches.poolId,
+				matchNumber: poolMatches.matchNumber,
+			});
+
+		await db.insert(matchRefs).values(
+			refValues.map(({ poolId, matchNumber, refTeamId }) => ({
+				poolMatchId: createdMatches.find(
+					(match) =>
+						match.poolId === poolId && match.matchNumber === matchNumber,
+				)?.id,
+				teamId: refTeamId,
+			})),
+		);
 
 		// Now create match sets with correct poolMatchId references
 		const setValues: CreateMatchSet[] = createdMatches.flatMap(

@@ -9,6 +9,7 @@ import {
 	inviteTournaments,
 	matchRefs,
 	matchSets,
+	phoneVerification,
 	playoffMatches,
 	poolMatches,
 	pools,
@@ -37,7 +38,18 @@ export const userRelations = relations(users, ({ many }) => ({
 	teamPlayerChangesNew: many(teamPlayerChangesNew),
 	matchRefs: many(matchRefs),
 	invitePlayers: many(invitePlayers),
+	phoneVerifications: many(phoneVerification),
 }));
+
+export const phoneVerificationRelations = relations(
+	phoneVerification,
+	({ one }) => ({
+		user: one(users, {
+			fields: [phoneVerification.userId],
+			references: [users.id],
+		}),
+	}),
+);
 
 // Director Preferences relations
 export const directorPreferencesRelations = relations(

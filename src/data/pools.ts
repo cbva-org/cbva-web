@@ -23,7 +23,11 @@ async function readPools({
 					sets: true,
 					teamA: {
 						with: {
-							poolTeam: true,
+							poolTeam: {
+								with: {
+									pool: true,
+								},
+							},
 							team: {
 								with: {
 									players: {
@@ -41,7 +45,11 @@ async function readPools({
 					},
 					teamB: {
 						with: {
-							poolTeam: true,
+							poolTeam: {
+								with: {
+									pool: true,
+								},
+							},
 							team: {
 								with: {
 									players: {
@@ -49,6 +57,23 @@ async function readPools({
 											profile: {
 												with: {
 													level: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					refTeams: {
+						with: {
+							team: {
+								with: {
+									team: {
+										with: {
+											players: {
+												with: {
+													profile: true,
 												},
 											},
 										},

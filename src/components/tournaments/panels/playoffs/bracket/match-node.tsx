@@ -228,8 +228,6 @@ export function MatchNode({
 									className="px-0 self-start hover:underline"
 									variant="text"
 									onPress={() => {
-										console.log(team.id);
-
 										if (typeof team.id === "number") {
 											setNodeIdToCenter(team.id as number);
 										}

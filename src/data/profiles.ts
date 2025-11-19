@@ -5,10 +5,11 @@ import {
 } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
+import { or } from "drizzle-orm";
 import z from "zod";
-
-import type { Viewer } from "@/auth";
+import { auth, type Viewer } from "@/auth";
 import { getViewer } from "@/auth/server";
+import { requireAuthenticated, useViewerHasPermission } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
 	type CreatePlayerProfile,
@@ -90,6 +91,7 @@ async function readProfile(id: number, viewerId: Viewer["id"]) {
 const getProfile = createServerFn({
 	method: "GET",
 })
+	.middleware([requireAuthenticated])
 	.inputValidator(selectPlayerProfileSchema.pick({ id: true }))
 	.handler(async ({ data: { id } }) => {
 		const viewer = await getViewer();
@@ -105,6 +107,52 @@ export const profileQueryOptions = (id: number) =>
 	queryOptions({
 		queryKey: ["profile", id],
 		queryFn: () => getProfile({ data: { id } }),
+	});
+
+const getProfileOverview = createServerFn({
+	method: "GET",
+})
+	.inputValidator(selectPlayerProfileSchema.pick({ id: true }))
+	.handler(async ({ data: { id } }) => {
+		const result = await db.query.playerProfiles.findFirst({
+			columns: {
+				id: true,
+				userId: true,
+				firstName: true,
+				preferredName: true,
+				lastName: true,
+				imageSource: true,
+				ratedPoints: true,
+				juniorsPoints: true,
+				rank: true,
+				bio: true,
+				heightFeet: true,
+				heightInches: true,
+				dominantArm: true,
+				preferredRole: true,
+				preferredSide: true,
+				club: true,
+				highSchoolGraduationYear: true,
+				collegeTeam: true,
+				collegeTeamYearsParticipated: true,
+			},
+			with: {
+				level: true,
+			},
+			where: (t, { eq }) => eq(t.id, id),
+		});
+
+		if (!result) {
+			throw notFound();
+		}
+
+		return result;
+	});
+
+export const profileOverviewQueryOptions = (id: number) =>
+	queryOptions({
+		queryKey: ["profile", id],
+		queryFn: () => getProfileOverview({ data: { id } }),
 	});
 
 export const updatePlayerProfileFn = createServerFn({ method: "POST" })

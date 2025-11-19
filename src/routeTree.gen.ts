@@ -29,6 +29,7 @@ import { Route as ApiFilesRouteImport } from './routes/api/files'
 import { Route as AccountSetupRouteImport } from './routes/account/setup'
 import { Route as TournamentsTournamentIdIndexRouteImport } from './routes/tournaments/$tournamentId/index'
 import { Route as AccountVerifyIndexRouteImport } from './routes/account/verify/index'
+import { Route as ProfileProfileIdEditRouteImport } from './routes/profile/$profileId.edit'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AccountVerifySuccessRouteImport } from './routes/account/verify/success'
 import { Route as MatchesPoolMatchIdIndexRouteImport } from './routes/matches/pool/$matchId/index'
@@ -135,6 +136,11 @@ const AccountVerifyIndexRoute = AccountVerifyIndexRouteImport.update({
   path: '/account/verify/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileProfileIdEditRoute = ProfileProfileIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => ProfileProfileIdRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -170,7 +176,7 @@ export interface FileRoutesByFullPath {
   '/account/setup': typeof AccountSetupRoute
   '/api/files': typeof ApiFilesRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
-  '/profile/$profileId': typeof ProfileProfileIdRoute
+  '/profile/$profileId': typeof ProfileProfileIdRouteWithChildren
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account': typeof AccountIndexRoute
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/tournaments': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/account/verify': typeof AccountVerifyIndexRoute
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdIndexRoute
   '/tournaments/$tournamentId/$divisionId/{-$tab}': typeof TournamentsTournamentIdDivisionIdChar123TabChar125Route
@@ -196,7 +203,7 @@ export interface FileRoutesByTo {
   '/account/setup': typeof AccountSetupRoute
   '/api/files': typeof ApiFilesRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
-  '/profile/$profileId': typeof ProfileProfileIdRoute
+  '/profile/$profileId': typeof ProfileProfileIdRouteWithChildren
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account': typeof AccountIndexRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/tournaments': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/account/verify': typeof AccountVerifyIndexRoute
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdIndexRoute
   '/tournaments/$tournamentId/$divisionId/{-$tab}': typeof TournamentsTournamentIdDivisionIdChar123TabChar125Route
@@ -223,7 +231,7 @@ export interface FileRoutesById {
   '/account/setup': typeof AccountSetupRoute
   '/api/files': typeof ApiFilesRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
-  '/profile/$profileId': typeof ProfileProfileIdRoute
+  '/profile/$profileId': typeof ProfileProfileIdRouteWithChildren
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account/': typeof AccountIndexRoute
@@ -231,6 +239,7 @@ export interface FileRoutesById {
   '/tournaments/': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/account/verify/': typeof AccountVerifyIndexRoute
   '/tournaments/$tournamentId/': typeof TournamentsTournamentIdIndexRoute
   '/tournaments/$tournamentId/$divisionId/{-$tab}': typeof TournamentsTournamentIdDivisionIdChar123TabChar125Route
@@ -259,6 +268,7 @@ export interface FileRouteTypes {
     | '/tournaments'
     | '/account/verify/success'
     | '/api/auth/$'
+    | '/profile/$profileId/edit'
     | '/account/verify'
     | '/tournaments/$tournamentId'
     | '/tournaments/$tournamentId/$divisionId/{-$tab}'
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/tournaments'
     | '/account/verify/success'
     | '/api/auth/$'
+    | '/profile/$profileId/edit'
     | '/account/verify'
     | '/tournaments/$tournamentId'
     | '/tournaments/$tournamentId/$divisionId/{-$tab}'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/tournaments/'
     | '/account/verify/success'
     | '/api/auth/$'
+    | '/profile/$profileId/edit'
     | '/account/verify/'
     | '/tournaments/$tournamentId/'
     | '/tournaments/$tournamentId/$divisionId/{-$tab}'
@@ -330,7 +342,7 @@ export interface RootRouteChildren {
   AccountSetupRoute: typeof AccountSetupRoute
   ApiFilesRoute: typeof ApiFilesRoute
   JuniorsLeaderboardRoute: typeof JuniorsLeaderboardRoute
-  ProfileProfileIdRoute: typeof ProfileProfileIdRoute
+  ProfileProfileIdRoute: typeof ProfileProfileIdRouteWithChildren
   TournamentsCreateRoute: typeof TournamentsCreateRoute
   VenuesVenueIdRoute: typeof VenuesVenueIdRoute
   AccountIndexRoute: typeof AccountIndexRoute
@@ -486,6 +498,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountVerifyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/$profileId/edit': {
+      id: '/profile/$profileId/edit'
+      path: '/edit'
+      fullPath: '/profile/$profileId/edit'
+      preLoaderRoute: typeof ProfileProfileIdEditRouteImport
+      parentRoute: typeof ProfileProfileIdRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -517,6 +536,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ProfileProfileIdRouteChildren {
+  ProfileProfileIdEditRoute: typeof ProfileProfileIdEditRoute
+}
+
+const ProfileProfileIdRouteChildren: ProfileProfileIdRouteChildren = {
+  ProfileProfileIdEditRoute: ProfileProfileIdEditRoute,
+}
+
+const ProfileProfileIdRouteWithChildren =
+  ProfileProfileIdRoute._addFileChildren(ProfileProfileIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LeaderboardRoute: LeaderboardRoute,
@@ -530,7 +560,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountSetupRoute: AccountSetupRoute,
   ApiFilesRoute: ApiFilesRoute,
   JuniorsLeaderboardRoute: JuniorsLeaderboardRoute,
-  ProfileProfileIdRoute: ProfileProfileIdRoute,
+  ProfileProfileIdRoute: ProfileProfileIdRouteWithChildren,
   TournamentsCreateRoute: TournamentsCreateRoute,
   VenuesVenueIdRoute: VenuesVenueIdRoute,
   AccountIndexRoute: AccountIndexRoute,

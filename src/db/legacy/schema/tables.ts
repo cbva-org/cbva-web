@@ -56,6 +56,13 @@ export const users = gelTable("User", {
 	rank: integer().notNull(),
 });
 
+export const phoneVerification = gelTable("PhoneVerification", {
+	userId: uuid()
+		.notNull()
+		.references(() => users.id),
+	phone: text().notNull(),
+});
+
 export const directorPreferences = gelTable("DirectorPreferences", {
 	id: uuid().primaryKey().notNull(),
 	userId: uuid()

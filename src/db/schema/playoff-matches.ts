@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
-
+import { matchRefTeams } from "./match-ref-teams";
 import { matchSets } from "./match-sets";
 import { pools } from "./pools";
 import { matchStatusEnum } from "./shared";
@@ -89,5 +89,6 @@ export const playoffMatchRelations = relations(
 			fields: [playoffMatches.teamBId],
 			references: [tournamentDivisionTeams.id],
 		}),
+		refTeams: many(matchRefTeams),
 	}),
 );

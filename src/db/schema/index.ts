@@ -1,9 +1,11 @@
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { users } from "./auth";
+
+import { accounts, users } from "./auth";
 import { blocks, pages } from "./blocks";
 import { directorRelations, directors } from "./directors";
 import { divisionRelations, divisions } from "./divisions";
 import { levels } from "./levels";
+import { matchRefTeams, matchRefTeamsRelations } from "./match-ref-teams";
 import { matchSets, matchSetsRelations } from "./match-sets";
 import { playerProfileRelations, playerProfiles } from "./player-profiles";
 import { playoffMatches, playoffMatchRelations } from "./playoff-matches";
@@ -34,6 +36,7 @@ export * from "./blocks";
 export * from "./directors";
 export * from "./divisions";
 export * from "./levels";
+export * from "./match-ref-teams";
 export * from "./match-sets";
 export * from "./player-profiles";
 export * from "./playoff-matches";
@@ -56,6 +59,7 @@ export const tables = {
 	divisions,
 	levels,
 	matchSets,
+	matchRefTeams,
 	pages,
 	playerProfiles,
 	playoffMatches,
@@ -72,6 +76,7 @@ export const tables = {
 	tournamentDivisionTeams,
 	tournaments,
 	users,
+	accounts,
 	venues,
 };
 
@@ -83,6 +88,7 @@ export const relationships = {
 	playoffMatchRelations,
 	poolMatchRelations,
 	poolRelations,
+	matchRefTeamsRelations,
 	poolTeamsRelations,
 	teamPlayerRelations,
 	teamRelations,

@@ -4,6 +4,7 @@ import { seedDivisions, seedLevels } from "../seed/divisions";
 import { importDirectors } from "./directors";
 import { importPlayers } from "./players";
 import { importTournamentsForYear } from "./tournaments";
+import { importUsers } from "./users";
 import { getVenuesCache } from "./venues";
 
 async function main() {
@@ -24,7 +25,8 @@ async function main() {
 	const divisionsCache = await seedDivisions(db);
 	const levelsCache = await seedLevels(db);
 
-	await importPlayers(levelsCache);
+	// await importPlayers(levelsCache);
+	await importUsers(levelsCache);
 	await importDirectors();
 
 	const venuesCache = await getVenuesCache();
