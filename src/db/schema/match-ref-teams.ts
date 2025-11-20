@@ -2,7 +2,6 @@ import { relations, sql } from "drizzle-orm";
 import { check, index, integer, pgTable, serial } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import z from "zod";
-import { dbg } from "@/utils/dbg";
 import { playoffMatches } from "./playoff-matches";
 import { poolMatches } from "./pool-matches";
 import { tournamentDivisionTeams } from "./tournament-division-teams";

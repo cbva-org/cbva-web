@@ -19,7 +19,7 @@ import {
 	selectPoolSchema,
 	selectTournamentDivisionSchema,
 } from "@/db/schema";
-import { matchRefs } from "@/db/schema/match-ref-teams";
+import { matchRefTeams } from "@/db/schema/match-ref-teams";
 import { getPoolStats } from "@/hooks/matches";
 import { badRequest, internalServerError } from "@/lib/responses";
 import { snake } from "@/lib/snake-draft";
@@ -314,7 +314,7 @@ export const createPoolMatchesFn = createServerFn()
 				matchNumber: poolMatches.matchNumber,
 			});
 
-		await db.insert(matchRefs).values(
+		await db.insert(matchRefTeams).values(
 			refValues.map(({ poolId, matchNumber, refTeamId }) => ({
 				poolMatchId: createdMatches.find(
 					(match) =>
