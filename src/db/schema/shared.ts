@@ -41,6 +41,10 @@ export const teamStatusEnum = pgEnum("team_status", [
 	"cancelled",
 ]);
 
+export const teamStatusSchema = createSelectSchema(teamStatusEnum);
+
+export type TeamStatus = z.infer<typeof teamStatusSchema>;
+
 export const venueStatusEnum = pgEnum("venue_status", [
 	"active",
 	"hidden",

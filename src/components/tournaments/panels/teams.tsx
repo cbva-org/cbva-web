@@ -22,7 +22,9 @@ export function TeamsPanel({
 	tournamentDivisionId: TournamentDivision["id"];
 	teamSize: TournamentDivision["teamSize"];
 }) {
-	const { data } = useSuspenseQuery(teamsQueryOptions(tournamentDivisionId));
+	const { data } = useSuspenseQuery(
+		teamsQueryOptions({ tournamentDivisionId }),
+	);
 
 	return (
 		<TabPanel id="teams">

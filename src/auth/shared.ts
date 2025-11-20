@@ -9,8 +9,6 @@ import { getViewer } from "./server";
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
 	const viewer = await getViewer();
 
-	console.log(viewer);
-
 	return await next({
 		context: {
 			viewer: viewer

@@ -30,7 +30,8 @@ export function SimulateMatchesForm({
 		...simulateMatchesMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: teamsQueryOptions(division.id).queryKey,
+				queryKey: teamsQueryOptions({ tournamentDivisionId: division.id })
+					.queryKey,
 			});
 
 			queryClient.invalidateQueries({

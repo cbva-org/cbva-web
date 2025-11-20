@@ -110,7 +110,7 @@ export function SetCourtForm({
 							Pool {poolName}
 						</span>
 						{"'s "}
-						court for the{" "}
+						court for the division{" "}
 						<span className="font-semibold italic uppercase">
 							{divisionName}
 						</span>

@@ -31,7 +31,8 @@ export function CompletePoolsForm({
 		...completePoolsMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: teamsQueryOptions(division.id).queryKey,
+				queryKey: teamsQueryOptions({ tournamentDivisionId: division.id })
+					.queryKey,
 			});
 
 			queryClient.invalidateQueries({

@@ -43,7 +43,8 @@ export function AssignWildcardForm({
 		...assignWildcardMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: teamsQueryOptions(division.id).queryKey,
+				queryKey: teamsQueryOptions({ tournamentDivisionId: division.id })
+					.queryKey,
 			});
 
 			queryClient.invalidateQueries(
@@ -85,8 +86,14 @@ export function AssignWildcardForm({
 	});
 
 	const { data: teams } = useQuery({
-		...teamsQueryOptions(division.id),
-		select: (data) => data.filter((team) => !playoffTeams?.has(team.id)),
+		...teamsQueryOptions({ tournamentDivisionId: division.id }),
+		select: (data) =>
+			data.filter(
+				(team) =>
+					!playoffTeams?.has(team.id) &&
+					team.status === "confirmed" &&
+					team.poolTeam?.finish,
+			),
 	});
 
 	const { data: stats } = useQuery({
@@ -118,7 +125,7 @@ export function AssignWildcardForm({
 	const orderedTeams = orderBy(
 		teams,
 		[
-			(team) => team.poolTeam.finish,
+			(team) => team.poolTeam?.finish,
 			(team) => {
 				const teamStats = stats?.get(team.id);
 
@@ -131,7 +138,7 @@ export function AssignWildcardForm({
 				return 0;
 			},
 			(team) => stats?.get(team.id)?.totalPointDiff,
-			(team) => team.poolTeam.pool.name,
+			(team) => team.poolTeam?.pool.name,
 		],
 		["asc", "asc", "desc", "asc"],
 	);

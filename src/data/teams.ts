@@ -1,14 +1,21 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-
+import z from "zod";
 import { db } from "@/db/connection";
 import { selectTournamentDivisionTeamSchema } from "@/db/schema";
+import { teamStatusSchema } from "@/db/schema/shared";
+import { isNotNullOrUndefined } from "@/utils/types";
+
+const getTeamsSchema = selectTournamentDivisionTeamSchema
+	.pick({ tournamentDivisionId: true })
+	.extend({
+		statusIn: z.array(teamStatusSchema).optional(),
+	});
 
 async function readTeams({
 	tournamentDivisionId,
-}: {
-	tournamentDivisionId: number;
-}) {
+	statusIn,
+}: z.infer<typeof getTeamsSchema>) {
 	return await db.query.tournamentDivisionTeams.findMany({
 		with: {
 			team: {
@@ -30,10 +37,12 @@ async function readTeams({
 				},
 			},
 		},
-		where: (teams, { eq, and, or }) =>
+		where: (t, { eq, and, or, inArray }) =>
 			and(
-				eq(teams.tournamentDivisionId, tournamentDivisionId),
-				or(eq(teams.status, "confirmed"), eq(teams.status, "registered")),
+				eq(t.tournamentDivisionId, tournamentDivisionId),
+				statusIn
+					? inArray(t.status, statusIn)
+					: or(eq(t.status, "confirmed"), eq(t.status, "registered")),
 			),
 		orderBy: (t, { asc }) => [asc(t.finish), asc(t.seed)],
 	});
@@ -42,18 +51,22 @@ async function readTeams({
 export const getTeams = createServerFn({
 	method: "GET",
 })
-	.inputValidator(
-		selectTournamentDivisionTeamSchema.pick({ tournamentDivisionId: true }),
-	)
+	.inputValidator(getTeamsSchema)
 	.handler(async ({ data }) => await readTeams(data));
 
-export const teamsQueryOptions = (tournamentDivisionId: number) =>
+export const teamsQueryOptions = ({
+	tournamentDivisionId,
+	statusIn,
+}: z.infer<typeof getTeamsSchema>) =>
 	queryOptions({
-		queryKey: ["teams", tournamentDivisionId],
+		queryKey: ["teams", tournamentDivisionId, statusIn?.join(":")].filter(
+			isNotNullOrUndefined,
+		),
 		queryFn: () =>
 			getTeams({
 				data: {
 					tournamentDivisionId,
+					statusIn,
 				},
 			}),
 	});

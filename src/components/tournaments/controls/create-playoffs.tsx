@@ -72,7 +72,7 @@ export function CreatePlayoffsForm({
 	});
 
 	const { data: teamCount } = useQuery({
-		...teamsQueryOptions(division.id),
+		...teamsQueryOptions({ tournamentDivisionId: division.id }),
 		select: (data) => data.length,
 	});
 

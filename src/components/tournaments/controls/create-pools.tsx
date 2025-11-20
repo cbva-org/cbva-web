@@ -4,6 +4,7 @@ import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
+import { poolsQueryOptions } from "@/data/pools";
 import { teamsQueryOptions } from "@/data/teams";
 import {
 	createPoolsMutationOptions,
@@ -11,7 +12,6 @@ import {
 } from "@/data/tournaments/pools";
 import type { Division, TournamentDivision } from "@/db/schema";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
-import { poolsQueryOptions } from "@/data/pools";
 
 export type CreatePoolsFormProps = {
 	tournamentId: number;
@@ -32,7 +32,8 @@ export function CreatePoolsForm({
 		...createPoolsMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: teamsQueryOptions(division.id).queryKey,
+				queryKey: teamsQueryOptions({ tournamentDivisionId: division.id })
+					.queryKey,
 			});
 
 			queryClient.invalidateQueries({
@@ -68,7 +69,7 @@ export function CreatePoolsForm({
 	});
 
 	const { data: teamCount } = useQuery({
-		...teamsQueryOptions(division.id),
+		...teamsQueryOptions({ tournamentDivisionId: division.id }),
 		select: (data) => data.length,
 	});
 

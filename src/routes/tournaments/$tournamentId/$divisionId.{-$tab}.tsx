@@ -92,7 +92,7 @@ function RouteComponent() {
 		) ?? tournament.tournamentDivisions[0];
 
 	const { data: hasTeams } = useQuery({
-		...teamsQueryOptions(activeDivision.id),
+		...teamsQueryOptions({ tournamentDivisionId: activeDivision.id }),
 		select: (data) => data.length > 0,
 	});
 

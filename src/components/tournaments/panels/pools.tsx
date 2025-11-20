@@ -103,8 +103,9 @@ export function PoolsPanel({
 									}) => {
 										const teamStats = stats?.[teamId];
 
-										const wins = teamStats?.wins.size();
-										const losses = teamStats?.losses.size();
+										console.log(teamStats);
+										const wins = teamStats?.wins.size;
+										const losses = teamStats?.losses.size;
 
 										return (
 											<TableRow key={id}>

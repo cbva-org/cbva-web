@@ -30,7 +30,8 @@ export function CalculateSeedsForm({
 		...calculateSeedsMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: teamsQueryOptions(division.id).queryKey,
+				queryKey: teamsQueryOptions({ tournamentDivisionId: division.id })
+					.queryKey,
 			});
 
 			onOpenChange(false);
