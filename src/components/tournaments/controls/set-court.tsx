@@ -10,11 +10,7 @@ import {
 	setPoolCourtMutationOptions,
 	setPoolCourtSchema,
 } from "@/data/tournaments/pools";
-import type { Division, TournamentDivision } from "@/db/schema";
-import {
-	getTournamentDivisionDisplay,
-	useTournamentDivisionName,
-} from "@/hooks/tournament";
+import { useTournamentDivisionName } from "@/hooks/tournament";
 
 export type SetCourtForm = {
 	tournamentId: number;

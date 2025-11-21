@@ -1,9 +1,5 @@
-import {
-	queryOptions,
-	type UseQueryOptions,
-	useQuery,
-} from "@tanstack/react-query";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
+import { queryOptions } from "@tanstack/react-query";
+import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/db/connection";
 
 async function readPlayoffs({

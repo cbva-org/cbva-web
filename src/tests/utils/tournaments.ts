@@ -7,7 +7,6 @@ import {
 } from "@/data/tournaments/pools";
 import { calculateSeedsFn } from "@/data/tournaments/teams";
 import {
-	type CreateTeam,
 	type Database,
 	divisions,
 	playerProfiles,

@@ -2,7 +2,9 @@ import { mutationOptions } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, lte, sql } from "drizzle-orm";
+import chunk from "lodash/chunk";
+import shuffle from "lodash/shuffle";
 import z from "zod";
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
@@ -198,4 +200,109 @@ export const calculateSeedsMutationOptions = () =>
 	mutationOptions({
 		mutationFn: (data: z.infer<typeof calculateSeedsSchema>) =>
 			calculateSeedsFn({ data }),
+	});
+
+export const fillTournamentSchema = selectTournamentSchema.pick({
+	id: true,
+});
+
+export const fillTournamentFn = createServerFn()
+	.middleware([
+		requirePermissions({
+			tournament: ["update"],
+		}),
+	])
+	.inputValidator(fillTournamentSchema)
+	.handler(async ({ data: { id: tournamentId } }) => {
+		const tournament = await db.query.tournaments.findFirst({
+			with: {
+				tournamentDivisions: {
+					with: {
+						division: true,
+					},
+				},
+			},
+			where: (t, { eq }) => eq(t.id, tournamentId),
+		});
+
+		if (!tournament) {
+			throw notFound();
+		}
+
+		for (const {
+			id: tournamentDivisionId,
+			capacity,
+			teamSize,
+			gender,
+			division: { order },
+		} of tournament.tournamentDivisions) {
+			const validLevelIds = (
+				await db.select().from(levels).where(lte(levels.order, order))
+			).map(({ id }) => id);
+
+			const randomTeams = chunk(
+				shuffle(
+					await db.query.playerProfiles.findMany({
+						where: (t, { inArray, and, eq }) =>
+							and(inArray(t.levelId, validLevelIds), eq(t.gender, gender)),
+						limit: capacity * teamSize,
+					}),
+				),
+				2,
+			);
+
+			console.log(
+				1,
+				randomTeams.map((players) => players.map(({ id }) => id).join(":")),
+			);
+
+			const createdTeams = await db
+				.insert(teams)
+				.values(
+					randomTeams.map((players) => ({
+						name: players.map(({ id }) => id).join(":"),
+					})),
+				)
+				.returning({
+					id: teams.id,
+					name: teams.name,
+				});
+
+			console.log(createdTeams);
+
+			await db.insert(teamPlayers).values(
+				createdTeams.flatMap(({ id: teamId, name }) =>
+					randomTeams
+						.filter((players) => players.join(":") === name)
+						.flat()
+						.map(({ id: playerProfileId }) => ({
+							teamId,
+							playerProfileId,
+						})),
+				),
+
+				// createdTeams.map(({ id, name }) => ({
+				// 	teamId: id,
+				// 	playerProfileId: randomTeams.find(
+				// 		(players) => players.join(":") === name,
+				// 	),
+				// })),
+			);
+
+			await db.insert(tournamentDivisionTeams).values(
+				createdTeams.map(({ id }) => ({
+					tournamentDivisionId,
+					teamId: id,
+					status: "confirmed" as const,
+				})),
+			);
+
+			console.log("teehee", tournamentDivisionId);
+		}
+	});
+
+export const fillTournamentMutationOptions = () =>
+	mutationOptions({
+		mutationFn: (data: z.infer<typeof fillTournamentSchema>) =>
+			fillTournamentFn({ data }),
 	});

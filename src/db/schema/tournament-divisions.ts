@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+	boolean,
 	integer,
 	pgTable,
 	serial,
@@ -32,6 +33,9 @@ export const tournamentDivisions = pgTable(
 		name: text(), // e.g., "Father/Son Division", "Open Mixed"
 		gender: genderEnum().notNull(),
 		teamSize: integer().notNull().default(2), // Number of players per team
+		capacity: integer().notNull().default(10),
+		waitlistCapacity: integer().notNull().default(5),
+		autopromoteWaitlist: boolean().notNull().default(true),
 		externalRef: uuid().unique(),
 	},
 	(table) => [
