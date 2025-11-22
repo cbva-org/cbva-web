@@ -102,6 +102,14 @@ CREATE TABLE "levels" (
 	CONSTRAINT "levels_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
+CREATE TABLE "match_ref_teams" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"pool_match_id" integer,
+	"playoff_match_id" integer,
+	"team_id" integer NOT NULL,
+	CONSTRAINT "match_ref_teams_type_exclusive" CHECK (("match_ref_teams"."pool_match_id" IS NOT NULL AND "match_ref_teams"."playoff_match_id" IS NULL) OR ("match_ref_teams"."pool_match_id" IS NULL AND "match_ref_teams"."playoff_match_id" IS NOT NULL))
+);
+--> statement-breakpoint
 CREATE TABLE "match_sets" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"pool_match_id" integer,
@@ -131,6 +139,7 @@ CREATE TABLE "player_profiles" (
 	"level_id" integer,
 	"rated_points" double precision DEFAULT 0 NOT NULL,
 	"juniors_points" double precision DEFAULT 0 NOT NULL,
+	"rank" integer,
 	"bio" text,
 	"image_source" text,
 	"height_feet" integer,
@@ -176,11 +185,12 @@ CREATE TABLE "pool_matches" (
 	"court" text,
 	"team_a_id" integer,
 	"team_b_id" integer,
-	"scheduled_time" timestamp,
+	"scheduled_time" time,
 	"status" "match_status" DEFAULT 'scheduled' NOT NULL,
 	"winner_id" integer,
 	"external_ref" uuid,
 	CONSTRAINT "pool_matches_externalRef_unique" UNIQUE("external_ref"),
+	CONSTRAINT "pool_matches_pool_id_match_number" UNIQUE("pool_id","match_number"),
 	CONSTRAINT "team_a_team_a_different" CHECK (("pool_matches"."team_a_id" IS NULL AND "pool_matches"."team_b_id" IS NULL) OR "pool_matches"."team_a_id" != "pool_matches"."team_b_id")
 );
 --> statement-breakpoint
@@ -199,8 +209,9 @@ CREATE TABLE "pools" (
 	"tournament_division_id" integer NOT NULL,
 	"court" text,
 	"done" boolean DEFAULT false NOT NULL,
-	"external_ref" uuid NOT NULL,
-	CONSTRAINT "pools_externalRef_unique" UNIQUE("external_ref")
+	"external_ref" uuid,
+	CONSTRAINT "pools_externalRef_unique" UNIQUE("external_ref"),
+	CONSTRAINT "pool_tournament_division_name_unique" UNIQUE("tournament_division_id","name")
 );
 --> statement-breakpoint
 CREATE TABLE "projects" (
@@ -257,10 +268,11 @@ CREATE TABLE "tournament_division_teams" (
 	"team_id" integer NOT NULL,
 	"seed" integer,
 	"finish" integer,
+	"playoffs_seed" integer,
 	"points_earned" double precision,
 	"rating_earned" text,
 	"status" "team_status" DEFAULT 'registered' NOT NULL,
-	"external_ref" uuid NOT NULL,
+	"external_ref" uuid,
 	CONSTRAINT "tournament_division_teams_externalRef_unique" UNIQUE("external_ref")
 );
 --> statement-breakpoint
@@ -271,7 +283,10 @@ CREATE TABLE "tournament_divisions" (
 	"name" text,
 	"gender" "gender" NOT NULL,
 	"team_size" integer DEFAULT 2 NOT NULL,
-	"external_ref" uuid NOT NULL,
+	"capacity" integer DEFAULT 10 NOT NULL,
+	"waitlist_capacity" integer DEFAULT 5 NOT NULL,
+	"autopromote_waitlist" boolean DEFAULT true NOT NULL,
+	"external_ref" uuid,
 	CONSTRAINT "tournament_divisions_externalRef_unique" UNIQUE("external_ref"),
 	CONSTRAINT "tournament_division_name_gender_unique" UNIQUE("tournament_id","division_id","name","gender")
 );
@@ -306,16 +321,19 @@ ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_impersonated_by_users_id_fk" FOREIGN KEY ("impersonated_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "blocks" ADD CONSTRAINT "blocks_page_pages_path_fk" FOREIGN KEY ("page") REFERENCES "public"."pages"("path") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "directors" ADD CONSTRAINT "directors_profile_id_player_profiles_id_fk" FOREIGN KEY ("profile_id") REFERENCES "public"."player_profiles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "match_ref_teams" ADD CONSTRAINT "match_ref_teams_pool_match_id_pool_matches_id_fk" FOREIGN KEY ("pool_match_id") REFERENCES "public"."pool_matches"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "match_ref_teams" ADD CONSTRAINT "match_ref_teams_playoff_match_id_playoff_matches_id_fk" FOREIGN KEY ("playoff_match_id") REFERENCES "public"."playoff_matches"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "match_ref_teams" ADD CONSTRAINT "match_ref_teams_team_id_tournament_division_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."tournament_division_teams"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "match_sets" ADD CONSTRAINT "match_sets_pool_match_id_pool_matches_id_fk" FOREIGN KEY ("pool_match_id") REFERENCES "public"."pool_matches"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "match_sets" ADD CONSTRAINT "match_sets_playoff_match_id_playoff_matches_id_fk" FOREIGN KEY ("playoff_match_id") REFERENCES "public"."playoff_matches"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "match_sets" ADD CONSTRAINT "match_sets_winner_id_tournament_division_teams_id_fk" FOREIGN KEY ("winner_id") REFERENCES "public"."tournament_division_teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "player_profiles" ADD CONSTRAINT "player_profiles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "player_profiles" ADD CONSTRAINT "player_profiles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "player_profiles" ADD CONSTRAINT "player_profiles_level_id_levels_id_fk" FOREIGN KEY ("level_id") REFERENCES "public"."levels"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_tournament_division_id_tournament_divisions_id_fk" FOREIGN KEY ("tournament_division_id") REFERENCES "public"."tournament_divisions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_team_a_id_tournament_division_teams_id_fk" FOREIGN KEY ("team_a_id") REFERENCES "public"."tournament_division_teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_team_b_id_tournament_division_teams_id_fk" FOREIGN KEY ("team_b_id") REFERENCES "public"."tournament_division_teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_team_a_pool_id_pools_id_fk" FOREIGN KEY ("team_a_pool_id") REFERENCES "public"."pools"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_team_b_pool_id_pools_id_fk" FOREIGN KEY ("team_b_pool_id") REFERENCES "public"."pools"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_team_a_pool_id_pools_id_fk" FOREIGN KEY ("team_a_pool_id") REFERENCES "public"."pools"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_team_b_pool_id_pools_id_fk" FOREIGN KEY ("team_b_pool_id") REFERENCES "public"."pools"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_team_a_previous_match_id_playoff_matches_id_fk" FOREIGN KEY ("team_a_previous_match_id") REFERENCES "public"."playoff_matches"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_team_b_previous_match_id_playoff_matches_id_fk" FOREIGN KEY ("team_b_previous_match_id") REFERENCES "public"."playoff_matches"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "playoff_matches" ADD CONSTRAINT "playoff_matches_winner_id_tournament_division_teams_id_fk" FOREIGN KEY ("winner_id") REFERENCES "public"."tournament_division_teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -341,6 +359,8 @@ ALTER TABLE "tournament_division_teams" ADD CONSTRAINT "tournament_division_team
 ALTER TABLE "tournament_divisions" ADD CONSTRAINT "tournament_divisions_tournament_id_tournaments_id_fk" FOREIGN KEY ("tournament_id") REFERENCES "public"."tournaments"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tournament_divisions" ADD CONSTRAINT "tournament_divisions_division_id_divisions_id_fk" FOREIGN KEY ("division_id") REFERENCES "public"."divisions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tournaments" ADD CONSTRAINT "tournaments_venue_id_venues_id_fk" FOREIGN KEY ("venue_id") REFERENCES "public"."venues"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "match_ref_teams_pool_match_idx" ON "match_ref_teams" USING btree ("pool_match_id");--> statement-breakpoint
+CREATE INDEX "match_ref_teams_playoff_match_idx" ON "match_ref_teams" USING btree ("playoff_match_id");--> statement-breakpoint
 CREATE INDEX "match_sets_pool_match_idx" ON "match_sets" USING btree ("pool_match_id");--> statement-breakpoint
 CREATE INDEX "match_sets_playoff_match_idx" ON "match_sets" USING btree ("playoff_match_id");--> statement-breakpoint
 CREATE INDEX "playoff_matches_tournament_division_idx" ON "playoff_matches" USING btree ("tournament_division_id");--> statement-breakpoint

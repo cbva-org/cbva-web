@@ -1,1 +1,0 @@
-ALTER TABLE "pools" ALTER COLUMN "external_ref" DROP NOT NULL;
