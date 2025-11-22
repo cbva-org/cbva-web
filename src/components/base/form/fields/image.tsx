@@ -6,6 +6,7 @@ import {
 	DropZone,
 	type FileDropItem,
 	FileTrigger,
+	Heading,
 } from "react-aria-components";
 import ReactCrop, {
 	type Crop,
@@ -258,7 +259,9 @@ export function ImageField({
 				}}
 			>
 				<div className="px-5 pt-8 pb-4 flex flex-col gap-3">
-					<h3 className={subtitle()}>Crop your profile photo</h3>
+					<Heading className={subtitle()} slot="title">
+						Crop your profile photo
+					</Heading>
 
 					<ReactCrop
 						circularCrop

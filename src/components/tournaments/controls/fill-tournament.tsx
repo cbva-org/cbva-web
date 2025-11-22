@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Heading } from "react-aria-components";
 
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
@@ -50,8 +51,6 @@ export function FillTournamentForm({
 			// onChange: schema,
 		},
 		onSubmit: () => {
-			console.log("hello");
-
 			mutate({
 				id: tournamentId,
 			});
@@ -61,7 +60,9 @@ export function FillTournamentForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Fill Tournament</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Fill Tournament
+				</Heading>
 
 				<p className="text-sm text-gray-700 mb-6">
 					Randomly fill each division in the tournament to max capacity.
@@ -71,8 +72,6 @@ export function FillTournamentForm({
 					className="flex flex-col space-y-6"
 					onSubmit={(e) => {
 						e.preventDefault();
-
-						console.log("here");
 
 						form.handleSubmit();
 					}}

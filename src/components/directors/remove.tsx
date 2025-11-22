@@ -1,6 +1,6 @@
 import { DeleteIcon, XIcon } from "lucide-react";
 import { useState } from "react";
-import { DialogTrigger } from "react-aria-components";
+import { DialogTrigger, Heading } from "react-aria-components";
 import { useDeleteTournamentDirector } from "@/data/directors";
 import { Button } from "../base/button";
 import { useAppForm } from "../base/form";
@@ -58,18 +58,19 @@ export function RemoveDirector({
 				onOpenChange={setOpen}
 			>
 				<div className="p-4 flex flex-col space-y-4 relative">
-					<h3
+					<Heading
 						className={title({
 							size: "sm",
 							class: "flex flex-row justify-between items-center",
 						})}
+						slot="title"
 					>
 						<span>Remove Director</span>
 
 						<Button variant="icon" className="fill-red-500" slot="close">
 							<XIcon size={16} />
 						</Button>
-					</h3>
+					</Heading>
 
 					<p>
 						Are you sure you'd like to remove{" "}

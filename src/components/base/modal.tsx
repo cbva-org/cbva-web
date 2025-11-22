@@ -1,5 +1,6 @@
 import {
 	Dialog,
+	type DialogProps,
 	ModalOverlay,
 	type ModalOverlayProps,
 	Modal as RACModal,
@@ -43,11 +44,16 @@ export function Modal({
 	isDismissable = true,
 	children,
 	size,
+	isOpen,
+	onOpenChange,
 	...props
-}: ModalOverlayProps & { size?: "2xl" | "xl" | "lg" | "md" }) {
+}: Omit<ModalOverlayProps, "children"> &
+	Pick<DialogProps, "children"> & { size?: "2xl" | "xl" | "lg" | "md" }) {
 	return (
 		<ModalOverlay
 			{...props}
+			isOpen={isOpen}
+			onOpenChange={onOpenChange}
 			isDismissable={isDismissable}
 			isKeyboardDismissDisabled={isDismissable}
 			className={overlayStyles}

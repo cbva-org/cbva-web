@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Heading } from "react-aria-components";
 
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
@@ -67,7 +68,9 @@ export function CreatePoolMatchesForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Create Pool Matches</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Create Pool Matches
+				</Heading>
 
 				<p className="text-sm text-gray-700 mb-6">
 					Create matches for all pools in this tournament. If you want to

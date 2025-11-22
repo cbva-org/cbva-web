@@ -5,6 +5,7 @@ import {
 } from "@internationalized/date";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { Heading } from "react-aria-components";
 import z from "zod";
 
 import { Button } from "@/components/base/button";
@@ -81,7 +82,9 @@ export function DuplicateForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Duplicate Tournament</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Duplicate Tournament
+				</Heading>
 
 				<form
 					onSubmit={(e) => {

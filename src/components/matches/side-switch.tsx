@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Heading } from "react-aria-components";
 
 import type { MatchSet } from "@/db/schema";
 import { Button } from "../base/button";
@@ -35,7 +36,9 @@ export function SideSwitchModal({
 			</p>
 			<Modal isOpen={isOpen} onOpenChange={setOpen}>
 				<div className="p-3 flex flex-col space-y-3">
-					<h1 className={title({ size: "sm" })}>Side Switch!</h1>
+					<Heading className={title({ size: "sm" })} slot="title">
+						Side Switch!
+					</Heading>
 
 					<img
 						className="rounded-md"

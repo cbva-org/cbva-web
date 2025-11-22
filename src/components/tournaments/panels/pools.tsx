@@ -103,7 +103,6 @@ export function PoolsPanel({
 									}) => {
 										const teamStats = stats?.[teamId];
 
-										console.log(teamStats);
 										const wins = teamStats?.wins.size;
 										const losses = teamStats?.losses.size;
 

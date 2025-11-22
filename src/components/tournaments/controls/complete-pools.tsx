@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Heading } from "react-aria-components";
 
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
@@ -64,7 +65,9 @@ export function CompletePoolsForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Complete Pools</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Complete Pools
+				</Heading>
 
 				<p className="text-sm text-gray-700 mb-6">
 					Calculate finish positions for all pools in this division based on

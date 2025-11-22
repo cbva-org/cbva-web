@@ -10,6 +10,7 @@ import {
 	TableRow,
 } from "@/components/base/table";
 import { TabPanel } from "@/components/base/tabs";
+import { TeamsControls } from "@/components/teams/controls";
 import { teamsQueryOptions } from "@/data/teams";
 import type { TournamentDivision } from "@/db/schema";
 import { getLevelDisplay } from "@/hooks/tournament";
@@ -28,7 +29,9 @@ export function TeamsPanel({
 
 	return (
 		<TabPanel id="teams">
-			<div className="max-w-4xl mx-auto py-12 px-3">
+			<div className="max-w-4xl mx-auto py-12 px-3 flex flex-col gap-3">
+				<TeamsControls className="self-end" />
+
 				<div className="md:hidden border border-gray-300 rounded-lg">
 					{data?.map(({ id, team: { players }, finish, seed, poolTeam }, i) => {
 						const columns: [string, ReactNode][] = [

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { XIcon } from "lucide-react";
 import { useRef, useState } from "react";
+import { Heading } from "react-aria-components";
 import z from "zod";
 
 import { Button } from "@/components/base/button";
@@ -81,7 +82,9 @@ export function AddTeamForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Add Team</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Add Team
+				</Heading>
 
 				<p>
 					Add a team to the{" "}

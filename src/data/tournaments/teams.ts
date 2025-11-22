@@ -11,6 +11,7 @@ import { db } from "@/db/connection";
 import {
 	levels,
 	playerProfiles,
+	selectTournamentDivisionSchema,
 	selectTournamentSchema,
 	teamPlayers,
 	teams,
@@ -219,6 +220,7 @@ export const fillTournamentFn = createServerFn()
 				tournamentDivisions: {
 					with: {
 						division: true,
+						teams: true,
 					},
 				},
 			},
@@ -235,6 +237,7 @@ export const fillTournamentFn = createServerFn()
 			teamSize,
 			gender,
 			division: { order },
+			teams: existingTeams,
 		} of tournament.tournamentDivisions) {
 			const validLevelIds = (
 				await db.select().from(levels).where(lte(levels.order, order))
@@ -245,15 +248,10 @@ export const fillTournamentFn = createServerFn()
 					await db.query.playerProfiles.findMany({
 						where: (t, { inArray, and, eq }) =>
 							and(inArray(t.levelId, validLevelIds), eq(t.gender, gender)),
-						limit: capacity * teamSize,
+						limit: capacity * teamSize - existingTeams.length,
 					}),
 				),
 				2,
-			);
-
-			console.log(
-				1,
-				randomTeams.map((players) => players.map(({ id }) => id).join(":")),
 			);
 
 			const createdTeams = await db
@@ -268,25 +266,23 @@ export const fillTournamentFn = createServerFn()
 					name: teams.name,
 				});
 
-			console.log(createdTeams);
+			const createdTeamMap = createdTeams.reduce<{ [key: string]: number }>(
+				(memo, team) => {
+					memo[team.name as string] = team.id;
+					return memo;
+				},
+				{},
+			);
 
 			await db.insert(teamPlayers).values(
-				createdTeams.flatMap(({ id: teamId, name }) =>
-					randomTeams
-						.filter((players) => players.join(":") === name)
-						.flat()
-						.map(({ id: playerProfileId }) => ({
-							teamId,
-							playerProfileId,
-						})),
-				),
+				randomTeams.flatMap((players) => {
+					const teamId = createdTeamMap[players.map(({ id }) => id).join(":")];
 
-				// createdTeams.map(({ id, name }) => ({
-				// 	teamId: id,
-				// 	playerProfileId: randomTeams.find(
-				// 		(players) => players.join(":") === name,
-				// 	),
-				// })),
+					return players.map(({ id }) => ({
+						teamId: teamId,
+						playerProfileId: id,
+					}));
+				}),
 			);
 
 			await db.insert(tournamentDivisionTeams).values(
@@ -296,8 +292,6 @@ export const fillTournamentFn = createServerFn()
 					status: "confirmed" as const,
 				})),
 			);
-
-			console.log("teehee", tournamentDivisionId);
 		}
 	});
 
@@ -305,4 +299,43 @@ export const fillTournamentMutationOptions = () =>
 	mutationOptions({
 		mutationFn: (data: z.infer<typeof fillTournamentSchema>) =>
 			fillTournamentFn({ data }),
+	});
+
+export const setCapacitySchema = selectTournamentDivisionSchema
+	.pick({
+		id: true,
+	})
+	.extend({
+		capacity: z.number().min(0),
+		waitlistCapacity: z.number().min(0),
+	});
+
+export type SetCapacityParams = z.infer<typeof setCapacitySchema>;
+
+export const setCapacityFn = createServerFn({ method: "POST" })
+	.middleware([
+		requirePermissions({
+			tournament: ["update"],
+		}),
+	])
+	.inputValidator(setCapacitySchema)
+	.handler(async ({ data: { id, capacity, waitlistCapacity } }) => {
+		await db
+			.update(tournamentDivisions)
+			.set({
+				capacity,
+				waitlistCapacity,
+			})
+			.where(eq(tournamentDivisions.id, id));
+
+		return {
+			success: true,
+		};
+	});
+
+export const setCapacityMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: SetCapacityParams) => {
+			return setCapacityFn({ data });
+		},
 	});

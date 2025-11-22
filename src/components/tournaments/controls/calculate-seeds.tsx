@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Heading } from "react-aria-components";
 import { Alert } from "@/components/base/alert";
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
@@ -61,7 +62,9 @@ export function CalculateSeedsForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Calculate Seeds</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Calculate Seeds
+				</Heading>
 
 				<p className="text-sm text-gray-700 mb-6">
 					Calculate seeds for each division in this tournament. If you want to

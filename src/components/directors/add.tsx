@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { EditIcon, XIcon } from "lucide-react";
 import { useState } from "react";
-import { DialogTrigger } from "react-aria-components";
+import { DialogTrigger, Heading } from "react-aria-components";
 import z from "zod";
 import {
 	directorsQueryOptions,
@@ -77,18 +77,19 @@ export function AddDirector({
 			</Button>
 			<Modal isDismissable isOpen={isOpen} onOpenChange={setOpen}>
 				<div className="p-3 flex flex-col space-y-4 relative">
-					<h3
+					<Heading
 						className={title({
 							size: "sm",
 							class: "flex flex-row justify-between items-center",
 						})}
+						slot="title"
 					>
 						<span>Add Director</span>
 
 						<Button variant="icon" slot="close">
 							<XIcon size={16} />
 						</Button>
-					</h3>
+					</Heading>
 
 					<form
 						onSubmit={(e) => {

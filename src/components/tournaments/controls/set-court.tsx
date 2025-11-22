@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Heading } from "react-aria-components";
 import { useViewerHasPermission } from "@/auth/shared";
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
@@ -99,7 +100,9 @@ export function SetCourtForm({
 
 			<Modal isOpen={isOpen} onOpenChange={setOpen}>
 				<div className="p-3 flex flex-col space-y-3">
-					<h3 className={title({ size: "sm" })}>Set Court</h3>
+					<Heading className={title({ size: "sm" })} slot="title">
+						Set Court
+					</Heading>
 					<p>
 						Set{" "}
 						<span className="font-semibold italic uppercase">

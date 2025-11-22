@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DialogTrigger, Button, Input, Label } from "react-aria-components";
+import { DialogTrigger, Button, Input, Label, Heading } from "react-aria-components";
 import { Modal } from "../../modal";
 
 interface LinkModalProps {
@@ -50,7 +50,9 @@ export function LinkModal({
 	return (
 		<Modal isOpen={isOpen} onOpenChange={onOpenChange} size="md">
 			<div className="p-6">
-				<h2 className="text-lg font-semibold mb-4">{modalTitle}</h2>
+				<Heading className="text-lg font-semibold mb-4" slot="title">
+					{modalTitle}
+				</Heading>
 				<div className="space-y-4">
 					<div className="flex flex-col gap-2">
 						<Label className="text-sm font-medium">URL</Label>

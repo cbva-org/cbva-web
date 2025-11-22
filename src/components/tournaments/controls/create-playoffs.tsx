@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Heading } from "react-aria-components";
 
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
@@ -79,7 +80,9 @@ export function CreatePlayoffsForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Create Playoffs</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Create Playoffs
+				</Heading>
 
 				<p className="text-sm text-gray-700 mb-6">
 					Create the playoff bracket for the{" "}

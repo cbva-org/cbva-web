@@ -4,6 +4,7 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from "@tanstack/react-query";
+import { Heading } from "react-aria-components";
 import z from "zod";
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
@@ -102,7 +103,9 @@ export function OverrideScoreForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Override Score</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Override Score
+				</Heading>
 
 				<form
 					className="flex flex-col space-y-6"

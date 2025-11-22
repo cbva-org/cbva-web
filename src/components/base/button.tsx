@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { forwardRef, type ReactNode, type Ref, RefObject } from "react";
 import {
 	composeRenderProps,
 	Button as RACButton,
@@ -213,6 +213,15 @@ export const button = tv({
 		// 	class: "text-default-foreground bg-transparent hover:bg-default/25",
 		// },
 		{
+			variant: "text",
+			class: "px-0",
+		},
+		{
+			variant: "text",
+			isHovered: true,
+			class: "underline",
+		},
+		{
 			variant: "icon",
 			size: "xs",
 			class: "w-4 px-0",
@@ -242,31 +251,36 @@ export const button = tv({
 	},
 });
 
-export function Button(props: ButtonProps) {
-	const node = (
-		<RACButton
-			{...props}
-			className={composeRenderProps(props.className, (className, renderProps) =>
-				button({
-					...renderProps,
-					variant: props.variant,
-					color: props.color,
-					size: props.size,
-					radius: props.radius,
-					className,
-				}),
-			)}
-		/>
-	);
-
-	if (props.tooltip) {
-		return (
-			<TooltipTrigger delay={100} closeDelay={50}>
-				{node}
-				<Tooltip>{props.tooltip}</Tooltip>
-			</TooltipTrigger>
+export const Button = forwardRef(
+	(props: ButtonProps, ref: Ref<HTMLButtonElement>) => {
+		const node = (
+			<RACButton
+				{...props}
+				ref={ref}
+				className={composeRenderProps(
+					props.className,
+					(className, renderProps) =>
+						button({
+							...renderProps,
+							variant: props.variant,
+							color: props.color,
+							size: props.size,
+							radius: props.radius,
+							className,
+						}),
+				)}
+			/>
 		);
-	}
 
-	return node;
-}
+		if (props.tooltip) {
+			return (
+				<TooltipTrigger delay={100} closeDelay={50}>
+					{node}
+					<Tooltip>{props.tooltip}</Tooltip>
+				</TooltipTrigger>
+			);
+		}
+
+		return node;
+	},
+);

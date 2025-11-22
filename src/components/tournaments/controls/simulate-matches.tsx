@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Heading } from "react-aria-components";
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
@@ -61,7 +62,9 @@ export function SimulateMatchesForm({
 	return (
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
-				<h3 className={title({ size: "sm" })}>Simulate Matches</h3>
+				<Heading className={title({ size: "sm" })} slot="title">
+					Simulate Matches
+				</Heading>
 
 				<p className="text-sm text-gray-700 mb-6">
 					Simulate all pending games by randomly setting scores to valid

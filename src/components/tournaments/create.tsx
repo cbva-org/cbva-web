@@ -4,10 +4,9 @@ import {
 	Time,
 	today,
 } from "@internationalized/date";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { ChevronLeftIcon } from "lucide-react";
-import { match, P } from "ts-pattern";
 import { z } from "zod/v4";
 
 import { Button } from "@/components/base/button";
@@ -54,8 +53,6 @@ export function CreateTournamentForm({
 	initialValues,
 	showBackButton,
 }: CreateTournamentProps) {
-	// const { mutate, failureReason } = useCreateTournament()
-
 	const failureReason = null;
 
 	const router = useRouter();
