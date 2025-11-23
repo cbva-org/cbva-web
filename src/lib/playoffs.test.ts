@@ -2,119 +2,119 @@ import { range } from "lodash";
 import { describe, expect, test } from "vitest";
 import { draftPlayoffs, recursiveSnakeDraft, seedPlayoffs } from "./playoffs";
 
-// describe("seedPlayoffs", () => {
-// 	test("can seed varying pool sizes and team counts", () => {
-// 		const cases = [
-// 			{
-// 				teams: 6,
-// 				pools: 2,
-// 				want: [
-// 					{ pool: 0, seed: 1 },
-// 					{ pool: 1, seed: 1 },
-// 					{ pool: 0, seed: 2 },
-// 					{ pool: 1, seed: 2 },
-// 					{ pool: 0, seed: 3 },
-// 					{ pool: 1, seed: 3 },
-// 				],
-// 			},
-// 			{
-// 				teams: 6,
-// 				pools: 3,
-// 				want: [
-// 					{ pool: 0, seed: 1 },
-// 					{ pool: 1, seed: 1 },
-// 					{ pool: 2, seed: 1 },
-// 					{ pool: 2, seed: 2 },
-// 					{ pool: 1, seed: 2 },
-// 					{ pool: 0, seed: 2 },
-// 				],
-// 			},
-// 			{
-// 				teams: 12,
-// 				pools: 4,
-// 				want: [
-// 					{ pool: 0, seed: 1 },
-// 					{ pool: 1, seed: 1 },
-// 					{ pool: 2, seed: 1 },
-// 					{ pool: 3, seed: 1 },
-// 					{ pool: 1, seed: 2 },
-// 					{ pool: 0, seed: 2 },
-// 					{ pool: 3, seed: 2 },
-// 					{ pool: 2, seed: 2 },
-// 					{ pool: 3, seed: 3 },
-// 					{ pool: 2, seed: 3 },
-// 					{ pool: 1, seed: 3 },
-// 					{ pool: 0, seed: 3 },
-// 				],
-// 			},
-// 			{
-// 				teams: 12,
-// 				pools: 5,
-// 				want: [
-// 					{ pool: 0, seed: 1 },
-// 					{ pool: 1, seed: 1 },
-// 					{ pool: 2, seed: 1 },
-// 					{ pool: 3, seed: 1 },
-// 					{ pool: 4, seed: 1 },
-// 					{ pool: 4, seed: 2 },
-// 					{ pool: 3, seed: 2 },
-// 					{ pool: 2, seed: 2 },
-// 					{ pool: 1, seed: 2 },
-// 					{ pool: 0, seed: 2 },
-// 					{ pool: 0, seed: 3 },
-// 					{ pool: 1, seed: 3 },
-// 					{ pool: 2, seed: 3 },
-// 					{ pool: 3, seed: 3 },
-// 					{ pool: 4, seed: 3 },
-// 				],
-// 			},
-// 			{
-// 				teams: 12,
-// 				pools: 6,
-// 				want: [
-// 					{ pool: 0, seed: 1 },
-// 					{ pool: 1, seed: 1 },
-// 					{ pool: 2, seed: 1 },
-// 					{ pool: 3, seed: 1 },
-// 					{ pool: 4, seed: 1 },
-// 					{ pool: 5, seed: 1 },
-// 					{ pool: 5, seed: 2 },
-// 					{ pool: 4, seed: 2 },
-// 					{ pool: 3, seed: 2 },
-// 					{ pool: 2, seed: 2 },
-// 					{ pool: 1, seed: 2 },
-// 					{ pool: 0, seed: 2 },
-// 				],
-// 			},
-// 			{
-// 				teams: 14,
-// 				pools: 7,
-// 				want: [
-// 					{ pool: 0, seed: 1 },
-// 					{ pool: 1, seed: 1 },
-// 					{ pool: 2, seed: 1 },
-// 					{ pool: 3, seed: 1 },
-// 					{ pool: 4, seed: 1 },
-// 					{ pool: 5, seed: 1 },
-// 					{ pool: 6, seed: 1 },
-// 					{ pool: 5, seed: 2 },
-// 					{ pool: 6, seed: 2 },
-// 					{ pool: 0, seed: 2 },
-// 					{ pool: 4, seed: 2 },
-// 					{ pool: 2, seed: 2 },
-// 					{ pool: 1, seed: 2 },
-// 					{ pool: 3, seed: 2 },
-// 				],
-// 			},
-// 		];
+describe.only("seedPlayoffs", () => {
+	test("can seed varying pool sizes and team counts", () => {
+		const cases = [
+			{
+				teams: 6,
+				pools: 2,
+				want: [
+					{ pool: 0, seed: 1 },
+					{ pool: 1, seed: 1 },
+					{ pool: 0, seed: 2 },
+					{ pool: 1, seed: 2 },
+					{ pool: 0, seed: 3 },
+					{ pool: 1, seed: 3 },
+				],
+			},
+			{
+				teams: 6,
+				pools: 3,
+				want: [
+					{ pool: 0, seed: 1 },
+					{ pool: 1, seed: 1 },
+					{ pool: 2, seed: 1 },
+					{ pool: 2, seed: 2 },
+					{ pool: 1, seed: 2 },
+					{ pool: 0, seed: 2 },
+				],
+			},
+			{
+				teams: 12,
+				pools: 4,
+				want: [
+					{ pool: 0, seed: 1 },
+					{ pool: 1, seed: 1 },
+					{ pool: 2, seed: 1 },
+					{ pool: 3, seed: 1 },
+					{ pool: 1, seed: 2 },
+					{ pool: 0, seed: 2 },
+					{ pool: 3, seed: 2 },
+					{ pool: 2, seed: 2 },
+					{ pool: 3, seed: 3 },
+					{ pool: 2, seed: 3 },
+					{ pool: 1, seed: 3 },
+					{ pool: 0, seed: 3 },
+				],
+			},
+			{
+				teams: 12,
+				pools: 5,
+				want: [
+					{ pool: 0, seed: 1 },
+					{ pool: 1, seed: 1 },
+					{ pool: 2, seed: 1 },
+					{ pool: 3, seed: 1 },
+					{ pool: 4, seed: 1 },
+					{ pool: 4, seed: 2 },
+					{ pool: 3, seed: 2 },
+					{ pool: 2, seed: 2 },
+					{ pool: 1, seed: 2 },
+					{ pool: 0, seed: 2 },
+					{ pool: 0, seed: 3 },
+					{ pool: 1, seed: 3 },
+					{ pool: 2, seed: 3 },
+					{ pool: 3, seed: 3 },
+					{ pool: 4, seed: 3 },
+				],
+			},
+			{
+				teams: 12,
+				pools: 6,
+				want: [
+					{ pool: 0, seed: 1 },
+					{ pool: 1, seed: 1 },
+					{ pool: 2, seed: 1 },
+					{ pool: 3, seed: 1 },
+					{ pool: 4, seed: 1 },
+					{ pool: 5, seed: 1 },
+					{ pool: 5, seed: 2 },
+					{ pool: 4, seed: 2 },
+					{ pool: 3, seed: 2 },
+					{ pool: 2, seed: 2 },
+					{ pool: 1, seed: 2 },
+					{ pool: 0, seed: 2 },
+				],
+			},
+			{
+				teams: 14,
+				pools: 7,
+				want: [
+					{ pool: 0, seed: 1 },
+					{ pool: 1, seed: 1 },
+					{ pool: 2, seed: 1 },
+					{ pool: 3, seed: 1 },
+					{ pool: 4, seed: 1 },
+					{ pool: 5, seed: 1 },
+					{ pool: 6, seed: 1 },
+					{ pool: 5, seed: 2 },
+					{ pool: 6, seed: 2 },
+					{ pool: 0, seed: 2 },
+					{ pool: 4, seed: 2 },
+					{ pool: 2, seed: 2 },
+					{ pool: 1, seed: 2 },
+					{ pool: 3, seed: 2 },
+				],
+			},
+		];
 
-// 		for (const { teams, pools, want } of cases) {
-// 			const got = seedPlayoffs(teams, pools);
+		for (const { teams, pools, want } of cases) {
+			const got = seedPlayoffs(teams, pools);
 
-// 			expect(got, `teams=${teams}; pools=${pools}`).toStrictEqual(want);
-// 		}
-// 	});
-// });
+			expect(got, `teams=${teams}; pools=${pools}`).toStrictEqual(want);
+		}
+	});
+});
 
 // describe("draftPlayoffs", () => {
 // 	test("draft playoffs", () => {
