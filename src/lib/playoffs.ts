@@ -223,32 +223,97 @@ const playoffSeedOrders = [
 	},
 ];
 
+const SEED_ORDERS: { [key: number]: { pool: number; seed: number }[] } = {
+	2: [
+		{ pool: 0, seed: 1 },
+		{ pool: 1, seed: 1 },
+		{ pool: 0, seed: 2 },
+		{ pool: 1, seed: 2 },
+		{ pool: 0, seed: 3 },
+		{ pool: 1, seed: 3 },
+	],
+	3: [
+		{ pool: 0, seed: 1 },
+		{ pool: 1, seed: 1 },
+		{ pool: 2, seed: 1 },
+		{ pool: 2, seed: 2 },
+		{ pool: 1, seed: 2 },
+		{ pool: 0, seed: 2 },
+	],
+	4: [
+		{ pool: 0, seed: 1 },
+		{ pool: 1, seed: 1 },
+		{ pool: 2, seed: 1 },
+		{ pool: 3, seed: 1 },
+		{ pool: 1, seed: 2 },
+		{ pool: 0, seed: 2 },
+		{ pool: 3, seed: 2 },
+		{ pool: 2, seed: 2 },
+		{ pool: 3, seed: 3 },
+		{ pool: 2, seed: 3 },
+		{ pool: 1, seed: 3 },
+		{ pool: 0, seed: 3 },
+	],
+	5: [
+		{ pool: 0, seed: 1 },
+		{ pool: 1, seed: 1 },
+		{ pool: 2, seed: 1 },
+		{ pool: 3, seed: 1 },
+		{ pool: 4, seed: 1 },
+		{ pool: 4, seed: 2 },
+		{ pool: 3, seed: 2 },
+		{ pool: 2, seed: 2 },
+		{ pool: 1, seed: 2 },
+		{ pool: 0, seed: 2 },
+		{ pool: 0, seed: 3 },
+		{ pool: 1, seed: 3 },
+		{ pool: 2, seed: 3 },
+		{ pool: 3, seed: 3 },
+		{ pool: 4, seed: 3 },
+	],
+	6: [
+		{ pool: 0, seed: 1 },
+		{ pool: 1, seed: 1 },
+		{ pool: 2, seed: 1 },
+		{ pool: 3, seed: 1 },
+		{ pool: 4, seed: 1 },
+		{ pool: 5, seed: 1 },
+		{ pool: 5, seed: 2 },
+		{ pool: 4, seed: 2 },
+		{ pool: 3, seed: 2 },
+		{ pool: 2, seed: 2 },
+		{ pool: 1, seed: 2 },
+		{ pool: 0, seed: 2 },
+	],
+	7: [
+		{ pool: 0, seed: 1 },
+		{ pool: 1, seed: 1 },
+		{ pool: 2, seed: 1 },
+		{ pool: 3, seed: 1 },
+		{ pool: 4, seed: 1 },
+		{ pool: 5, seed: 1 },
+		{ pool: 6, seed: 1 },
+		{ pool: 5, seed: 2 },
+		{ pool: 6, seed: 2 },
+		{ pool: 0, seed: 2 },
+		{ pool: 4, seed: 2 },
+		{ pool: 2, seed: 2 },
+		{ pool: 1, seed: 2 },
+		{ pool: 3, seed: 2 },
+	],
+};
+
 export function seedPlayoffs(
 	size: number,
 	poolCount: number,
 ): { pool: number; seed: number }[] {
-	const seedOrders = playoffSeedOrders.find(
-		({ pools }) => pools.length === poolCount,
-	);
+	const seedOrders = SEED_ORDERS[poolCount];
 
 	if (!seedOrders) {
 		return fancySnakeDraft(size, poolCount);
 	}
 
-	const seeds = [];
-
-	for (let i = 0; i < size; i++) {
-		const poolIdx = i % poolCount;
-
-		const pool = seedOrders.pools[poolIdx];
-
-		seeds.push({
-			pool: pool.id,
-			seed: // idk
-		});
-	}
-
-	return seeds;
+	return seedOrders;
 }
 
 export function fancySnakeDraft(

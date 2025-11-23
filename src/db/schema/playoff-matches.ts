@@ -29,7 +29,7 @@ export const playoffMatches = pgTable(
 		tournamentDivisionId: integer()
 			.notNull()
 			.references(() => tournamentDivisions.id, { onDelete: "cascade" }),
-		round: text().notNull().default("-"),
+		round: integer().notNull().default(-1),
 		matchNumber: integer().notNull(),
 		court: text(),
 		teamAId: integer().references(() => tournamentDivisionTeams.id),

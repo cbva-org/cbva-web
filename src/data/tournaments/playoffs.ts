@@ -8,6 +8,7 @@ import { db } from "@/db/connection";
 import {
 	type CreateMatchSet,
 	matchSets,
+	type PlayoffMatch,
 	type PoolTeam,
 	playoffMatches,
 	selectPlayoffMatchSchema,
@@ -16,7 +17,6 @@ import {
 } from "@/db/schema";
 import { draftPlayoffs, seedPlayoffs } from "@/lib/playoffs";
 import { notFound } from "@/lib/responses";
-import { dbg } from "@/utils/dbg";
 import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 export type MatchKind = "set-to-21" | "set-to-28" | "best-of-3";
@@ -104,6 +104,16 @@ export const createPlayoffsFn = createServerFn()
 						.filter(isNotNull),
 				);
 
+				const createdMatches: Pick<
+					PlayoffMatch,
+					| "id"
+					| "round"
+					| "teamAId"
+					| "teamBId"
+					| "teamAPreviousMatchId"
+					| "teamBPreviousMatchId"
+				>[] = [];
+
 				for (const [i, round] of bracket.entries()) {
 					roundIds[i] = [];
 
@@ -119,11 +129,20 @@ export const createPlayoffsFn = createServerFn()
 									? seededTeams[match.bSeed - 1]
 									: null;
 
-							const [{ id }] = await txn
+							const [
+								{
+									id,
+									round: roundIndex,
+									teamAId,
+									teamBId,
+									teamAPreviousMatchId,
+									teamBPreviousMatchId,
+								},
+							] = await txn
 								.insert(playoffMatches)
 								.values({
 									tournamentDivisionId,
-									round: `Round ${i}`,
+									round: i,
 									matchNumber,
 									teamAId: teamA?.teamId,
 									teamAPoolId: teamA?.poolId,
@@ -131,7 +150,6 @@ export const createPlayoffsFn = createServerFn()
 										isNotNullOrUndefined(match.aFrom) && i > 0
 											? roundIds[i - 1][match.aFrom]
 											: null,
-
 									teamBId: teamB?.teamId,
 									teamBPoolId: teamB?.poolId,
 									teamBPreviousMatchId:
@@ -141,9 +159,23 @@ export const createPlayoffsFn = createServerFn()
 								})
 								.returning({
 									id: playoffMatches.id,
+									round: playoffMatches.round,
+									teamAId: playoffMatches.teamAId,
+									teamBId: playoffMatches.teamBId,
+									teamAPreviousMatchId: playoffMatches.teamAPreviousMatchId,
+									teamBPreviousMatchId: playoffMatches.teamBPreviousMatchId,
 								});
 
 							roundIds[i].push(id);
+
+							createdMatches.push({
+								id,
+								round: roundIndex,
+								teamAId,
+								teamBId,
+								teamAPreviousMatchId,
+								teamBPreviousMatchId,
+							});
 
 							matchNumber += 1;
 						} else {
@@ -216,9 +248,17 @@ export const createPlayoffsFn = createServerFn()
 				await txn.insert(matchSets).values(matchSetValues);
 			});
 
+			// TODO: assign refs
+			// const availableRefs = round index 1, only one team assigned, open slot is not wildcard
+			// const matchesThatNeedRefs = round index 0, next match has a team assigned already
+
 			return { success: true };
 		},
 	);
+
+// TODO: reffing playoffs
+// - when game ends and winner assigned next match, if its the second team assigned, assign losing team as ref (so that its the last game to finish loser's that ref)
+// - td can assign refs
 
 export const createPlayoffsMutationOptions = () =>
 	mutationOptions({
