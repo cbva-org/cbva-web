@@ -3,7 +3,6 @@ import {
 	useMutation,
 	useQueryClient,
 } from "@tanstack/react-query";
-import type { Role } from "@/auth/permissions";
 import { useAppForm } from "@/components/base/form";
 import {
 	adminUpdateUserMutationOptions,
@@ -77,7 +76,9 @@ export function UpdateUserForm({
 			}}
 		>
 			<div className="col-span-8 flex flex-row items-center justify-between">
-				<span>{name}</span>
+				<div>
+					<span>{name}</span>
+				</div>
 
 				<form.AppForm>
 					<form.Subscribe

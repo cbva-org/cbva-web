@@ -1,3 +1,6 @@
+import clsx from "clsx";
+
+import { ChevronDown, ChevronUp } from "lucide-react";
 import {
 	NumberField as AriaNumberField,
 	type NumberFieldProps as AriaNumberFieldProps,
@@ -5,17 +8,13 @@ import {
 	type ButtonProps,
 	Input,
 } from "react-aria-components";
-
-import { ChevronDown, ChevronUp } from "lucide-react";
-
-import clsx from "clsx";
 import {
+	baseInputStyles,
 	Description,
 	Errors,
 	type FieldProps,
 	Group,
 	Label,
-	baseInputStyles,
 } from "./shared";
 
 export type NumberFieldProps = FieldProps & AriaNumberFieldProps;
@@ -46,11 +45,11 @@ export function NumberField({
 					className={clsx("pl-3 py-1.5", baseInputStyles)}
 				/>
 
-				<div className="flex flex-col rounded-r-lg border-s-1 overflow-hidden">
+				<div className="flex flex-col rounded-r-lg border-s overflow-hidden">
 					<StepperButton slot="increment">
 						<ChevronUp aria-hidden className="w-4 h-4" />
 					</StepperButton>
-					<div className="border-b-1" />
+					<div className="border-b" />
 					<StepperButton slot="decrement">
 						<ChevronDown aria-hidden className="w-4 h-4" />
 					</StepperButton>

@@ -1,9 +1,11 @@
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 import clsx from "clsx";
-import type { ReactNode } from "react";
-
+import { type ReactNode, useState } from "react";
+import { Heading } from "react-aria-components";
 import { type AlertProps, Alert as BaseAlert } from "@/components/base/alert";
 import { Button, type ButtonProps } from "@/components/base/button";
+import { Modal } from "../modal";
+import { title } from "../primitives";
 import { CheckboxField } from "./fields/checkbox";
 import { AsyncComboBoxField, ComboBoxField } from "./fields/combo-box";
 import { DateField } from "./fields/date";
@@ -56,7 +58,7 @@ function SubmitButton({
 	className,
 	children = <>Submit</>,
 	...props
-}: Omit<ButtonProps, "type">) {
+}: Omit<ButtonProps, "type" | "children"> & { children?: ReactNode }) {
 	const form = useFormContext();
 
 	return (
@@ -72,6 +74,67 @@ function SubmitButton({
 				>
 					{children}
 				</Button>
+			)}
+		/>
+	);
+}
+
+function ConfirmSubmitButton({
+	isDisabled,
+	className,
+	description,
+	children = <>Submit</>,
+	...props
+}: Omit<ButtonProps, "type" | "children"> & {
+	description: ReactNode;
+	children?: ReactNode;
+}) {
+	const form = useFormContext();
+
+	const [open, setOpen] = useState(false);
+
+	return (
+		<form.Subscribe
+			selector={(state) => [state.canSubmit, state.isSubmitting]}
+			children={([canSubmit, isSubmitting]) => (
+				<>
+					<Button
+						color="primary"
+						onPress={() => setOpen(true)}
+						className={clsx(className)}
+						isDisabled={!canSubmit || isSubmitting || isDisabled}
+						{...props}
+					>
+						{children}
+					</Button>
+
+					<Modal isOpen={open} onOpenChange={setOpen}>
+						<div className="py-4 px-3 flex flex-col space-y-4">
+							<Heading className={title({ size: "sm" })}>Are you sure?</Heading>
+
+							{description}
+
+							<Footer>
+								<Button onPress={() => setOpen(false)}>Cancel</Button>
+
+								<Button
+									type="submit"
+									color="primary"
+									onPress={() => {
+										setOpen(false);
+
+										form.handleSubmit();
+									}}
+									className={clsx(className)}
+									isDisabled={!canSubmit || isSubmitting || isDisabled}
+									{...props}
+								>
+									{children}
+								</Button>
+							</Footer>
+						</div>
+					</Modal>
+				</>
 			)}
 		/>
 	);
@@ -111,6 +174,7 @@ export const { useAppForm } = createFormHook({
 	formComponents: {
 		Alert,
 		SubmitButton,
+		ConfirmSubmitButton,
 		Button,
 		Footer,
 		Row,

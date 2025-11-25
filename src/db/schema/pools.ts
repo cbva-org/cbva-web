@@ -24,7 +24,7 @@ export const pools = pgTable(
 		name: text().notNull(),
 		tournamentDivisionId: integer()
 			.notNull()
-			.references(() => tournamentDivisions.id),
+			.references(() => tournamentDivisions.id, { onDelete: "cascade" }),
 		court: text(),
 		done: boolean().notNull().default(false),
 		externalRef: uuid().unique(),

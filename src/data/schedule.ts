@@ -2,8 +2,9 @@ import { type CalendarDate, parseDate } from "@internationalized/date";
 import { mutationOptions } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { and, gte, lte } from "drizzle-orm";
 import z from "zod";
-import { requirePermissions } from "@/auth/shared";
+import { requirePermissions, requireRole } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
 	type CreateTournament,
@@ -20,6 +21,7 @@ import {
 	tournaments,
 	type Venue,
 } from "@/db/schema";
+import { calendarDateSchema } from "@/lib/schemas";
 
 async function duplicateTournaments(
 	templates: (Tournament & {
@@ -133,14 +135,18 @@ export const duplicateTournamentOptions = () =>
 		},
 	});
 
-const copyScheduleSchema = z.object({
-	sourceYear: z.number(),
-	days: z.number(),
+export const duplicateScheduleSchema = z.object({
+	startDate: calendarDateSchema(),
+	endDate: calendarDateSchema(),
+	addDays: z.number(),
 });
 
-export const copyScheduleFn = createServerFn()
-	.inputValidator(copyScheduleSchema)
-	.handler(async ({ data: { sourceYear, days } }) => {
+export type DuplicateScheduleParams = z.infer<typeof duplicateScheduleSchema>;
+
+export const duplicateScheduleFn = createServerFn()
+	.middleware([requireRole("admin")])
+	.inputValidator(duplicateScheduleSchema)
+	.handler(async ({ data: { startDate, endDate, addDays } }) => {
 		// consider doing this all at once using $with
 		//
 		// https://orm.drizzle.team/docs/insert#with-insert-clause
@@ -151,15 +157,47 @@ export const copyScheduleFn = createServerFn()
 				tournamentDivisions: true,
 			},
 			where: (t, { gte, lte, and }) =>
-				and(
-					gte(t.date, `${sourceYear}-01-01`),
-					lte(t.date, `${sourceYear}-12-31`),
-				),
+				and(gte(t.date, startDate.toString()), lte(t.date, endDate.toString())),
 		});
 
 		const created = await duplicateTournaments(tournaments, (date) =>
-			date.add({ days }).toString(),
+			date.add({ days: addDays }).toString(),
 		);
 
 		return created;
+	});
+
+export const duplicateScheduleOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof duplicateScheduleSchema>) => {
+			return duplicateScheduleFn({ data });
+		},
+	});
+
+export const deleteScheduleSchema = z.object({
+	startDate: calendarDateSchema(),
+	endDate: calendarDateSchema(),
+});
+
+export type DeleteScheduleParams = z.infer<typeof deleteScheduleSchema>;
+
+export const deleteScheduleFn = createServerFn()
+	.middleware([requireRole("admin")])
+	.inputValidator(deleteScheduleSchema)
+	.handler(async ({ data: { startDate, endDate } }) => {
+		await db
+			.delete(tournaments)
+			.where(
+				and(
+					gte(tournaments.date, startDate.toString()),
+					lte(tournaments.date, endDate.toString()),
+				),
+			);
+	});
+
+export const deleteScheduleOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof deleteScheduleSchema>) => {
+			return deleteScheduleFn({ data });
+		},
 	});

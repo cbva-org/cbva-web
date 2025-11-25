@@ -4,7 +4,7 @@ import { db } from "@/db/connection";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
 import { createDirectors } from "@/tests/utils/users";
 import { createVenues } from "@/tests/utils/venues";
-import { copyScheduleFn, duplicateTournamentFn } from "./schedule";
+import { duplicateScheduleFn, duplicateTournamentFn } from "./schedule";
 
 describe("duplicateTournamentFn", () => {
 	test("duplicates a tournament on a given date", async () => {
@@ -78,7 +78,7 @@ describe("duplicateTournamentFn", () => {
 
 		// Assert tournament divisions are copied correctly
 		expect(copiedTournament.tournamentDivisions).toHaveLength(4);
-		const expectedDivisions = input.divisions.map(div => ({
+		const expectedDivisions = input.divisions.map((div) => ({
 			divisionId: expect.any(Number), // we don't know the exact IDs
 			gender: div.gender,
 			name: null, // defaults to null in bootstrapTournament
@@ -87,7 +87,7 @@ describe("duplicateTournamentFn", () => {
 
 		for (const expectedDiv of expectedDivisions) {
 			expect(copiedTournament.tournamentDivisions).toContainEqual(
-				expect.objectContaining(expectedDiv)
+				expect.objectContaining(expectedDiv),
 			);
 		}
 
@@ -103,12 +103,12 @@ describe("duplicateTournamentFn", () => {
 					directorId: directors[1].id,
 					order: 1,
 				}),
-			])
+			]),
 		);
 	});
 });
 
-describe("copyScheduleFn", () => {
+describe("duplicateScheduleFn", () => {
 	test("copies the schedule from a year", async () => {
 		const [venue1, venue2] = await createVenues(db, 2);
 
@@ -171,8 +171,8 @@ describe("copyScheduleFn", () => {
 			await bootstrapTournament(db, input);
 		}
 
-		await copyScheduleFn({
-			data: { sourceYear: 2025, days: 364 },
+		await duplicateScheduleFn({
+			data: { startDate: "2025-01-01", endDate: "2025-12-31", addDays: 364 },
 		});
 
 		const dbResult = await db.query.tournaments.findMany({
@@ -206,7 +206,8 @@ describe("copyScheduleFn", () => {
 
 		// Assert tournament divisions for venue1
 		expect(venue1Tournament.tournamentDivisions).toHaveLength(4);
-		const expectedDivisions1 = input1.divisions.map(div => ({
+
+		const expectedDivisions1 = input1.divisions.map((div) => ({
 			divisionId: expect.any(Number),
 			gender: div.gender,
 			name: null,
@@ -215,7 +216,7 @@ describe("copyScheduleFn", () => {
 
 		for (const expectedDiv of expectedDivisions1) {
 			expect(venue1Tournament.tournamentDivisions).toContainEqual(
-				expect.objectContaining(expectedDiv)
+				expect.objectContaining(expectedDiv),
 			);
 		}
 
@@ -232,7 +233,8 @@ describe("copyScheduleFn", () => {
 
 		// Assert tournament divisions for venue2
 		expect(venue2Tournament.tournamentDivisions).toHaveLength(1);
-		const expectedDivisions2 = input2.divisions.map(div => ({
+
+		const expectedDivisions2 = input2.divisions.map((div) => ({
 			divisionId: expect.any(Number),
 			gender: div.gender,
 			name: null,
@@ -241,7 +243,7 @@ describe("copyScheduleFn", () => {
 
 		for (const expectedDiv of expectedDivisions2) {
 			expect(venue2Tournament.tournamentDivisions).toContainEqual(
-				expect.objectContaining(expectedDiv)
+				expect.objectContaining(expectedDiv),
 			);
 		}
 

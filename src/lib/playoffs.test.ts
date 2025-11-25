@@ -2,7 +2,7 @@ import { range } from "lodash";
 import { describe, expect, test } from "vitest";
 import { draftPlayoffs, recursiveSnakeDraft, seedPlayoffs } from "./playoffs";
 
-describe.only("seedPlayoffs", () => {
+describe("seedPlayoffs", () => {
 	const cases = [
 		{
 			teams: 6,
@@ -116,134 +116,6 @@ describe.only("seedPlayoffs", () => {
 	}
 });
 
-// describe("draftPlayoffs", () => {
-// 	test("draft playoffs", () => {
-// 		const pools = "abcde";
-
-// 		const testCases = [
-// 			{
-// 				pools: Array.from({ length: 5 }).map((_, i) => ({
-// 					id: i + 1,
-// 					name: pools[i],
-// 					teams: Array.from({ length: 4 }).map((_, j) => ({
-// 						id: i * 4 + j + 1,
-// 						finish: j + 1,
-// 					})),
-// 				})),
-// 				count: 16,
-// 			},
-// 		];
-
-// 		for (const { pools, count } of testCases) {
-// 			const got = draftPlayoffs(pools, count);
-
-// 			expect(got).toStrictEqual(null);
-// 		}
-// 	});
-
-// 	// 	test("handles 5 pools with 12 teams", () => {
-// 	// 		const pools = "abcde";
-// 	// 		const testCase = {
-// 	// 			pools: Array.from({ length: 5 }).map((_, i) => ({
-// 	// 				id: i + 1,
-// 	// 				name: pools[i],
-// 	// 				teams: Array.from({ length: 4 }).map((_, j) => ({
-// 	// 					id: i * 4 + j + 1,
-// 	// 					finish: j + 1,
-// 	// 				})),
-// 	// 			})),
-// 	// 			count: 16,
-// 	// 		};
-// 	// 		// - Pool 0 (a): IDs 1, 2, 3, 4
-// 	// 		// - Pool 1 (b): IDs 5, 6, 7, 8
-// 	// 		// - Pool 2 (c): IDs 9, 10, 11, 12
-// 	// 		// - Pool 3 (d): IDs 13, 14, 15, 16
-// 	// 		// - Pool 4 (e): IDs 17, 18, 19, 20
-// 	// 		const result = draftPlayoffs(testCase.pools, testCase.count);
-// 	// 		console.log(result);
-// 	// 		// // Verify we get two brackets
-// 	// 		// expect(result).toHaveLength(2);
-// 	// 		// expect(result[0].seeds).toBeDefined();
-// 	// 		// expect(result[1].seeds).toBeDefined();
-// 	// 		// // Verify cross-bracketing: first place teams in top bracket, second place in bottom bracket
-// 	// 		// const topBracketSeeds = result[0].seeds.map((team) => team.seed);
-// 	// 		// const bottomBracketSeeds = result[1].seeds.map((team) => team.seed);
-// 	// 		// // Should use shape 2 (5 pools, 12 teams)
-// 	// 		// // Expected top bracket seeds: [1, 4, 5, 8, 9] (first place teams)
-// 	// 		// // Expected bottom bracket seeds: [2, 3, 6, 7, 10] (second place teams)
-// 	// 		// expect(topBracketSeeds).toEqual([1, 4, 5, 8, 9]);
-// 	// 		// expect(bottomBracketSeeds).toEqual([2, 3, 6, 7, 10]);
-// 	// 	});
-// 	// 	// test("handles 8 pools with 16 teams", () => {
-// 	// 	// 	const pools = "abcdefgh";
-// 	// 	// 	const testCase = {
-// 	// 	// 		pools: Array.from({ length: 8 }).map((_, i) => ({
-// 	// 	// 			id: i + 1,
-// 	// 	// 			name: pools[i],
-// 	// 	// 			teams: Array.from({ length: 4 }).map((_, j) => ({
-// 	// 	// 				id: i * 4 + j + 1,
-// 	// 	// 				finish: j + 1,
-// 	// 	// 			})),
-// 	// 	// 		})),
-// 	// 	// 		count: 16,
-// 	// 	// 	};
-// 	// 	// 	const result = draftPlayoffs(testCase.pools, testCase.count);
-// 	// 	// 	// Verify we get two brackets
-// 	// 	// 	expect(result).toHaveLength(2);
-// 	// 	// 	// Should use shape 0 (8 pools, 16 teams)
-// 	// 	// 	// Expected top bracket seeds: [1, 4, 5, 8, 9, 12, 13, 16] (first place teams)
-// 	// 	// 	// Expected bottom bracket seeds: [2, 3, 6, 7, 10, 11, 14, 15] (second place teams)
-// 	// 	// 	const topBracketSeeds = result[0].seeds.map((team) => team.seed);
-// 	// 	// 	const bottomBracketSeeds = result[1].seeds.map((team) => team.seed);
-// 	// 	// 	expect(topBracketSeeds).toEqual([1, 4, 5, 8, 9, 12, 13, 16]);
-// 	// 	// 	expect(bottomBracketSeeds).toEqual([2, 3, 6, 7, 10, 11, 14, 15]);
-// 	// 	// });
-// 	// 	// test("handles 3 pools with 6 teams", () => {
-// 	// 	// 	const pools = "abc";
-// 	// 	// 	const testCase = {
-// 	// 	// 		pools: Array.from({ length: 3 }).map((_, i) => ({
-// 	// 	// 			id: i + 1,
-// 	// 	// 			name: pools[i],
-// 	// 	// 			teams: Array.from({ length: 4 }).map((_, j) => ({
-// 	// 	// 				id: i * 4 + j + 1,
-// 	// 	// 				finish: j + 1,
-// 	// 	// 			})),
-// 	// 	// 		})),
-// 	// 	// 		count: 6,
-// 	// 	// 	};
-// 	// 	// 	const result = draftPlayoffs(testCase.pools, testCase.count);
-// 	// 	// 	// Verify we get two brackets
-// 	// 	// 	expect(result).toHaveLength(2);
-// 	// 	// 	// Should use shape 5 (3 pools, 6 teams)
-// 	// 	// 	// Expected top bracket seeds: [1, 6] (first place teams)
-// 	// 	// 	// Expected bottom bracket seeds: [2, 5, 4] (second place teams)
-// 	// 	// 	const topBracketSeeds = result[0].seeds.map((team) => team.seed);
-// 	// 	// 	const bottomBracketSeeds = result[1].seeds.map((team) => team.seed);
-// 	// 	// 	expect(topBracketSeeds).toEqual([1, 6]);
-// 	// 	// 	expect(bottomBracketSeeds).toEqual([2, 5, 4]);
-// 	// 	// });
-// });
-
-// describe("buildFirstRound", () => {
-// 	test("round of 16", () => {
-// 		expect(buildFirstRound(16)).toStrictEqual([
-// 			// -- //
-// 			// 1, 4, 5, 8, 9
-// 			[1, 16],
-// 			[9, 8],
-// 			[5, 12],
-// 			[13, 4],
-// 			// -- //
-// 			// 2, 3, 6, 7, 10, 11, 14, 15
-// 			[3, 14],
-// 			[11, 6],
-// 			[7, 10],
-// 			[15, 2],
-// 			// -- //
-// 		]);
-// 	});
-// });
-
 describe("recursiveSnakeDraft", () => {
 	const cases = [
 		{
@@ -306,11 +178,63 @@ describe("recursiveSnakeDraft", () => {
 				// -- //
 			],
 		},
+		{
+			size: 64,
+			want: [
+				[1, 64],
+				[33, 32],
+				[17, 48],
+				[49, 16],
+				// --
+				[9, 56],
+				[41, 24],
+				[25, 40],
+				[57, 8],
+				// --
+				// --
+				[5, 60],
+				[37, 28],
+				[21, 44],
+				[53, 12],
+				// --
+				[13, 52],
+				[45, 20],
+				[29, 36],
+				[61, 4],
+				// --
+				// --
+				// --
+				[3, 62],
+				[35, 30],
+				[19, 46],
+				[51, 14],
+				// --
+				[11, 54],
+				[43, 22],
+				[27, 38],
+				[59, 6],
+				// --
+				// --
+				[7, 58],
+				[39, 26],
+				[23, 42],
+				[55, 10],
+				// --
+				[15, 50],
+				[47, 18],
+				[31, 34],
+				[63, 2],
+			],
+		},
 	];
 
 	for (const { size, want } of cases) {
 		test(`round of ${size}`, () => {
 			const got = recursiveSnakeDraft(range(1, size + 1));
+
+			if (size === 64) {
+				console.log(JSON.stringify(got, null, 2));
+			}
 
 			expect(got).toStrictEqual(want);
 		});

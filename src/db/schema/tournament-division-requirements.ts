@@ -14,7 +14,7 @@ export const tournamentDivisionRequirements = pgTable(
 		id: serial().primaryKey(),
 		tournamentDivisionId: integer()
 			.notNull()
-			.references(() => tournamentDivisions.id),
+			.references(() => tournamentDivisions.id, { onDelete: "cascade" }),
 		gender: genderEnum(),
 		qualifiedDivisionId: integer().references(() => divisions.id),
 	},

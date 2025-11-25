@@ -23,7 +23,7 @@ export const tournamentDivisionTeams = pgTable("tournament_division_teams", {
 	id: serial().primaryKey(),
 	tournamentDivisionId: integer()
 		.notNull()
-		.references(() => tournamentDivisions.id),
+		.references(() => tournamentDivisions.id, { onDelete: "cascade" }),
 	teamId: integer()
 		.notNull()
 		.references(() => teams.id),

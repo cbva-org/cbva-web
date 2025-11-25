@@ -20,6 +20,7 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TournamentsIndexRouteImport } from './routes/tournaments/index'
 import { Route as JuniorsIndexRouteImport } from './routes/juniors/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
 import { Route as VenuesVenueIdRouteImport } from './routes/venues/$venueId'
 import { Route as TournamentsCreateRouteImport } from './routes/tournaments/create'
@@ -27,6 +28,7 @@ import { Route as ProfileProfileIdRouteImport } from './routes/profile/$profileI
 import { Route as JuniorsLeaderboardRouteImport } from './routes/juniors/leaderboard'
 import { Route as ApiFilesRouteImport } from './routes/api/files'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
 import { Route as AccountSetupRouteImport } from './routes/account/setup'
 import { Route as AccountResetPasswordRouteImport } from './routes/account/reset-password'
 import { Route as AccountForgotPasswordRouteImport } from './routes/account/forgot-password'
@@ -93,6 +95,11 @@ const JuniorsIndexRoute = JuniorsIndexRouteImport.update({
   path: '/juniors/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountIndexRoute = AccountIndexRouteImport.update({
   id: '/account/',
   path: '/account/',
@@ -126,6 +133,11 @@ const ApiFilesRoute = ApiFilesRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminScheduleRoute = AdminScheduleRouteImport.update({
+  id: '/admin/schedule',
+  path: '/admin/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountSetupRoute = AccountSetupRouteImport.update({
@@ -194,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/account/forgot-password': typeof AccountForgotPasswordRoute
   '/account/reset-password': typeof AccountResetPasswordRoute
   '/account/setup': typeof AccountSetupRoute
+  '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/files': typeof ApiFilesRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
@@ -201,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account': typeof AccountIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/juniors': typeof JuniorsIndexRoute
   '/tournaments': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
@@ -224,6 +238,7 @@ export interface FileRoutesByTo {
   '/account/forgot-password': typeof AccountForgotPasswordRoute
   '/account/reset-password': typeof AccountResetPasswordRoute
   '/account/setup': typeof AccountSetupRoute
+  '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/files': typeof ApiFilesRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
@@ -231,6 +246,7 @@ export interface FileRoutesByTo {
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account': typeof AccountIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/juniors': typeof JuniorsIndexRoute
   '/tournaments': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
@@ -255,6 +271,7 @@ export interface FileRoutesById {
   '/account/forgot-password': typeof AccountForgotPasswordRoute
   '/account/reset-password': typeof AccountResetPasswordRoute
   '/account/setup': typeof AccountSetupRoute
+  '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/files': typeof ApiFilesRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
@@ -262,6 +279,7 @@ export interface FileRoutesById {
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account/': typeof AccountIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/juniors/': typeof JuniorsIndexRoute
   '/tournaments/': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
@@ -287,6 +305,7 @@ export interface FileRouteTypes {
     | '/account/forgot-password'
     | '/account/reset-password'
     | '/account/setup'
+    | '/admin/schedule'
     | '/admin/users'
     | '/api/files'
     | '/juniors/leaderboard'
@@ -294,6 +313,7 @@ export interface FileRouteTypes {
     | '/tournaments/create'
     | '/venues/$venueId'
     | '/account'
+    | '/admin'
     | '/juniors'
     | '/tournaments'
     | '/account/verify/success'
@@ -317,6 +337,7 @@ export interface FileRouteTypes {
     | '/account/forgot-password'
     | '/account/reset-password'
     | '/account/setup'
+    | '/admin/schedule'
     | '/admin/users'
     | '/api/files'
     | '/juniors/leaderboard'
@@ -324,6 +345,7 @@ export interface FileRouteTypes {
     | '/tournaments/create'
     | '/venues/$venueId'
     | '/account'
+    | '/admin'
     | '/juniors'
     | '/tournaments'
     | '/account/verify/success'
@@ -347,6 +369,7 @@ export interface FileRouteTypes {
     | '/account/forgot-password'
     | '/account/reset-password'
     | '/account/setup'
+    | '/admin/schedule'
     | '/admin/users'
     | '/api/files'
     | '/juniors/leaderboard'
@@ -354,6 +377,7 @@ export interface FileRouteTypes {
     | '/tournaments/create'
     | '/venues/$venueId'
     | '/account/'
+    | '/admin/'
     | '/juniors/'
     | '/tournaments/'
     | '/account/verify/success'
@@ -378,6 +402,7 @@ export interface RootRouteChildren {
   AccountForgotPasswordRoute: typeof AccountForgotPasswordRoute
   AccountResetPasswordRoute: typeof AccountResetPasswordRoute
   AccountSetupRoute: typeof AccountSetupRoute
+  AdminScheduleRoute: typeof AdminScheduleRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ApiFilesRoute: typeof ApiFilesRoute
   JuniorsLeaderboardRoute: typeof JuniorsLeaderboardRoute
@@ -385,6 +410,7 @@ export interface RootRouteChildren {
   TournamentsCreateRoute: typeof TournamentsCreateRoute
   VenuesVenueIdRoute: typeof VenuesVenueIdRoute
   AccountIndexRoute: typeof AccountIndexRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   JuniorsIndexRoute: typeof JuniorsIndexRoute
   TournamentsIndexRoute: typeof TournamentsIndexRoute
   AccountVerifySuccessRoute: typeof AccountVerifySuccessRoute
@@ -474,6 +500,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JuniorsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/': {
       id: '/account/'
       path: '/account'
@@ -521,6 +554,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/schedule': {
+      id: '/admin/schedule'
+      path: '/admin/schedule'
+      fullPath: '/admin/schedule'
+      preLoaderRoute: typeof AdminScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account/setup': {
@@ -620,6 +660,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountForgotPasswordRoute: AccountForgotPasswordRoute,
   AccountResetPasswordRoute: AccountResetPasswordRoute,
   AccountSetupRoute: AccountSetupRoute,
+  AdminScheduleRoute: AdminScheduleRoute,
   AdminUsersRoute: AdminUsersRoute,
   ApiFilesRoute: ApiFilesRoute,
   JuniorsLeaderboardRoute: JuniorsLeaderboardRoute,
@@ -627,6 +668,7 @@ const rootRouteChildren: RootRouteChildren = {
   TournamentsCreateRoute: TournamentsCreateRoute,
   VenuesVenueIdRoute: VenuesVenueIdRoute,
   AccountIndexRoute: AccountIndexRoute,
+  AdminIndexRoute: AdminIndexRoute,
   JuniorsIndexRoute: JuniorsIndexRoute,
   TournamentsIndexRoute: TournamentsIndexRoute,
   AccountVerifySuccessRoute: AccountVerifySuccessRoute,

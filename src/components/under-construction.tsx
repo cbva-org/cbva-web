@@ -1,6 +1,6 @@
 import { ConstructionIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { Alert } from "./base/alert";
-import { ReactNode } from "react";
 
 export function UnderConstruction({
 	description = <>This area is under construction.</>,
@@ -9,6 +9,7 @@ export function UnderConstruction({
 }) {
 	return (
 		<Alert
+			icon={false}
 			color="warning"
 			title={
 				<span className="flex flex-row gap-2 items-center">
