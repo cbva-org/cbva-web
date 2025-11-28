@@ -87,6 +87,13 @@ export default defineConfig({
       // command: 'pnpm serve --port 5174 --host',
       command: 'pnpm vite dev --port 5174',
       url: 'http://localhost:5174',
+      env: {
+        SENDGRID_API_KEY: 'e2e-sendgrid_api_key',
+        TWILIO_ACCOUNT_SID: 'e2e-twilio_account_sid',
+        TWILIO_AUTH_TOKEN: 'e2e-twilio_auth_token',
+        TWILIO_MESSAGING_SERVICE_SID: 'e2e-twilio_messaging_service_sid',
+        TWILIO_PHONE_NUMBER_SID: 'e2e-twilio_phone_number_sid',
+      },
       reuseExistingServer: !process.env.CI,
       stdout: "pipe",
     }
