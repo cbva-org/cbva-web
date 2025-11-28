@@ -5,6 +5,7 @@ import {
 	TextField,
 } from "react-aria-components";
 
+import { useIsMounted } from "@/lib/dom";
 import type { FieldProps } from "./shared";
 import { Description, Errors, inputStyles, Label } from "./shared";
 
@@ -18,6 +19,8 @@ export function TextAreaField({
 	field,
 	...props
 }: TextAreaProps) {
+	const isMounted = useIsMounted();
+
 	return (
 		<TextField
 			{...props}
@@ -27,6 +30,7 @@ export function TextAreaField({
 			onChange={field.handleChange}
 			onBlur={field.handleBlur}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
+			isDisabled={!isMounted || props.isDisabled}
 		>
 			{label && <Label isRequired={props.isRequired}>{label}</Label>}
 			<TextArea placeholder={placeholder} className={inputStyles} />

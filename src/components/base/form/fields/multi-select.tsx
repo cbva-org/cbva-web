@@ -2,19 +2,19 @@ import clsx from "clsx";
 import { Check, ChevronDown } from "lucide-react";
 import {
 	Button,
+	composeRenderProps,
 	type Key,
 	ListBox,
 	ListBoxItem,
 	type ListBoxProps,
 	MenuTrigger,
 	Popover,
-	composeRenderProps,
 } from "react-aria-components";
-
-import { focusRing } from "@/components/base/utils";
 import { tv } from "tailwind-variants";
+import { focusRing } from "@/components/base/utils";
+import { useIsMounted } from "@/lib/dom";
 import type { FieldProps } from "./shared";
-import { Description, Errors, Label, inputStyles } from "./shared";
+import { Description, Errors, inputStyles, Label } from "./shared";
 
 export type Option<Value extends Key> = {
 	value: Value;
@@ -68,11 +68,14 @@ export function MultiSelectField<Value extends Key>({
 	field,
 	className,
 	isRequired,
+	isDisabled,
 }: MultiSelectFieldProps<Value>) {
 	const values: Set<Value> = field.state.value;
+	const isMounted = useIsMounted();
 
 	return (
 		<MenuTrigger
+			isDisabled={!isMounted || isDisabled}
 			onOpenChange={(open) => {
 				if (!open) {
 					field.handleBlur();

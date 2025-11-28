@@ -6,6 +6,7 @@ import {
 	TooltipTrigger,
 } from "react-aria-components";
 import { tv, type VariantProps } from "tailwind-variants";
+import { useIsMounted } from "@/lib/dom";
 import { Tooltip } from "./tooltip";
 import { focusRing } from "./utils";
 
@@ -253,10 +254,13 @@ export const button = tv({
 
 export const Button = forwardRef(
 	(props: ButtonProps, ref: Ref<HTMLButtonElement>) => {
+		const isMounted = useIsMounted();
+
 		const node = (
 			<RACButton
 				{...props}
 				ref={ref}
+				isDisabled={!isMounted || props.isDisabled}
 				className={composeRenderProps(
 					props.className,
 					(className, renderProps) =>

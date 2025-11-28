@@ -14,6 +14,7 @@ import {
 import { tv } from "tailwind-variants";
 import { Popover } from "@/components/base/popover";
 import { composeTailwindRenderProps } from "@/components/base/utils";
+import { useIsMounted } from "@/lib/dom";
 import { DateInput } from "./date";
 import { Description, Errors, type FieldProps, Group, Label } from "./shared";
 
@@ -52,6 +53,8 @@ export function DatePickerField({
 	className,
 	...props
 }: DatePickerProps<CalendarDate>) {
+	const isMounted = useIsMounted();
+
 	return (
 		<DatePicker
 			{...props}
@@ -62,6 +65,7 @@ export function DatePickerField({
 			onBlur={field.handleBlur}
 			shouldForceLeadingZeros={true}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
+			isDisabled={!isMounted || props.isDisabled}
 		>
 			{label && <Label isRequired={props.isRequired}>{label}</Label>}
 			<Group>

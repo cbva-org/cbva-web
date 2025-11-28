@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
 
+import { useIsMounted } from "@/lib/dom";
 import { Checkbox, type CheckboxProps } from "../../checkbox";
 import type { FieldProps } from "./shared";
 
@@ -14,6 +15,8 @@ export function CheckboxField({
 	field,
 	...props
 }: CheckboxFieldProps) {
+	const isMounted = useIsMounted();
+
 	return (
 		<Checkbox
 			{...props}
@@ -23,6 +26,7 @@ export function CheckboxField({
 			onChange={field.handleChange}
 			onBlur={field.handleBlur}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
+			isDisabled={!isMounted || props.isDisabled}
 		/>
 	);
 }

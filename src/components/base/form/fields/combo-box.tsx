@@ -1,5 +1,6 @@
 import type { Key } from "react-aria-components";
 import { type AsyncListOptions, useAsyncList } from "react-stately";
+import { useIsMounted } from "@/lib/dom";
 import { ComboBox, ComboBoxItem, type ComboBoxProps } from "../../combo-box";
 import type { Option } from "../../select";
 import type { FieldProps } from "./shared";
@@ -17,6 +18,8 @@ export function ComboBoxField<T extends Key>({
 	onSelectionChange,
 	...props
 }: ComboBoxFieldProps<T>) {
+	const isMounted = useIsMounted();
+
 	return (
 		<ComboBox
 			{...props}
@@ -37,7 +40,7 @@ export function ComboBoxField<T extends Key>({
 				}
 			}}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
-			isDisabled={!Boolean(options) || isDisabled}
+			isDisabled={!isMounted || !Boolean(options) || isDisabled}
 		>
 			{(item) => (
 				<ComboBoxItem id={item.value}>

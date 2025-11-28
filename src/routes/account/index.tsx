@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Suspense } from "react";
 import { useViewer } from "@/auth/shared";
 import { Link } from "@/components/base/link";
 import { useNotLoggedInRedirect } from "@/hooks/auth";
@@ -23,9 +24,11 @@ function RouteComponent() {
 				Log Out
 			</Link>
 
-			<pre className="p-6 rounded-lg border border-gray-900 bg-white">
-				{JSON.stringify(viewer, null, 2)}
-			</pre>
+			<Suspense>
+				<pre className="p-6 rounded-lg border border-gray-900 bg-white">
+					{JSON.stringify(viewer, null, 2)}
+				</pre>
+			</Suspense>
 		</DefaultLayout>
 	);
 }

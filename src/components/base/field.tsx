@@ -17,6 +17,7 @@ import {
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
+import { useIsMounted } from "@/lib/dom";
 import { composeTailwindRenderProps, focusRing } from "./utils";
 
 export function Label(props: LabelProps) {
@@ -88,11 +89,13 @@ export function FieldGroup(props: GroupProps) {
 export const Input = forwardRef(
 	(props: InputProps, ref: React.ForwardedRef<HTMLInputElement>) => {
 		const [mergedProps, mergedRef] = useContextProps(props, ref, InputContext);
+		const isMounted = useIsMounted();
 
 		return (
 			<RACInput
 				ref={mergedRef}
 				{...mergedProps}
+				disabled={!isMounted || props.disabled}
 				className={composeTailwindRenderProps(
 					props.className,
 					"px-2 py-1.5 flex-1 min-w-0 border-0 outline-0 bg-white text-sm text-content-foreground",

@@ -8,8 +8,8 @@ import {
 	type DateValue,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
-
 import { composeTailwindRenderProps } from "@/components/base/utils";
+import { useIsMounted } from "@/lib/dom";
 import {
 	baseInputStyles,
 	Description,
@@ -31,6 +31,8 @@ export function DateField({
 	picker,
 	...props
 }: DateFieldProps<CalendarDate>) {
+	const isMounted = useIsMounted();
+
 	return (
 		<AriaDateField
 			{...props}
@@ -44,6 +46,7 @@ export function DateField({
 				"flex flex-col gap-1",
 			)}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
+			isDisabled={!isMounted || props.isDisabled}
 		>
 			{label && <Label isRequired={props.isRequired}>{label}</Label>}
 			<DateInput />

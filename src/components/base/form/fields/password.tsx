@@ -7,6 +7,7 @@ import {
 	ToggleButton,
 } from "react-aria-components";
 
+import { useIsMounted } from "@/lib/dom";
 import {
 	baseInputStyles,
 	Description,
@@ -27,6 +28,7 @@ export function PasswordField({
 	...props
 }: Omit<PasswordFieldProps, "type"> & { labelRight?: ReactNode }) {
 	const [isVisible, setVisible] = useState(false);
+	const isMounted = useIsMounted();
 
 	return (
 		<AriaTextField
@@ -36,6 +38,7 @@ export function PasswordField({
 			onChange={field.handleChange}
 			onBlur={field.handleBlur}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
+			isDisabled={!isMounted || props.isDisabled}
 		>
 			{label && (
 				<div className="flex flex-row justify-between">

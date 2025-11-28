@@ -13,6 +13,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { focusRing } from "@/components/base/utils";
+import { useIsMounted } from "@/lib/dom";
 import type { FieldProps } from "./shared";
 import {
 	Description,
@@ -73,6 +74,8 @@ export function SelectField<Value extends Key>({
 	field,
 	...props
 }: SelectFieldProps<Value>) {
+	const isMounted = useIsMounted();
+
 	return (
 		<Select
 			{...props}
@@ -85,6 +88,7 @@ export function SelectField<Value extends Key>({
 				}
 			}}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
+			isDisabled={!isMounted || props.isDisabled}
 		>
 			{({ isOpen }) => (
 				<>

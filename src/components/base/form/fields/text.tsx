@@ -4,6 +4,7 @@ import {
 	Input,
 	type TextFieldProps as RACTextFieldProps,
 } from "react-aria-components";
+import { useIsMounted } from "@/lib/dom";
 import type { FieldProps } from "./shared";
 import { Description, Errors, inputStyles, Label } from "./shared";
 
@@ -17,6 +18,8 @@ export function TextField({
 	field,
 	...props
 }: TextFieldProps) {
+	const isMounted = useIsMounted();
+
 	return (
 		<AriaTextField
 			{...props}
@@ -26,6 +29,7 @@ export function TextField({
 			onChange={field.handleChange}
 			onBlur={field.handleBlur}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
+			isDisabled={!isMounted || props.isDisabled}
 		>
 			{label && <Label isRequired={props.isRequired}>{label}</Label>}
 			<Input placeholder={placeholder} className={inputStyles} />

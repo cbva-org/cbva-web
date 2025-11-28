@@ -21,6 +21,7 @@ import { Button } from "@/components/base/button";
 import { Modal } from "@/components/base/modal";
 import { subtitle } from "@/components/base/primitives";
 import { deleteFileServerFn, uploadFileServerFn } from "@/data/files";
+import { useIsMounted } from "@/lib/dom";
 // import { postFormData } from "@/hooks/api";
 // import { useDeleteFile } from "@/hooks/files";
 import { Errors, Label } from "./shared";
@@ -65,6 +66,7 @@ export function ImageField({
 	const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const imgRef = useRef<HTMLImageElement>(null);
+	const isMounted = useIsMounted();
 
 	const uploadFile = useServerFn(uploadFileServerFn);
 	const deleteFile = useServerFn(deleteFileServerFn);
@@ -202,6 +204,7 @@ export function ImageField({
 					<div className="flex flex-col gap-2.5 justify-start items-stretch">
 						<Button
 							variant="filled"
+							isDisabled={!isMounted}
 							onClick={() => {
 								handleRemove();
 								field.handleChange(null);
@@ -213,6 +216,7 @@ export function ImageField({
 				</div>
 			) : (
 				<DropZone
+					isDisabled={!isMounted}
 					onDrop={async (e) => {
 						const files = e.items.filter(
 							(file): file is FileDropItem => file.kind === "file",

@@ -8,6 +8,7 @@ import {
 	type ButtonProps,
 	Input,
 } from "react-aria-components";
+import { useIsMounted } from "@/lib/dom";
 import {
 	baseInputStyles,
 	Description,
@@ -27,6 +28,8 @@ export function NumberField({
 	placeholder,
 	...props
 }: Omit<NumberFieldProps, "type">) {
+	const isMounted = useIsMounted();
+
 	return (
 		<AriaNumberField
 			{...props}
@@ -36,6 +39,7 @@ export function NumberField({
 			onChange={field.handleChange}
 			onBlur={field.handleBlur}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
+			isDisabled={!isMounted || props.isDisabled}
 		>
 			{label && <Label isRequired={props.isRequired}>{label}</Label>}
 

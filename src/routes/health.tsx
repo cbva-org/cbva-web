@@ -1,7 +1,7 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-
+import { Suspense } from "react";
 import { db } from "@/db/connection";
 
 const checkHealthFn = createServerFn().handler(async () => {
@@ -31,7 +31,9 @@ export const Route = createFileRoute("/health")({
 });
 
 function RouteComponent() {
-	const { data } = useQuery(checkHealthOptions());
+	const { data } = useSuspenseQuery(checkHealthOptions());
 
-	return JSON.stringify(data, null, 2);
+	return <Suspense>{JSON.stringify(data, null, 2)}</Suspense>;
+
+	// return "ok";
 }
