@@ -94,7 +94,7 @@ export default defineConfig({
       stdout: "pipe"
     },
     {
-      command: 'vite dev --port 5174',
+      command: 'pnpm build && pnpm vite preview --port 5174',
       url: 'http://localhost:5174',
       reuseExistingServer: !process.env.CI,
       stdout: "pipe"
