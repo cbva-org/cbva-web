@@ -5,11 +5,12 @@ import {
 } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { or } from "drizzle-orm";
+import { round } from "lodash-es";
+import { titleCase } from "title-case";
 import z from "zod";
-import { auth, type Viewer } from "@/auth";
+import type { Viewer } from "@/auth";
 import { getViewer } from "@/auth/server";
-import { requireAuthenticated, useViewerHasPermission } from "@/auth/shared";
+import { requireAuthenticated } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
 	type CreatePlayerProfile,
@@ -19,6 +20,7 @@ import {
 	updatePlayerProfileSchema,
 } from "@/db/schema/player-profiles";
 import { genderSchema } from "@/db/schema/shared";
+import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 async function readViewerProfiles(userId: Viewer["id"]) {
@@ -171,6 +173,14 @@ const getProfileResults = createServerFn({
 							where: (t, { eq, not }) => not(eq(t.playerProfileId, id)),
 						},
 						tournamentDivisionTeams: {
+							with: {
+								tournamentDivision: {
+									with: {
+										division: true,
+										tournament: true,
+									},
+								},
+							},
 							where: (t, { eq }) => eq(t.status, "confirmed"),
 						},
 					},
@@ -179,15 +189,49 @@ const getProfileResults = createServerFn({
 			where: (t, { eq }) => eq(t.playerProfileId, id),
 		});
 
-		if (!result) {
-			throw notFound();
-		}
+		const venues = await db.query.venues.findMany({
+			where: (t, { inArray }) =>
+				inArray(
+					t.id,
+					result.flatMap((t) =>
+						t.team.tournamentDivisionTeams.map(
+							({ tournamentDivision }) => tournamentDivision.tournament.venueId,
+						),
+					),
+				),
+		});
 
-		return result.filter((data) =>
-			data.team.tournamentDivisionTeams.some(
-				(team) => team.status === "confirmed",
-			),
+		const venuesMap = new Map(
+			venues.map(({ id, name, city }) => [id, `${name}, ${city}`]),
 		);
+
+		return result
+			.filter((data) =>
+				data.team.tournamentDivisionTeams.some(
+					(team) => team.status === "confirmed",
+				),
+			)
+			.flatMap((t) =>
+				t.team.tournamentDivisionTeams.map((tdt) => {
+					return {
+						id: tdt.id,
+						date: tdt.tournamentDivision.tournament.date,
+						event:
+							tdt.tournamentDivision.tournament.name ??
+							getTournamentDivisionDisplay(tdt.tournamentDivision),
+						venue: venuesMap.get(tdt.tournamentDivision.tournament.venueId),
+						division: ["unrated", "open"].includes(
+							tdt.tournamentDivision.division.name,
+						)
+							? titleCase(tdt.tournamentDivision.division.name)
+							: (tdt.tournamentDivision.division.name.toUpperCase() ?? "-"),
+						players: t.team.players, //.map(({ profile }) => profile),
+						finish: tdt.finish,
+						rating: tdt.ratingEarned?.toUpperCase() ?? "-",
+						points: tdt.pointsEarned ? round(tdt.pointsEarned) : "-",
+					};
+				}),
+			);
 	});
 
 export const profileResultsQueryOptions = (id: number) =>

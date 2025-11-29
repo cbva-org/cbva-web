@@ -5,12 +5,12 @@ export async function seedDivisions(db: Database) {
 		.insert(divisions)
 		.values(
 			[
-				{ name: "unrated", maxAge: null },
+				{ name: "unrated", display: "Unrated", maxAge: null },
 				{ name: "b", maxAge: null },
 				{ name: "a", maxAge: null },
 				{ name: "aa", maxAge: null },
 				{ name: "aaa", maxAge: null },
-				{ name: "open", maxAge: null },
+				{ name: "open", display: "Open", maxAge: null },
 				{ name: "12u", maxAge: 12 },
 				{ name: "14u", maxAge: 14 },
 				{ name: "16u", maxAge: 16 },
