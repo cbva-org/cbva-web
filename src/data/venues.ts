@@ -3,7 +3,9 @@ import {
 	queryOptions,
 	useMutation,
 	useQueryClient,
+	useSuspenseQuery,
 } from "@tanstack/react-query";
+import { linkOptions, useRouterState } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
@@ -25,6 +27,37 @@ export const venuesQueryOptions = () =>
 		queryKey: ["venues"],
 		queryFn: () => getVenues(),
 	});
+
+export function useVenueFilterOptions(link?: boolean) {
+	const { location } = useRouterState();
+
+	const { data: venues } = useSuspenseQuery({
+		...venuesQueryOptions(),
+		select: (data) =>
+			data.map(({ id, name, city }) => ({
+				value: id,
+				display: `${name}, ${city}`,
+				link: link
+					? linkOptions({
+							to: location.pathname,
+							search: (search) => {
+								const values = search.venues ?? [];
+
+								return {
+									...search,
+									page: 1,
+									venues: values.includes(id)
+										? values.filter((v) => v !== id)
+										: values.concat(id),
+								};
+							},
+						})
+					: undefined,
+			})),
+	});
+
+	return venues;
+}
 
 export const updateVenueFn = createServerFn({ method: "POST" })
 	.middleware([

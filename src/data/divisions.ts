@@ -1,6 +1,6 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { linkOptions, useRouterState } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-
 import { db } from "@/db/connection";
 
 async function readDivisions(includeJuniors = true) {
@@ -24,3 +24,34 @@ export const divisionsQueryOptions = (includeJuniors?: boolean) =>
 		queryKey: ["divisions", includeJuniors],
 		queryFn: () => getDivisions({ data: { includeJuniors } }),
 	});
+
+export function useDivisionFilterOptions(link?: boolean) {
+	const { location } = useRouterState();
+
+	const { data: divisions } = useSuspenseQuery({
+		...divisionsQueryOptions(),
+		select: (divisions) =>
+			divisions.map(({ id, name }) => ({
+				value: id,
+				display: name.toUpperCase(),
+				link: link
+					? linkOptions({
+							to: location.pathname,
+							search: (search) => {
+								const values = search.divisions ?? [];
+
+								return {
+									...search,
+									page: 1,
+									divisions: values.includes(id)
+										? values.filter((v) => v !== id)
+										: values.concat(id),
+								};
+							},
+						})
+					: undefined,
+			})),
+	});
+
+	return divisions;
+}

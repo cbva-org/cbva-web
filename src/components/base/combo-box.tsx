@@ -9,6 +9,7 @@ import {
 	type ListBoxItemProps,
 	type ValidationResult,
 } from "react-aria-components";
+import { dbg } from "@/utils/dbg";
 import { isNotNullOrUndefined } from "@/utils/types";
 import { Button } from "./button";
 import { Description, FieldError, FieldGroup, Input, Label } from "./field";
@@ -50,6 +51,8 @@ export function ComboBox<T extends Key>({
 	const selectedKeysSet = new Set(selectedKeys);
 
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	console.log(props);
 
 	return (
 		<AriaComboBox

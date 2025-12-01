@@ -175,169 +175,199 @@ const getProfileResults = createServerFn({
 	method: "GET",
 })
 	.inputValidator(
-		selectPlayerProfileSchema.pick({ id: true }).extend({
-			paging: pagingOptionsSchema,
-		}),
-	)
-	.handler(async ({ data: { id, paging } }) => {
-		const { limit, offset } = getLimitAndOffset(paging);
-
-		// Shared where condition
-		const whereCondition = and(
-			eq(tournamentDivisionTeams.status, "confirmed"),
-			inArray(
-				tournamentDivisionTeams.teamId,
-				db
-					.select({ teamId: teamPlayers.teamId })
-					.from(teamPlayers)
-					.where(eq(teamPlayers.playerProfileId, id)),
-			),
-		);
-
-		// Get total count
-		const [totalResult] = await db
-			.select({ count: count() })
-			.from(tournamentDivisionTeams)
-			.innerJoin(teams, eq(tournamentDivisionTeams.teamId, teams.id))
-			.where(whereCondition);
-
-		const totalItems = totalResult.count;
-		const totalPages = Math.ceil(totalItems / paging.size);
-
-		// Main query to get tournament results with pagination
-		const results = await db
-			.select({
-				id: tournamentDivisionTeams.id,
-				teamId: tournamentDivisionTeams.teamId,
-				finish: tournamentDivisionTeams.finish,
-				pointsEarned: tournamentDivisionTeams.pointsEarned,
-				tournamentDate: tournaments.date,
-				tournamentName: tournaments.name,
-				tournamentDivisionName: tournamentDivisions.name,
-				tournamentDivisionGender: tournamentDivisions.gender,
-				tournamentDivisionTeamSize: tournamentDivisions.teamSize,
-				divisionName: divisions.name,
-				divisionMaxAge: divisions.maxAge,
-				levelEarnedName: levels.name,
-				venueName: venues.name,
-				venueCity: venues.city,
+		selectPlayerProfileSchema
+			.pick({
+				id: true,
 			})
-			.from(tournamentDivisionTeams)
-			.innerJoin(teams, eq(tournamentDivisionTeams.teamId, teams.id))
-			.innerJoin(
-				tournamentDivisions,
-				eq(
-					tournamentDivisionTeams.tournamentDivisionId,
-					tournamentDivisions.id,
+			.extend({
+				venues: z.array(z.number()),
+				divisions: z.array(z.number()),
+				paging: pagingOptionsSchema,
+			}),
+	)
+	.handler(
+		async ({
+			data: { id, venues: venueIds, divisions: divisionIds, paging },
+		}) => {
+			const { limit, offset } = getLimitAndOffset(paging);
+
+			// Shared where condition
+			const whereCondition = and(
+				eq(tournamentDivisionTeams.status, "confirmed"),
+				inArray(
+					tournamentDivisionTeams.teamId,
+					db
+						.select({ teamId: teamPlayers.teamId })
+						.from(teamPlayers)
+						.where(eq(teamPlayers.playerProfileId, id)),
 				),
-			)
-			.innerJoin(
-				tournaments,
-				eq(tournamentDivisions.tournamentId, tournaments.id),
-			)
-			.innerJoin(divisions, eq(tournamentDivisions.divisionId, divisions.id))
-			.innerJoin(venues, eq(tournaments.venueId, venues.id))
-			.leftJoin(levels, eq(tournamentDivisionTeams.levelEarnedId, levels.id))
-			.where(whereCondition)
-			.orderBy(desc(tournaments.date))
-			.limit(limit)
-			.offset(offset);
+			);
 
-		// Get partner info for each result
-		const teamIds = results.map((r) => r.teamId);
-		const partners = teamIds.length
-			? await db
-					.select({
-						teamId: teamPlayers.teamId,
-						playerProfileId: teamPlayers.playerProfileId,
-						firstName: playerProfiles.firstName,
-						preferredName: playerProfiles.preferredName,
-						lastName: playerProfiles.lastName,
-					})
-					.from(teamPlayers)
-					.innerJoin(
-						playerProfiles,
-						eq(teamPlayers.playerProfileId, playerProfiles.id),
-					)
-					.where(
-						and(
-							inArray(teamPlayers.teamId, teamIds),
-							not(eq(teamPlayers.playerProfileId, id)),
-						),
-					)
-			: [];
+			// Get total count
+			const [totalResult] = await db
+				.select({ count: count() })
+				.from(tournamentDivisionTeams)
+				.innerJoin(teams, eq(tournamentDivisionTeams.teamId, teams.id))
+				.where(whereCondition);
 
-		// Group partners by team ID
-		const partnersByTeam = new Map<
-			number,
-			Array<{
-				teamId: number;
-				playerProfileId: number;
-				firstName: string;
-				preferredName: string | null;
-				lastName: string;
-			}>
-		>();
+			const totalItems = totalResult.count;
+			const totalPages = Math.ceil(totalItems / paging.size);
 
-		for (const partner of partners) {
-			if (!partnersByTeam.has(partner.teamId)) {
-				partnersByTeam.set(partner.teamId, []);
+			// Main query to get tournament results with pagination
+			const results = await db
+				.select({
+					id: tournamentDivisionTeams.id,
+					teamId: tournamentDivisionTeams.teamId,
+					finish: tournamentDivisionTeams.finish,
+					pointsEarned: tournamentDivisionTeams.pointsEarned,
+					tournamentDate: tournaments.date,
+					tournamentName: tournaments.name,
+					tournamentDivisionName: tournamentDivisions.name,
+					tournamentDivisionGender: tournamentDivisions.gender,
+					tournamentDivisionTeamSize: tournamentDivisions.teamSize,
+					divisionId: divisions.id,
+					divisionName: divisions.name,
+					divisionMaxAge: divisions.maxAge,
+					levelEarnedName: levels.name,
+					venueId: venues.id,
+					venueName: venues.name,
+					venueCity: venues.city,
+				})
+				.from(tournamentDivisionTeams)
+				.innerJoin(teams, eq(tournamentDivisionTeams.teamId, teams.id))
+				.innerJoin(
+					tournamentDivisions,
+					eq(
+						tournamentDivisionTeams.tournamentDivisionId,
+						tournamentDivisions.id,
+					),
+				)
+				.innerJoin(
+					tournaments,
+					eq(tournamentDivisions.tournamentId, tournaments.id),
+				)
+				.innerJoin(divisions, eq(tournamentDivisions.divisionId, divisions.id))
+				.innerJoin(venues, eq(tournaments.venueId, venues.id))
+				.leftJoin(levels, eq(tournamentDivisionTeams.levelEarnedId, levels.id))
+				.where(whereCondition)
+				.orderBy(desc(tournaments.date))
+				.limit(limit)
+				.offset(offset);
+
+			// Get partner info for each result
+			const teamIds = results.map((r) => r.teamId);
+			const partners = teamIds.length
+				? await db
+						.select({
+							teamId: teamPlayers.teamId,
+							playerProfileId: teamPlayers.playerProfileId,
+							firstName: playerProfiles.firstName,
+							preferredName: playerProfiles.preferredName,
+							lastName: playerProfiles.lastName,
+						})
+						.from(teamPlayers)
+						.innerJoin(
+							playerProfiles,
+							eq(teamPlayers.playerProfileId, playerProfiles.id),
+						)
+						.where(
+							and(
+								inArray(teamPlayers.teamId, teamIds),
+								not(eq(teamPlayers.playerProfileId, id)),
+							),
+						)
+				: [];
+
+			// Group partners by team ID
+			const partnersByTeam = new Map<
+				number,
+				Array<{
+					teamId: number;
+					playerProfileId: number;
+					firstName: string;
+					preferredName: string | null;
+					lastName: string;
+				}>
+			>();
+
+			for (const partner of partners) {
+				if (!partnersByTeam.has(partner.teamId)) {
+					partnersByTeam.set(partner.teamId, []);
+				}
+				partnersByTeam.get(partner.teamId)?.push(partner);
 			}
-			partnersByTeam.get(partner.teamId)?.push(partner);
-		}
 
-		const data = results.map((result) => {
-			const tournamentDivision = {
-				name: result.tournamentDivisionName,
-				gender: result.tournamentDivisionGender,
-				division: {
-					name: result.divisionName,
-					maxAge: result.divisionMaxAge,
-				},
-				teamSize: result.tournamentDivisionTeamSize,
-			};
+			const data = results.map((result) => {
+				const tournamentDivision = {
+					name: result.tournamentDivisionName,
+					gender: result.tournamentDivisionGender,
+					division: {
+						name: result.divisionName,
+						maxAge: result.divisionMaxAge,
+					},
+					teamSize: result.tournamentDivisionTeamSize,
+				};
+
+				return {
+					id: result.id,
+					date: result.tournamentDate,
+					event:
+						result.tournamentName ??
+						getTournamentDivisionDisplay(tournamentDivision),
+					venueId: result.venueId,
+					venue: `${result.venueName}, ${result.venueCity}`,
+					divisionId: result.divisionId,
+					division: ["unrated", "open"].includes(result.divisionName)
+						? titleCase(result.divisionName)
+						: (result.divisionName.toUpperCase() ?? "-"),
+					players:
+						partnersByTeam.get(result.teamId)?.map((p) => ({
+							profile: {
+								id: p.playerProfileId,
+								firstName: p.firstName,
+								preferredName: p.preferredName,
+								lastName: p.lastName,
+							},
+						})) ?? [],
+					finish: result.finish,
+					rating: result.levelEarnedName?.toUpperCase() ?? "-",
+					points: result.pointsEarned ? round(result.pointsEarned) : "-",
+				};
+			});
 
 			return {
-				id: result.id,
-				date: result.tournamentDate,
-				event:
-					result.tournamentName ??
-					getTournamentDivisionDisplay(tournamentDivision),
-				venue: `${result.venueName}, ${result.venueCity}`,
-				division: ["unrated", "open"].includes(result.divisionName)
-					? titleCase(result.divisionName)
-					: (result.divisionName.toUpperCase() ?? "-"),
-				players:
-					partnersByTeam.get(result.teamId)?.map((p) => ({
-						profile: {
-							id: p.playerProfileId,
-							firstName: p.firstName,
-							preferredName: p.preferredName,
-							lastName: p.lastName,
-						},
-					})) ?? [],
-				finish: result.finish,
-				rating: result.levelEarnedName?.toUpperCase() ?? "-",
-				points: result.pointsEarned ? round(result.pointsEarned) : "-",
+				data,
+				pageInfo: {
+					totalItems,
+					totalPages,
+				},
 			};
-		});
+		},
+	);
 
-		return {
-			data,
-			pageInfo: {
-				totalItems,
-				totalPages,
-			},
-		};
-	});
-
-export const profileResultsQueryOptions = (
-	id: number,
-	{ page, size }: PagingOptions,
-) =>
+export const profileResultsQueryOptions = ({
+	id,
+	venues,
+	divisions,
+	paging: { page, size },
+}: {
+	id: number;
+	venues: number[];
+	divisions: number[];
+	paging: PagingOptions;
+}) =>
 	queryOptions({
-		queryKey: ["profile_results", id, page, size],
-		queryFn: () => getProfileResults({ data: { id, paging: { page, size } } }),
+		queryKey: [
+			"profile_results",
+			id,
+			page,
+			size,
+			JSON.stringify({ venues, divisions }),
+		],
+		queryFn: () =>
+			getProfileResults({
+				data: { id, divisions, venues, paging: { page, size } },
+			}),
 	});
 
 export const updatePlayerProfileFn = createServerFn({ method: "POST" })

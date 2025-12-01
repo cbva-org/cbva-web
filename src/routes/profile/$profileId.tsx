@@ -22,10 +22,12 @@ import { ImpersonateButton } from "@/components/impersonator/impersonate-button"
 import { ProfileName } from "@/components/profiles/name";
 import { ProfilePhoto } from "@/components/profiles/photo";
 import { TeamNames } from "@/components/teams/names";
+import { useDivisionFilterOptions } from "@/data/divisions";
 import {
 	profileOverviewQueryOptions,
 	profileResultsQueryOptions,
 } from "@/data/profiles";
+import { useVenueFilterOptions } from "@/data/venues";
 import { DefaultLayout } from "@/layouts/default";
 import { isNotNullOrUndefined } from "@/utils/types";
 
@@ -35,14 +37,14 @@ export const Route = createFileRoute("/profile/$profileId")({
 	): {
 		page: number;
 		// pageSize: number;
-		// divisions: number[];
-		// venues: number[];
+		divisions: number[];
+		venues: number[];
 	} => {
 		return {
 			page: Math.max(Number(search?.page ?? 1), 1),
 			// pageSize: Math.max(Number(search?.pageSize ?? 25), 25),
-			// divisions: Array.isArray(search?.divisions) ? search.divisions : [],
-			// venues: Array.isArray(search?.venues) ? search.venues : [],
+			divisions: Array.isArray(search?.divisions) ? search.divisions : [],
+			venues: Array.isArray(search?.venues) ? search.venues : [],
 		};
 	},
 	loader: async ({ params: { profileId }, context: { queryClient } }) => {
@@ -60,7 +62,7 @@ export const Route = createFileRoute("/profile/$profileId")({
 
 function RouteComponent() {
 	const { profileId } = Route.useParams();
-	const { page } = Route.useSearch();
+	const { page, venues, divisions } = Route.useSearch();
 	const pageSize = 5;
 
 	const { data: profile } = useSuspenseQuery({
@@ -75,9 +77,14 @@ function RouteComponent() {
 	});
 
 	const { data: resultData } = useSuspenseQuery({
-		...profileResultsQueryOptions(Number.parseInt(profileId, 10), {
-			page,
-			size: pageSize,
+		...profileResultsQueryOptions({
+			id: Number.parseInt(profileId, 10),
+			venues,
+			divisions,
+			paging: {
+				page,
+				size: pageSize,
+			},
 		}),
 		select: (data) => ({
 			...data,
@@ -107,23 +114,16 @@ function RouteComponent() {
 		},
 	].filter(({ value }) => isNotNullOrUndefined(value));
 
-	const venueOptions = Array.from(
-		new Set(
-			resultData.data.map(({ venue }) => venue).filter(isNotNullOrUndefined),
-		),
-	).map((name) => ({ display: name, value: name }));
+	const venueOptions = useVenueFilterOptions(true);
+	const divisionOptions = useDivisionFilterOptions(true);
 
-	const divisionOptions = Array.from(
-		new Set(resultData.data.map(({ division }) => division)),
-	).map((name) => ({ display: name, value: name }));
-
-	const filteredResults = resultData.data.filter(
-		({ venue, division }) =>
-			!(
-				(selectedVenue && venue !== selectedVenue) ||
-				(selectedDivisions.length && !selectedDivisions.includes(division))
-			),
-	);
+	// const filteredResults = resultData.data.filter(
+	// 	({ venue, division }) =>
+	// 		!(
+	// 			(selectedVenue && venue !== selectedVenue) ||
+	// 			(selectedDivisions.length && !selectedDivisions.includes(division))
+	// 		),
+	// );
 
 	const info = [
 		{
@@ -224,29 +224,40 @@ function RouteComponent() {
 
 						<div className="flex flex-col space-y-3">
 							<div className="gap-3 flex flex-col sm:flex-row">
-								<ComboBox
-									items={venueOptions}
-									placeholder="All Beaches"
-									className="w-full sm:max-w-xs"
-									onSelectionChange={(key) => {
-										setSelectedVenue(key as string);
-									}}
-								>
-									{({ value, display }) => (
-										<ComboBoxItem id={value}>{display}</ComboBoxItem>
-									)}
-								</ComboBox>
+								<Suspense>
+									<ComboBox
+										selectedKeys={venues}
+										value={venues}
+										multi={true}
+										items={venueOptions}
+										placeholder="All Beaches"
+										className="w-full sm:max-w-xs"
+										onSelectionChange={(key) => {
+											setSelectedVenue(key as string);
+										}}
+									>
+										{({ value, display, link }) => (
+											<ComboBoxItem id={value} link={link}>
+												{display}
+											</ComboBoxItem>
+										)}
+									</ComboBox>
+								</Suspense>
 
-								<Select
-									selectionMode="multiple"
-									options={divisionOptions}
-									placeholder="All Divisions"
-									className="bg-white"
-									containerClassName="w-full sm:max-w-xs"
-									onChange={(keys) => {
-										setSelectedDivisions(keys as string[]);
-									}}
-								/>
+								<Suspense>
+									<Select
+										defaultValue={divisions}
+										value={divisions}
+										selectionMode="multiple"
+										options={divisionOptions}
+										placeholder="All Divisions"
+										className="bg-white"
+										containerClassName="w-full sm:max-w-xs"
+										onChange={(keys) => {
+											setSelectedDivisions(keys as string[]);
+										}}
+									/>
+								</Suspense>
 							</div>
 
 							<Table aria-label="Player's tournament results">
@@ -277,7 +288,7 @@ function RouteComponent() {
 									</TableColumn>
 								</TableHeader>
 
-								<TableBody items={filteredResults}>
+								<TableBody items={resultData.data}>
 									{({
 										id,
 										date,

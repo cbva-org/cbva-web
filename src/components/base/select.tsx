@@ -1,3 +1,4 @@
+import { createLink, Link, type LinkOptions } from "@tanstack/react-router";
 import clsx from "clsx";
 import { Check, ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
@@ -8,6 +9,7 @@ import {
 	type Key,
 	ListBox,
 	ListBoxItem,
+	type ListBoxItemRenderProps,
 	Popover,
 	type SelectionMode,
 	type SelectProps,
@@ -15,6 +17,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { focusRing } from "@/components/base/utils";
+import { dbg } from "@/utils/dbg";
 import {
 	Description,
 	Errors,
@@ -83,6 +86,8 @@ export const popoverStyles = tv({
 	},
 });
 
+const ListBoxItemLink = createLink(ListBoxItem);
+
 export function Select<
 	Value extends Key,
 	Mode extends "single" | "multiple" = "single",
@@ -131,11 +136,25 @@ export function Select<
 						}}
 					>
 						<SelectValue className={valueStyles}>
-							{({ selectedItems, defaultChildren }) =>
-								selectedItems.length
-									? selectedItems.join(", ")
-									: defaultChildren
-							}
+							{({
+								// selectedItems,
+								// selectedItem,
+								defaultChildren,
+								state,
+								// ...rest
+							}) => {
+								const selected = options
+									.filter(({ value }) =>
+										state.selectionManager.selectedKeys.has(value),
+									)
+									.map(({ display }) => display);
+
+								if (selected.length) {
+									return selected.join(", ");
+								}
+
+								return defaultChildren;
+							}}
 						</SelectValue>
 						<ChevronDown
 							aria-hidden
@@ -153,25 +172,44 @@ export function Select<
 							items={options}
 							className="border border-gray-300 outline-0 p-1 shadow-lg rounded-lg bg-popover outline-hidden max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]"
 						>
-							{options.map(({ value, display }) => (
-								<ListBoxItem
-									key={value}
-									id={value}
-									value={display}
-									className={itemStyles}
-								>
-									{({ isSelected }) => (
-										<>
-											<span className="flex items-center flex-1 gap-2 font-normal truncate group-selected:font-semibold">
-												{display}
-											</span>
-											<span className="flex items-center w-5">
-												{isSelected && <Check className="w-4 h-4" />}
-											</span>
-										</>
-									)}
-								</ListBoxItem>
-							))}
+							{options.map(({ value, display, link }) => {
+								const renderFn = ({ isSelected }: ListBoxItemRenderProps) => (
+									<>
+										<span className="flex items-center flex-1 gap-2 font-normal truncate group-selected:font-semibold">
+											{display}
+										</span>
+										<span className="flex items-center w-5">
+											{isSelected && <Check className="w-4 h-4" />}
+										</span>
+									</>
+								);
+
+								if (link) {
+									return (
+										<ListBoxItem key={value} id={value} className={itemStyles}>
+											{({ isSelected }: ListBoxItemRenderProps) => (
+												<Link
+													{...link}
+													className="w-full h-full flex flex-row items-center justify-between"
+												>
+													<span className="flex items-center flex-1 gap-2 font-normal truncate group-selected:font-semibold">
+														{display}
+													</span>
+													<span className="flex items-center w-5">
+														{isSelected && <Check className="w-4 h-4" />}
+													</span>
+												</Link>
+											)}
+										</ListBoxItem>
+									);
+								}
+
+								return (
+									<ListBoxItem key={value} id={value} className={itemStyles}>
+										{renderFn}
+									</ListBoxItem>
+								);
+							})}
 						</ListBox>
 					</Popover>
 				</>
