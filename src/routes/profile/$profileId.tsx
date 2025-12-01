@@ -7,6 +7,7 @@ import { CircleCheckIcon } from "lucide-react";
 import { Suspense, useState } from "react";
 import { titleCase } from "title-case";
 import { ComboBox, ComboBoxItem } from "@/components/base/combo-box";
+import { Pagination } from "@/components/base/pagination";
 import { pill, title } from "@/components/base/primitives";
 import { Select } from "@/components/base/select";
 import {
@@ -29,21 +30,21 @@ import { DefaultLayout } from "@/layouts/default";
 import { isNotNullOrUndefined } from "@/utils/types";
 
 export const Route = createFileRoute("/profile/$profileId")({
-	// validateSearch: (
-	// 	search: Record<string, unknown>,
-	// ): {
-	// 	// page: number;
-	// 	// pageSize: number;
-	// 	divisions: number[];
-	// 	venues: number[];
-	// } => {
-	// 	return {
-	// 		page: Math.max(Number(search?.page ?? 1), 1),
-	// 		pageSize: Math.max(Number(search?.pageSize ?? 25), 25),
-	// 		divisions: Array.isArray(search?.divisions) ? search.divisions : [],
-	// 		venues: Array.isArray(search?.venues) ? search.venues : [],
-	// 	};
-	// },
+	validateSearch: (
+		search: Record<string, unknown>,
+	): {
+		page: number;
+		pageSize: number;
+		// divisions: number[];
+		// venues: number[];
+	} => {
+		return {
+			page: Math.max(Number(search?.page ?? 1), 1),
+			pageSize: Math.max(Number(search?.pageSize ?? 25), 25),
+			// divisions: Array.isArray(search?.divisions) ? search.divisions : [],
+			// venues: Array.isArray(search?.venues) ? search.venues : [],
+		};
+	},
 	loader: async ({ params: { profileId }, context: { queryClient } }) => {
 		const result = await queryClient.ensureQueryData(
 			profileOverviewQueryOptions(Number.parseInt(profileId, 10)),
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/profile/$profileId")({
 
 function RouteComponent() {
 	const { profileId } = Route.useParams();
+	const { page, pageSize } = Route.useSearch();
 
 	const { data: profile } = useSuspenseQuery({
 		...profileOverviewQueryOptions(Number.parseInt(profileId, 10)),
@@ -72,7 +74,10 @@ function RouteComponent() {
 	});
 
 	const { data: results } = useSuspenseQuery({
-		...profileResultsQueryOptions(Number.parseInt(profileId, 10)),
+		...profileResultsQueryOptions(Number.parseInt(profileId, 10), {
+			page,
+			size: pageSize,
+		}),
 		select: (data) =>
 			data.map(({ date, ...rest }) => ({
 				date: dateFormatter.format(parseDate(date).toDate(getLocalTimeZone())),
@@ -296,6 +301,13 @@ function RouteComponent() {
 									}}
 								</TableBody>
 							</Table>
+
+							<Pagination
+								to={Route.fullPath}
+								page={page}
+								pageSize={pageSize}
+								pageInfo={{ totalItems: 100, totalPages: 100 }}
+							/>
 						</div>
 					</div>
 				</div>
