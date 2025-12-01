@@ -98,7 +98,7 @@ export const Input = forwardRef(
 				disabled={!isMounted || props.disabled}
 				className={composeTailwindRenderProps(
 					props.className,
-					"px-2 py-1.5 flex-1 min-w-0 border-0 outline-0 bg-white text-sm text-content-foreground",
+					"px-2 py-1.5 flex-1 min-w-0 border-0 outline-0 bg-white text-sm text-content-foreground placeholder:italic",
 				)}
 			/>
 		);

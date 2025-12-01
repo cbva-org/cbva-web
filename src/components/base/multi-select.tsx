@@ -43,7 +43,7 @@ export function MultiSelect<Value extends Key>({
 
 	return (
 		<div className="flex flex-col space-y-1.5">
-			<Label>{label}</Label>
+			{label && <Label>{label}</Label>}
 
 			<div className="flex flex-row rounded-md bg-white h-12 items-stretch">
 				<div className="flex flex-row space-x-1 px-2 items-center">

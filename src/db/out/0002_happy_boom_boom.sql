@@ -1,1 +1,0 @@
-ALTER TABLE "playoff_matches" DROP COLUMN "round";

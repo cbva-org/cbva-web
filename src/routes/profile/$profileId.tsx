@@ -1,9 +1,19 @@
+import {
+	DateFormatter,
+	getLocalTimeZone,
+	parseDate,
+} from "@internationalized/date";
+import { useDateFormatter } from "@react-aria/i18n";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { round } from "lodash-es";
 import { CircleCheckIcon } from "lucide-react";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import { titleCase } from "title-case";
+import { ComboBox, ComboBoxItem } from "@/components/base/combo-box";
+import { MultiSelect } from "@/components/base/multi-select";
 import { pill, title } from "@/components/base/primitives";
+import { Select } from "@/components/base/select";
 import {
 	Table,
 	TableBody,
@@ -21,8 +31,24 @@ import {
 	profileResultsQueryOptions,
 } from "@/data/profiles";
 import { DefaultLayout } from "@/layouts/default";
+import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 export const Route = createFileRoute("/profile/$profileId")({
+	// validateSearch: (
+	// 	search: Record<string, unknown>,
+	// ): {
+	// 	// page: number;
+	// 	// pageSize: number;
+	// 	divisions: number[];
+	// 	venues: number[];
+	// } => {
+	// 	return {
+	// 		page: Math.max(Number(search?.page ?? 1), 1),
+	// 		pageSize: Math.max(Number(search?.pageSize ?? 25), 25),
+	// 		divisions: Array.isArray(search?.divisions) ? search.divisions : [],
+	// 		venues: Array.isArray(search?.venues) ? search.venues : [],
+	// 	};
+	// },
 	loader: async ({ params: { profileId }, context: { queryClient } }) => {
 		const result = await queryClient.ensureQueryData(
 			profileOverviewQueryOptions(Number.parseInt(profileId, 10)),
@@ -43,8 +69,20 @@ function RouteComponent() {
 		...profileOverviewQueryOptions(Number.parseInt(profileId, 10)),
 	});
 
+	const [selectedVenue, setSelectedVenue] = useState<string | null>(null);
+	const [selectedDivisions, setSelectedDivisions] = useState<string[]>([]);
+
+	const dateFormatter = useDateFormatter({
+		dateStyle: "short",
+	});
+
 	const { data: results } = useSuspenseQuery({
 		...profileResultsQueryOptions(Number.parseInt(profileId, 10)),
+		select: (data) =>
+			data.map(({ date, ...rest }) => ({
+				date: dateFormatter.format(parseDate(date).toDate(getLocalTimeZone())),
+				...rest,
+			})),
 	});
 
 	const accolades = [
@@ -62,9 +100,64 @@ function RouteComponent() {
 		},
 		{
 			label: "Junior Points",
-			value: round(profile?.juniorsPoints),
+			value: profile?.juniorsPoints ? round(profile?.juniorsPoints) : null,
 		},
-	];
+	].filter(({ value }) => isNotNullOrUndefined(value));
+
+	const venueOptions = Array.from(
+		new Set(results.map(({ venue }) => venue).filter(isNotNullOrUndefined)),
+	).map((name) => ({ display: name, value: name }));
+
+	const divisionOptions = Array.from(
+		new Set(results.map(({ division }) => division)),
+	).map((name) => ({ display: name, value: name }));
+
+	const filteredResults = results.filter(
+		({ venue, division }) =>
+			!(
+				(selectedVenue && venue !== selectedVenue) ||
+				(selectedDivisions.length && !selectedDivisions.includes(division))
+			),
+	);
+
+	const info = [
+		{
+			label: "Bio",
+			className: "col-span-full",
+			value: profile.bio,
+		},
+		{
+			label: "Dominant Arm",
+			value: profile.dominantArm,
+			transform: (v: string) => titleCase(v),
+		},
+		{
+			label: "Preferred Role",
+			value: profile.preferredRole,
+			transform: (v: string) => titleCase(v),
+		},
+		{
+			label: "Height",
+			value: profile.heightFeet
+				? `${profile.heightFeet}'${profile.heightInches ? `${profile.heightInches}"` : ""}`
+				: null,
+		},
+		{
+			label: "Preferred Side",
+			value: profile.preferredSide,
+			transform: (v: string) => titleCase(v),
+		},
+		{
+			label: "Club",
+			value: profile.club,
+		},
+		{
+			label: "College Team",
+			value: profile.collegeTeam
+				? `${profile.collegeTeam} ${profile.collegeTeamYearsParticipated ? `(${profile.collegeTeamYearsParticipated}	year(s))` : ""}`
+				: null,
+		},
+	].filter(({ value }) => value !== null);
 
 	return (
 		<DefaultLayout
@@ -74,7 +167,7 @@ function RouteComponent() {
 		>
 			<ImpersonateButton userId={profile?.userId} />
 
-			<Suspense fallback={<>Nope</>}>
+			<Suspense>
 				<div className="px-4 pb-18 max-w-5xl mx-auto flex flex-row space-x-8">
 					<div>
 						<ProfilePhoto {...profile} className="w-48 h-48" />
@@ -91,7 +184,7 @@ function RouteComponent() {
 							</span>
 						</div>
 
-						<div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-between gap-4 sm:w-full">
+						<div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 sm:gap-12 sm:w-full">
 							{accolades.map(({ label, value }) => (
 								<div key={label}>
 									<span className="font-semibold">{label}</span>
@@ -103,68 +196,112 @@ function RouteComponent() {
 						</div>
 					</div>
 				</div>
+				{info.length && (
+					<div className="bg-content-background-alt">
+						<div className="max-w-5xl mx-auto px-4 py-16 grid grid-cols-9 gap-y-8 gap-4">
+							{info.map(
+								({ label, className = "col-span-3", value, transform }) => (
+									<div className={className} key={label}>
+										<span className="font-semibold mb-2">{label}</span>
+										<p>{transform ? transform(value as string) : value}</p>
+									</div>
+								),
+							)}
+						</div>
+					</div>
+				)}
 			</Suspense>
 
 			<Suspense>
 				<div className="flex flex-col space-y-12 bg-content-background w-full py-16">
-					<div className="px-4 max-w-5xl w-full mx-auto">
+					<div className="px-4 max-w-5xl w-full mx-auto flex flex-col space-y-12">
 						<h2 className={title()}>Results</h2>
-						<Table aria-label="Player's tournament results">
-							<TableHeader className="bg-navbar-background">
-								<TableColumn id="date" allowsSorting minWidth={100}>
-									Date
-								</TableColumn>
-								<TableColumn id="tournament" isRowHeader minWidth={100}>
-									Event
-								</TableColumn>
-								<TableColumn id="venue" isRowHeader minWidth={90}>
-									Beach
-								</TableColumn>
-								<TableColumn id="division" isRowHeader minWidth={90}>
-									Division
-								</TableColumn>
-								<TableColumn id="players" isRowHeader minWidth={90}>
-									Players
-								</TableColumn>
-								<TableColumn id="finish" isRowHeader minWidth={90}>
-									Finish
-								</TableColumn>
-								<TableColumn id="rating" isRowHeader minWidth={90}>
-									Rating
-								</TableColumn>
-								<TableColumn id="points" isRowHeader minWidth={90}>
-									Points
-								</TableColumn>
-							</TableHeader>
-							<TableBody items={results}>
-								{({
-									id,
-									date,
-									event,
-									venue,
-									division,
-									players,
-									finish,
-									rating,
-									points,
-								}) => {
-									return (
-										<TableRow key={id}>
-											<TableCell>{date}</TableCell>
-											<TableCell>{event}</TableCell>
-											<TableCell>{venue}</TableCell>
-											<TableCell>{division}</TableCell>
-											<TableCell>
-												<TeamNames players={players} />
-											</TableCell>
-											<TableCell>{finish}</TableCell>
-											<TableCell>{rating}</TableCell>
-											<TableCell>{points}</TableCell>
-										</TableRow>
-									);
-								}}
-							</TableBody>
-						</Table>
+
+						<div className="flex flex-col space-y-3">
+							<div className="gap-3 flex flex-col sm:flex-row">
+								<ComboBox
+									items={venueOptions}
+									placeholder="All Beaches"
+									className="w-full sm:max-w-xs"
+									onSelectionChange={(key) => {
+										setSelectedVenue(key as string);
+									}}
+								>
+									{({ value, display }) => (
+										<ComboBoxItem id={value}>{display}</ComboBoxItem>
+									)}
+								</ComboBox>
+
+								<Select
+									selectionMode="multiple"
+									options={divisionOptions}
+									placeholder="All Divisions"
+									className="bg-white"
+									containerClassName="w-full sm:max-w-xs"
+									onChange={(keys) => {
+										setSelectedDivisions(keys as string[]);
+									}}
+								/>
+							</div>
+
+							<Table aria-label="Player's tournament results">
+								<TableHeader className="bg-navbar-background">
+									<TableColumn id="date" allowsSorting minWidth={100}>
+										Date
+									</TableColumn>
+									<TableColumn id="tournament" isRowHeader minWidth={100}>
+										Event
+									</TableColumn>
+									<TableColumn id="venue" isRowHeader minWidth={90}>
+										Beach
+									</TableColumn>
+									<TableColumn id="division" isRowHeader minWidth={90}>
+										Division
+									</TableColumn>
+									<TableColumn id="players" isRowHeader minWidth={90}>
+										Players
+									</TableColumn>
+									<TableColumn id="finish" isRowHeader minWidth={90}>
+										Finish
+									</TableColumn>
+									<TableColumn id="rating" isRowHeader minWidth={90}>
+										Rating
+									</TableColumn>
+									<TableColumn id="points" isRowHeader minWidth={90}>
+										Points
+									</TableColumn>
+								</TableHeader>
+
+								<TableBody items={filteredResults}>
+									{({
+										id,
+										date,
+										event,
+										venue,
+										division,
+										players,
+										finish,
+										rating,
+										points,
+									}) => {
+										return (
+											<TableRow key={id}>
+												<TableCell>{date}</TableCell>
+												<TableCell>{event}</TableCell>
+												<TableCell>{venue}</TableCell>
+												<TableCell>{division}</TableCell>
+												<TableCell>
+													<TeamNames players={players} />
+												</TableCell>
+												<TableCell>{finish}</TableCell>
+												<TableCell>{rating}</TableCell>
+												<TableCell>{points}</TableCell>
+											</TableRow>
+										);
+									}}
+								</TableBody>
+							</Table>
+						</div>
 					</div>
 				</div>
 			</Suspense>

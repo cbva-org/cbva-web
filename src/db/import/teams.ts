@@ -192,7 +192,9 @@ export async function importTeamsForYear(
 					seed: t.seed,
 					finish: t.finish,
 					pointsEarned: t.pointsEarned,
-					ratingEarned: t.ratingEarned,
+					levelEarnedId: t.ratingEarned
+						? levels.get(mapDivision(t.ratingEarned))!
+						: null,
 					status: mapTeamStatus(t.status),
 					externalRef: t.id,
 					poolTeam: t.poolId

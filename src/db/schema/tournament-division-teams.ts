@@ -5,12 +5,11 @@ import {
 	integer,
 	pgTable,
 	serial,
-	text,
 	uuid,
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
-
+import { levels } from "./levels";
 import { poolTeams } from "./pool-teams";
 import { teamStatusEnum } from "./shared";
 import { teams } from "./teams";
@@ -32,7 +31,7 @@ export const tournamentDivisionTeams = pgTable("tournament_division_teams", {
 	playoffsSeed: integer(),
 	wildcard: boolean(),
 	pointsEarned: doublePrecision(),
-	ratingEarned: text(),
+	levelEarnedId: integer().references(() => levels.id),
 	status: teamStatusEnum().notNull().default("registered"),
 	externalRef: uuid().unique(),
 });
@@ -73,6 +72,10 @@ export const tournamentDivisionTeamsRelations = relations(
 		poolTeam: one(poolTeams, {
 			fields: [tournamentDivisionTeams.id],
 			references: [poolTeams.teamId],
+		}),
+		levelEarned: one(levels, {
+			fields: [tournamentDivisionTeams.levelEarnedId],
+			references: [levels.id],
 		}),
 	}),
 );

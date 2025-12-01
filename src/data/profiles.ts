@@ -1,3 +1,4 @@
+import { DateFormatter, parseDate } from "@internationalized/date";
 import {
 	queryOptions,
 	useMutation,
@@ -174,6 +175,7 @@ const getProfileResults = createServerFn({
 						},
 						tournamentDivisionTeams: {
 							with: {
+								levelEarned: true,
 								tournamentDivision: {
 									with: {
 										division: true,
@@ -227,7 +229,7 @@ const getProfileResults = createServerFn({
 							: (tdt.tournamentDivision.division.name.toUpperCase() ?? "-"),
 						players: t.team.players, //.map(({ profile }) => profile),
 						finish: tdt.finish,
-						rating: tdt.ratingEarned?.toUpperCase() ?? "-",
+						rating: tdt.levelEarned?.name.toUpperCase() ?? "-",
 						points: tdt.pointsEarned ? round(tdt.pointsEarned) : "-",
 					};
 				}),

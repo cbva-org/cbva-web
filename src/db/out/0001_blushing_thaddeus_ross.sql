@@ -1,1 +1,0 @@
-ALTER TABLE "tournament_division_teams" ADD COLUMN "wildcard" boolean;

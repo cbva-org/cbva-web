@@ -9,6 +9,7 @@ import {
 	ListBox,
 	ListBoxItem,
 	Popover,
+	type SelectionMode,
 	type SelectProps,
 	SelectValue,
 } from "react-aria-components";
@@ -29,12 +30,16 @@ export type Option<Value extends Key> = {
 	beforeDisplay?: ReactNode;
 };
 
-export type SelectFieldProps<Value extends Key> = SelectProps<Option<Value>> & {
+export type SelectFieldProps<
+	Value extends Key,
+	Mode extends "single" | "multiple" = "single",
+> = SelectProps<Option<Value>, Mode> & {
 	label?: ReactNode;
 	description?: ReactNode;
 	name?: string;
 	isInvalid?: boolean;
 	options: Option<Value>[];
+	containerClassName?: string;
 };
 
 export const itemStyles = tv({
@@ -57,6 +62,15 @@ export const itemStyles = tv({
 	],
 });
 
+export const valueStyles = tv({
+	base: "flex-1 text-sm placeholder-shown:italic placeholder-shown:text-placeholder",
+	variants: {
+		isPlaceholder: {
+			true: "text-placeholder italic",
+		},
+	},
+});
+
 export const popoverStyles = tv({
 	base: "bg-white forced-colors:bg-[Canvas] shadow-2xl rounded-xl bg-clip-padding border border-black/10 text-popover-foreground",
 	variants: {
@@ -69,7 +83,10 @@ export const popoverStyles = tv({
 	},
 });
 
-export function Select<Value extends Key>({
+export function Select<
+	Value extends Key,
+	Mode extends "single" | "multiple" = "single",
+>({
 	label,
 	description,
 	placeholder,
@@ -78,11 +95,13 @@ export function Select<Value extends Key>({
 	onBlur,
 	isInvalid,
 	className,
+	containerClassName,
 	...props
-}: SelectFieldProps<Value>) {
+}: SelectFieldProps<Value, Mode>) {
 	return (
 		<AriaSelect
 			{...props}
+			className={containerClassName}
 			name={name}
 			onOpenChange={(open) => {
 				if (!open && onBlur) {
@@ -90,6 +109,7 @@ export function Select<Value extends Key>({
 				}
 			}}
 			isInvalid={isInvalid}
+			placeholder={placeholder}
 		>
 			{({ isOpen }) => (
 				<>
@@ -110,7 +130,13 @@ export function Select<Value extends Key>({
 							}
 						}}
 					>
-						<SelectValue className="flex-1 text-sm placeholder-shown:italic placeholder-shown:text-placeholder" />
+						<SelectValue className={valueStyles}>
+							{({ selectedItems, defaultChildren }) =>
+								selectedItems.length
+									? selectedItems.join(", ")
+									: defaultChildren
+							}
+						</SelectValue>
 						<ChevronDown
 							aria-hidden
 							className="mx-2 w-4 h-4 text-gray-600 forced-colors:text-[ButtonText] group-disabled:text-gray-200 forced-colors:group-disabled:text-[GrayText]"
@@ -128,7 +154,12 @@ export function Select<Value extends Key>({
 							className="border border-gray-300 outline-0 p-1 shadow-lg rounded-lg bg-popover outline-hidden max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]"
 						>
 							{options.map(({ value, display }) => (
-								<ListBoxItem key={value} id={value} className={itemStyles}>
+								<ListBoxItem
+									key={value}
+									id={value}
+									value={display}
+									className={itemStyles}
+								>
 									{({ isSelected }) => (
 										<>
 											<span className="flex items-center flex-1 gap-2 font-normal truncate group-selected:font-semibold">

@@ -26,22 +26,5 @@ services:
       - -c
       - listen_addresses=*
 
-  e2e_postgres:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: e2e
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - 5555:5432
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    tmpfs:
-      - /tmp
-    command:
-      - -c
-      - listen_addresses=*
-
 volumes:
   postgres_data:
-  e2e_postgres_data:

@@ -61,7 +61,7 @@ const links: {
 ];
 
 const linkClassName =
-	"uppercase text-navbar-foreground hover:bg-navbar-foreground hover:text-navbar-foreground-hover px-3 py-1 font-bold tracking-wide";
+	"uppercase text-navbar-foreground outline-none hover:bg-navbar-foreground hover:text-navbar-foreground-hover px-3 py-1 font-bold tracking-wide";
 
 export function Navbar() {
 	const viewerId = useViewerId();

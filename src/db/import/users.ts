@@ -18,7 +18,9 @@ export async function importUsers(levels: Map<string, number>) {
 	});
 
 	const existing = existingUsers.map(({ id }) => id);
-	const existingPhones = new Set(existingUsers.map(({ phoneNumber }) => phone));
+	const existingPhones = new Set(
+		existingUsers.map(({ phoneNumber }) => phoneNumber),
+	);
 
 	// while (hasMore) {
 	const legacyUsers = await legacy.query.users.findMany({

@@ -1,1 +1,0 @@
-ALTER TABLE "divisions" ADD COLUMN "display" text;

@@ -59,7 +59,7 @@ export function ComboBox<T extends Key>({
 				"group flex flex-col gap-1",
 			)}
 		>
-			<Label>{label}</Label>
+			{label && <Label>{label}</Label>}
 			<FieldGroup>
 				<Input placeholder={placeholder} ref={inputRef} />
 				<Button
