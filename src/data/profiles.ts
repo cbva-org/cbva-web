@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { and, desc, eq, inArray, not } from "drizzle-orm";
+import { and, count, desc, eq, inArray, not } from "drizzle-orm";
 import { round } from "lodash-es";
 import { titleCase } from "title-case";
 import z from "zod";
@@ -182,6 +182,28 @@ const getProfileResults = createServerFn({
 	.handler(async ({ data: { id, paging } }) => {
 		const { limit, offset } = getLimitAndOffset(paging);
 
+		// Shared where condition
+		const whereCondition = and(
+			eq(tournamentDivisionTeams.status, "confirmed"),
+			inArray(
+				tournamentDivisionTeams.teamId,
+				db
+					.select({ teamId: teamPlayers.teamId })
+					.from(teamPlayers)
+					.where(eq(teamPlayers.playerProfileId, id)),
+			),
+		);
+
+		// Get total count
+		const [totalResult] = await db
+			.select({ count: count() })
+			.from(tournamentDivisionTeams)
+			.innerJoin(teams, eq(tournamentDivisionTeams.teamId, teams.id))
+			.where(whereCondition);
+
+		const totalItems = totalResult.count;
+		const totalPages = Math.ceil(totalItems / paging.size);
+
 		// Main query to get tournament results with pagination
 		const results = await db
 			.select({
@@ -216,18 +238,7 @@ const getProfileResults = createServerFn({
 			.innerJoin(divisions, eq(tournamentDivisions.divisionId, divisions.id))
 			.innerJoin(venues, eq(tournaments.venueId, venues.id))
 			.leftJoin(levels, eq(tournamentDivisionTeams.levelEarnedId, levels.id))
-			.where(
-				and(
-					eq(tournamentDivisionTeams.status, "confirmed"),
-					inArray(
-						tournamentDivisionTeams.teamId,
-						db
-							.select({ teamId: teamPlayers.teamId })
-							.from(teamPlayers)
-							.where(eq(teamPlayers.playerProfileId, id)),
-					),
-				),
-			)
+			.where(whereCondition)
 			.orderBy(desc(tournaments.date))
 			.limit(limit)
 			.offset(offset);
@@ -275,7 +286,7 @@ const getProfileResults = createServerFn({
 			partnersByTeam.get(partner.teamId)?.push(partner);
 		}
 
-		return results.map((result) => {
+		const data = results.map((result) => {
 			const tournamentDivision = {
 				name: result.tournamentDivisionName,
 				gender: result.tournamentDivisionGender,
@@ -310,6 +321,14 @@ const getProfileResults = createServerFn({
 				points: result.pointsEarned ? round(result.pointsEarned) : "-",
 			};
 		});
+
+		return {
+			data,
+			pageInfo: {
+				totalItems,
+				totalPages,
+			},
+		};
 	});
 
 export const profileResultsQueryOptions = (

@@ -34,13 +34,13 @@ export const Route = createFileRoute("/profile/$profileId")({
 		search: Record<string, unknown>,
 	): {
 		page: number;
-		pageSize: number;
+		// pageSize: number;
 		// divisions: number[];
 		// venues: number[];
 	} => {
 		return {
 			page: Math.max(Number(search?.page ?? 1), 1),
-			pageSize: Math.max(Number(search?.pageSize ?? 25), 25),
+			// pageSize: Math.max(Number(search?.pageSize ?? 25), 25),
 			// divisions: Array.isArray(search?.divisions) ? search.divisions : [],
 			// venues: Array.isArray(search?.venues) ? search.venues : [],
 		};
@@ -60,7 +60,8 @@ export const Route = createFileRoute("/profile/$profileId")({
 
 function RouteComponent() {
 	const { profileId } = Route.useParams();
-	const { page, pageSize } = Route.useSearch();
+	const { page } = Route.useSearch();
+	const pageSize = 5;
 
 	const { data: profile } = useSuspenseQuery({
 		...profileOverviewQueryOptions(Number.parseInt(profileId, 10)),
@@ -73,16 +74,18 @@ function RouteComponent() {
 		dateStyle: "short",
 	});
 
-	const { data: results } = useSuspenseQuery({
+	const { data: resultData } = useSuspenseQuery({
 		...profileResultsQueryOptions(Number.parseInt(profileId, 10), {
 			page,
 			size: pageSize,
 		}),
-		select: (data) =>
-			data.map(({ date, ...rest }) => ({
+		select: (data) => ({
+			...data,
+			data: data.data.map(({ date, ...rest }) => ({
 				date: dateFormatter.format(parseDate(date).toDate(getLocalTimeZone())),
 				...rest,
 			})),
+		}),
 	});
 
 	const accolades = [
@@ -105,14 +108,16 @@ function RouteComponent() {
 	].filter(({ value }) => isNotNullOrUndefined(value));
 
 	const venueOptions = Array.from(
-		new Set(results.map(({ venue }) => venue).filter(isNotNullOrUndefined)),
+		new Set(
+			resultData.data.map(({ venue }) => venue).filter(isNotNullOrUndefined),
+		),
 	).map((name) => ({ display: name, value: name }));
 
 	const divisionOptions = Array.from(
-		new Set(results.map(({ division }) => division)),
+		new Set(resultData.data.map(({ division }) => division)),
 	).map((name) => ({ display: name, value: name }));
 
-	const filteredResults = results.filter(
+	const filteredResults = resultData.data.filter(
 		({ venue, division }) =>
 			!(
 				(selectedVenue && venue !== selectedVenue) ||
@@ -306,7 +311,7 @@ function RouteComponent() {
 								to={Route.fullPath}
 								page={page}
 								pageSize={pageSize}
-								pageInfo={{ totalItems: 100, totalPages: 100 }}
+								pageInfo={resultData.pageInfo}
 							/>
 						</div>
 					</div>
