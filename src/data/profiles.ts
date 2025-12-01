@@ -171,7 +171,7 @@ export const profileOverviewQueryOptions = (id: number) =>
 		queryFn: () => getProfileOverview({ data: { id } }),
 	});
 
-const getProfileResults = createServerFn({
+export const getProfileResults = createServerFn({
 	method: "GET",
 })
 	.inputValidator(
@@ -191,8 +191,8 @@ const getProfileResults = createServerFn({
 		}) => {
 			const { limit, offset } = getLimitAndOffset(paging);
 
-			// Shared where condition
-			const whereCondition = and(
+			// Build filter conditions
+			const filters = [
 				eq(tournamentDivisionTeams.status, "confirmed"),
 				inArray(
 					tournamentDivisionTeams.teamId,
@@ -201,13 +201,39 @@ const getProfileResults = createServerFn({
 						.from(teamPlayers)
 						.where(eq(teamPlayers.playerProfileId, id)),
 				),
-			);
+			];
+
+			console.log({ venueIds, divisionIds });
+
+			// Add venue filter if provided
+			if (venueIds.length > 0) {
+				filters.push(inArray(tournaments.venueId, venueIds));
+			}
+
+			// Add division filter if provided
+			if (divisionIds.length > 0) {
+				filters.push(inArray(tournamentDivisions.divisionId, divisionIds));
+			}
+
+			// Shared where condition
+			const whereCondition = and(...filters);
 
 			// Get total count
 			const [totalResult] = await db
 				.select({ count: count() })
 				.from(tournamentDivisionTeams)
 				.innerJoin(teams, eq(tournamentDivisionTeams.teamId, teams.id))
+				.innerJoin(
+					tournamentDivisions,
+					eq(
+						tournamentDivisionTeams.tournamentDivisionId,
+						tournamentDivisions.id,
+					),
+				)
+				.innerJoin(
+					tournaments,
+					eq(tournamentDivisions.tournamentId, tournaments.id),
+				)
 				.where(whereCondition);
 
 			const totalItems = totalResult.count;

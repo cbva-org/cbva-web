@@ -63,7 +63,7 @@ export const Route = createFileRoute("/profile/$profileId")({
 function RouteComponent() {
 	const { profileId } = Route.useParams();
 	const { page, venues, divisions } = Route.useSearch();
-	const pageSize = 5;
+	const pageSize = 25;
 
 	const { data: profile } = useSuspenseQuery({
 		...profileOverviewQueryOptions(Number.parseInt(profileId, 10)),

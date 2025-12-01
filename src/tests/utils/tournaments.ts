@@ -37,7 +37,7 @@ export async function bootstrapTournament(
 		}[];
 	} & (
 		| { poolMatches: false; simulatePoolMatches: false }
-		| { poolMatches: true; simulatePoolMatches: true }
+		| { poolMatches: true; simulatePoolMatches: boolean }
 	),
 ) {
 	const venueId = config.venue ?? (await getDefaultVenue(db)).id;
