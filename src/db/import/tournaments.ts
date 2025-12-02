@@ -3,9 +3,12 @@ import { db } from "../connection";
 import { legacy } from "../legacy";
 import * as legacyTables from "../legacy/schema/tables";
 import {
+	type CreateTournamentDivisionRequirement,
 	type Tournament,
 	type TournamentDivision,
+	type TournamentDivisionRequirement,
 	tournamentDirectors,
+	tournamentDivisionRequirements,
 	tournamentDivisions,
 	tournaments,
 } from "../schema";
@@ -125,29 +128,40 @@ export async function importTournamentsForYear(
 		return memo;
 	}, new Map<string, number>());
 
-	const divisionsToCreate: (typeof tournamentDivisions.$inferInsert)[] =
-		Array.from(
-			Object.entries(groupBy(batch, (t) => toKey(t.beachId, t.startAt))),
-		).flatMap(([key, t]) => {
-			const tournamentId = createdMap.get(
-				key,
-			) as TournamentDivision["tournamentId"];
+	const divisionsToCreate: (typeof tournamentDivisions.$inferInsert & {
+		requirements:
+			| Omit<CreateTournamentDivisionRequirement, "tournamentDivisionId">[]
+			| null;
+	})[] = Array.from(
+		Object.entries(groupBy(batch, (t) => toKey(t.beachId, t.startAt))),
+	).flatMap(([key, t]) => {
+		const tournamentId = createdMap.get(
+			key,
+		) as TournamentDivision["tournamentId"];
 
-			if (!tournamentId) {
-				throw new Error("no tournament id");
-			}
+		if (!tournamentId) {
+			throw new Error("no tournament id");
+		}
 
-			return t.map((t) => ({
-				tournamentId,
-				divisionId: divisions.get(
-					mapDivision(t.division),
-				) as TournamentDivision["divisionId"],
-				gender: t.gender.toLowerCase() as TournamentDivision["gender"],
-				name: t.name,
-				teamSize: t.teamSize,
-				externalRef: t.id,
-			}));
-		});
+		return t.map((t) => ({
+			tournamentId,
+			divisionId: divisions.get(
+				mapDivision(t.division),
+			) as TournamentDivision["divisionId"],
+			gender: t.gender.toLowerCase() as TournamentDivision["gender"],
+			name: t.name,
+			teamSize: t.teamSize,
+			externalRef: t.id,
+			requirements:
+				t.requirements?.map(({ minimum, gender, division }) => ({
+					gender: gender.toLowerCase() as TournamentDivision["gender"],
+					minimum,
+					qualifiedDivisionId: divisions.get(
+						mapDivision(division),
+					) as TournamentDivisionRequirement["qualifiedDivisionId"],
+				})) ?? null,
+		}));
+	});
 
 	const groups = groupBy(divisionsToCreate, (td) =>
 		[td.tournamentId, td.divisionId, td.gender, td.name].join(":"),
@@ -159,16 +173,33 @@ export async function importTournamentsForYear(
 		const result = await db
 			.insert(tournamentDivisions)
 			.values(
-				divisionsToCreate,
+				divisionsToCreate.map(({ requirements, ...div }) => div),
 				// uniqBy(divisionsToCreate, (td) =>
 				//   [td.tournamentId, td.divisionId, td.gender, td.name].join(":"),
 				// ),
 			)
-			.onConflictDoNothing()
+			// .onConflictDoNothing()
 			.returning({ id: tournamentDivisions.id });
 
+		const requirementsToCreate: CreateTournamentDivisionRequirement[] =
+			result.flatMap(
+				({ id }, i) =>
+					divisionsToCreate[i].requirements?.map((req) => ({
+						...req,
+						tournamentDivisionId: id,
+					})) ?? [],
+			);
+
+		if (requirementsToCreate.length) {
+			await db
+				.insert(tournamentDivisionRequirements)
+				.values(requirementsToCreate)
+				// .onConflictDoNothing()
+				.returning({ id: tournamentDivisions.id });
+		}
+
 		console.log(
-			`Created ${created.length} tournaments and ${result.length} divisions`,
+			`Created ${created.length} tournaments and ${result.length} divisions with ${requirementsToCreate.length} special requirements`,
 		);
 	} catch (e) {
 		console.error("FAILURE: ", e);

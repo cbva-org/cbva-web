@@ -261,7 +261,8 @@ CREATE TABLE "tournament_division_requirements" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"tournament_division_id" integer NOT NULL,
 	"gender" "gender",
-	"qualified_division_id" integer
+	"qualified_division_id" integer,
+	"minimum" integer
 );
 --> statement-breakpoint
 CREATE TABLE "tournament_division_teams" (

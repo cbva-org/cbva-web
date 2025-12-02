@@ -1,5 +1,5 @@
 {
-  "id": "e77ffad7-e794-4de9-a034-e51558b68891",
+  "id": "95d700b7-85b9-470d-98f7-05d6f801cef9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2170,6 +2170,12 @@
         },
         "qualified_division_id": {
           "name": "qualified_division_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "minimum": {
+          "name": "minimum",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
