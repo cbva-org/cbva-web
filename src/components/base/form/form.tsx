@@ -4,6 +4,7 @@ import { type ReactNode, useState } from "react";
 import { Heading } from "react-aria-components";
 import { type AlertProps, Alert as BaseAlert } from "@/components/base/alert";
 import { Button, type ButtonProps } from "@/components/base/button";
+import { dbg } from "@/utils/dbg";
 import { Modal } from "../modal";
 import { title } from "../primitives";
 import { CheckboxField } from "./fields/checkbox";
@@ -31,7 +32,9 @@ function Footer({
 	children: ReactNode;
 }) {
 	return (
-		<div className={clsx("mt-4 flex gap-4 justify-end", className)}>
+		<div
+			className={clsx("mt-4 flex gap-4 justify-end col-span-full", className)}
+		>
 			{children}
 		</div>
 	);
@@ -84,6 +87,9 @@ function ConfirmSubmitButton({
 	className,
 	description,
 	children = <>Submit</>,
+	variant,
+	color,
+	size,
 	...props
 }: Omit<ButtonProps, "type" | "children"> & {
 	description: ReactNode;
@@ -99,10 +105,12 @@ function ConfirmSubmitButton({
 			children={([canSubmit, isSubmitting]) => (
 				<>
 					<Button
-						color="primary"
+						color={color ?? "primary"}
 						onPress={() => setOpen(true)}
 						className={clsx(className)}
 						isDisabled={!canSubmit || isSubmitting || isDisabled}
+						variant={variant}
+						size={size}
 						{...props}
 					>
 						{children}

@@ -17,6 +17,7 @@ export const tournamentDivisionRequirements = pgTable(
 			.references(() => tournamentDivisions.id, { onDelete: "cascade" }),
 		gender: genderEnum(),
 		qualifiedDivisionId: integer().references(() => divisions.id),
+		minimum: integer(),
 	},
 	(table) => [
 		index("tournament_division_req_idx").on(table.tournamentDivisionId),

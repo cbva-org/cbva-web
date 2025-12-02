@@ -52,8 +52,6 @@ export function ComboBox<T extends Key>({
 
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	console.log(props);
-
 	return (
 		<AriaComboBox
 			{...props}

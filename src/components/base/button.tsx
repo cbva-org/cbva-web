@@ -20,7 +20,13 @@ export interface ButtonProps extends ButtonVariants, RACButtonProps {
 
 export const button = tv({
 	extend: focusRing,
-	base: ["inline-flex", "items-center", "justify-center", "gap-2"],
+	base: [
+		"inline-flex",
+		"items-center",
+		"justify-center",
+		"gap-2",
+		"no-underline",
+	],
 	variants: {
 		variant: {
 			solid: [],

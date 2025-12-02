@@ -2,6 +2,9 @@ import { getLocalTimeZone, parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import clsx from "clsx";
+import { AlertTriangleIcon, ConstructionIcon } from "lucide-react";
+import { useViewerIsAdmin } from "@/auth/shared";
 import { button } from "@/components/base/button";
 import { Checkbox } from "@/components/base/checkbox";
 import { Pagination } from "@/components/base/pagination";
@@ -159,8 +162,9 @@ function TournamentListItem({
 	name,
 	date,
 	venue,
+	visible,
 	tournamentDivisions,
-}: Pick<Tournament, "id" | "name" | "date"> & {
+}: Pick<Tournament, "id" | "name" | "date" | "visible"> & {
 	venue: Pick<Venue, "id" | "name" | "city">;
 } & {
 	tournamentDivisions: (Pick<
@@ -176,18 +180,32 @@ function TournamentListItem({
 
 	return (
 		<div className="rounded-md overflow-hidden">
-			<div className="w-full px-2 py-1 bg-navbar-background text-navbar-foreground">
+			<div
+				className={clsx(
+					"w-full px-2 py-1 ",
+					visible
+						? "bg-navbar-background text-navbar-foreground"
+						: "bg-orange-300 text-content-foreground",
+				)}
+			>
 				<Link
 					className="font-semibold hover:underline w-full flex flex-col"
-					to="/tournaments/$tournamentId/$divisionId/{-$tab}"
+					to="/tournaments/$tournamentId/"
 					params={{ tournamentId: id.toString() }}
 				>
 					{name && <span className="font-semibold text-lg">{name}</span>}
 					<span className="flex flex-row justify-between">
-						<span className="font-semibold">
-							{venue?.name}, {venue?.city}
+						<span className="flex flex-row gap-2 items-center">
+							{!visible && <ConstructionIcon size={18} />}
+							<span className="font-semibold">
+								{venue?.name}, {venue?.city}
+							</span>
 						</span>
-						<span className="text-gray-300">
+						<span
+							className={clsx(
+								visible ? "text-gray-300" : "text-content-foreground",
+							)}
+						>
 							{dateFormatter.format(parsedDate.toDate(getLocalTimeZone()))}
 						</span>
 					</span>

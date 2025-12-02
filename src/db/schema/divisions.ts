@@ -9,7 +9,7 @@ const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 
 export const divisions = pgTable("divisions", {
 	id: serial().primaryKey(),
-	name: text().notNull(),
+	name: text().unique().notNull(),
 	display: text(),
 	order: integer().notNull(),
 	maxAge: integer(),

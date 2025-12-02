@@ -1,17 +1,18 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { setResponseStatus } from "@tanstack/react-start/server";
+import { isEmpty } from "lodash-es";
 import { db } from "@/db/connection";
 import { authClient } from "./client";
 import type { Permissions, Role } from "./permissions";
 import { getViewer } from "./server";
 
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
-	const viewer = await getViewer();
+	const { impersonatedBy, ...viewer } = await getViewer();
 
 	return await next({
 		context: {
-			viewer: viewer
+			viewer: !isEmpty(viewer)
 				? {
 						id: viewer.id,
 						name: viewer.name,
@@ -22,7 +23,7 @@ export const authMiddleware = createMiddleware().server(async ({ next }) => {
 						phoneNumberVerified: viewer.phoneNumberVerified,
 					}
 				: undefined,
-			impersonatorId: viewer?.impersonatedBy,
+			impersonatorId: impersonatedBy,
 		},
 	});
 });

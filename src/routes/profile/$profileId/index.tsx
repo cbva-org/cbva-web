@@ -3,10 +3,13 @@ import { useDateFormatter } from "@react-aria/i18n";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { round } from "lodash-es";
-import { CircleCheckIcon } from "lucide-react";
-import { Suspense, useState } from "react";
+import { CircleCheckIcon, EditIcon } from "lucide-react";
+import { Suspense } from "react";
 import { titleCase } from "title-case";
+import { useViewer, useViewerHasPermission } from "@/auth/shared";
+import { button } from "@/components/base/button";
 import { ComboBox, ComboBoxItem } from "@/components/base/combo-box";
+import { Link } from "@/components/base/link";
 import { Pagination } from "@/components/base/pagination";
 import { pill, title } from "@/components/base/primitives";
 import { Select } from "@/components/base/select";
@@ -29,10 +32,9 @@ import {
 } from "@/data/profiles";
 import { useVenueFilterOptions } from "@/data/venues";
 import { DefaultLayout } from "@/layouts/default";
-import { dbg } from "@/utils/dbg";
 import { isNotNullOrUndefined } from "@/utils/types";
 
-export const Route = createFileRoute("/profile/$profileId")({
+export const Route = createFileRoute("/profile/$profileId/")({
 	validateSearch: (
 		search: Record<string, unknown>,
 	): {
@@ -85,7 +87,7 @@ function RouteComponent() {
 			},
 		}),
 		select: (data) => ({
-			...dbg(data),
+			...data,
 			data: data.data.map(({ date, ...rest }) => ({
 				date: dateFormatter.format(parseDate(date).toDate(getLocalTimeZone())),
 				...rest,
@@ -154,18 +156,43 @@ function RouteComponent() {
 		},
 	].filter(({ value }) => value !== null);
 
+	const viewer = useViewer();
+
+	const isViewer = viewer && viewer.id === profile.userId;
+
+	const canEdit = useViewerHasPermission({
+		user: ["update"],
+	});
+
 	return (
 		<DefaultLayout
 			classNames={{
 				content: "pt-18 w-full relative bg-white",
 			}}
 		>
-			<ImpersonateButton userId={profile?.userId} />
+			<div className="flex flex-row gap-2 absolute top-6 right-6">
+				<ImpersonateButton userId={profile?.userId} />
+				{(isViewer || canEdit) && (
+					<Link
+						className={button({ color: "secondary" })}
+						to="/profile/$profileId/edit"
+						params={{
+							profileId: profile.id.toString(),
+						}}
+					>
+						<EditIcon size={14} className="mr -ml" />
+						Edit
+					</Link>
+				)}
+			</div>
 
 			<Suspense>
 				<div className="px-4 pb-18 max-w-5xl mx-auto flex flex-row space-x-8">
 					<div>
-						<ProfilePhoto {...profile} className="w-48 h-48" />
+						<ProfilePhoto
+							{...profile}
+							className="w-48 min-w-48 h-48 min-h-48"
+						/>
 					</div>
 
 					<div className="flex flex-col space-y-4 w-full items-start sm:items-stretch">

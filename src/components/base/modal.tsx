@@ -1,11 +1,17 @@
+import clsx from "clsx";
+import { XIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import {
 	Dialog,
 	type DialogProps,
+	Heading,
 	ModalOverlay,
 	type ModalOverlayProps,
 	Modal as RACModal,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import { Button } from "./button";
+import { type TitleProps, title } from "./primitives";
 
 const overlayStyles = tv({
 	base: "fixed top-0 left-0 w-full h-(--visual-viewport-height) isolate z-20 bg-black/[15%] flex items-center justify-center p-4 text-center backdrop-blur-lg",
@@ -67,5 +73,27 @@ export function Modal({
 				<Dialog children={children} />
 			</RACModal>
 		</ModalOverlay>
+	);
+}
+
+export type ModalHeadingProps = TitleProps & {
+	children: ReactNode;
+};
+
+export function ModalHeading({ children, ...props }: ModalHeadingProps) {
+	return (
+		<Heading
+			className={clsx(
+				title(props),
+				"flex flex-row justify-between items-center w-full",
+			)}
+			slot="title"
+		>
+			<span>{children}</span>
+
+			<Button variant="text" slot="close">
+				<XIcon size={16} />
+			</Button>
+		</Heading>
 	);
 }

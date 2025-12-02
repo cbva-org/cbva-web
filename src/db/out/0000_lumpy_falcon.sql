@@ -87,7 +87,8 @@ CREATE TABLE "divisions" (
 	"name" text NOT NULL,
 	"display" text,
 	"order" integer NOT NULL,
-	"max_age" integer
+	"max_age" integer,
+	CONSTRAINT "divisions_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "files" (

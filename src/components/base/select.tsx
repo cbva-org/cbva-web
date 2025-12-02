@@ -1,4 +1,9 @@
-import { createLink, Link, type LinkOptions } from "@tanstack/react-router";
+import {
+	createLink,
+	Link,
+	type LinkOptions,
+	useRouter,
+} from "@tanstack/react-router";
 import clsx from "clsx";
 import { Check, ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
@@ -26,10 +31,10 @@ import {
 	Label,
 } from "./form/fields/shared";
 
-export type Option<Value extends Key> = {
+export type Option<Value extends Key, Link extends boolean = false> = {
 	value: Value;
 	display: string;
-	link?: LinkOptions;
+	link: Link extends true ? LinkOptions : undefined;
 	beforeDisplay?: ReactNode;
 };
 
@@ -103,6 +108,8 @@ export function Select<
 	containerClassName,
 	...props
 }: SelectFieldProps<Value, Mode>) {
+	const router = useRouter();
+
 	return (
 		<AriaSelect
 			{...props}
@@ -184,28 +191,15 @@ export function Select<
 									</>
 								);
 
-								if (link) {
-									return (
-										<ListBoxItem key={value} id={value} className={itemStyles}>
-											{({ isSelected }: ListBoxItemRenderProps) => (
-												<Link
-													{...link}
-													className="w-full h-full flex flex-row items-center justify-between"
-												>
-													<span className="flex items-center flex-1 gap-2 font-normal truncate group-selected:font-semibold">
-														{display}
-													</span>
-													<span className="flex items-center w-5">
-														{isSelected && <Check className="w-4 h-4" />}
-													</span>
-												</Link>
-											)}
-										</ListBoxItem>
-									);
-								}
+								const location = link ? router.buildLocation(link) : undefined;
 
 								return (
-									<ListBoxItem key={value} id={value} className={itemStyles}>
+									<ListBoxItem
+										key={value}
+										id={value}
+										className={itemStyles}
+										href={location?.href}
+									>
 										{renderFn}
 									</ListBoxItem>
 								);

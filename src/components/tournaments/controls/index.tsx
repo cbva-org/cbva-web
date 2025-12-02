@@ -15,6 +15,7 @@ import { CreatePlayoffsForm } from "./create-playoffs";
 import { CreatePoolMatchesForm } from "./create-pool-matches";
 import { CreatePoolsForm } from "./create-pools";
 import { DuplicateForm } from "./duplicate";
+import { EditDivisionsForm } from "./edit-divisions";
 import { FillTournamentForm } from "./fill-tournament";
 import { SimulateMatchesForm } from "./simulate-matches";
 
@@ -33,6 +34,7 @@ enum ModalKind {
 	CreatePlayoffs = 6,
 	CompletePools = 7,
 	FillTournament = 8,
+	EditDivisions = 9,
 }
 
 export function TournamentControls({
@@ -69,9 +71,18 @@ export function TournamentControls({
 				buttonIcon={<SettingsIcon />}
 			>
 				{canCreate && (
-					<DropdownMenuItem onPress={() => setActiveModal(ModalKind.Duplicate)}>
-						Duplicate
-					</DropdownMenuItem>
+					<>
+						<DropdownMenuItem
+							onPress={() => setActiveModal(ModalKind.EditDivisions)}
+						>
+							Edit Divisions
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onPress={() => setActiveModal(ModalKind.Duplicate)}
+						>
+							Duplicate
+						</DropdownMenuItem>
+					</>
 				)}
 
 				{canUpdate && (
@@ -117,6 +128,11 @@ export function TournamentControls({
 					</>
 				)}
 			</DropdownMenu>
+
+			<EditDivisionsForm
+				tournamentId={tournamentId}
+				{...makeModalOpenProps(ModalKind.EditDivisions)}
+			/>
 
 			<DuplicateForm
 				tournamentId={tournamentId}

@@ -1,6 +1,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { linkOptions, useRouterState } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import type { Option } from "@/components/base/select";
 import { db } from "@/db/connection";
 
 async function readDivisions(includeJuniors = true) {
@@ -25,15 +26,17 @@ export const divisionsQueryOptions = (includeJuniors?: boolean) =>
 		queryFn: () => getDivisions({ data: { includeJuniors } }),
 	});
 
-export function useDivisionFilterOptions(link?: boolean) {
+export function useDivisionFilterOptions<Link extends boolean>(
+	link?: Link,
+): Option<number, Link>[] {
 	const { location } = useRouterState();
 
 	const { data: divisions } = useSuspenseQuery({
 		...divisionsQueryOptions(),
 		select: (divisions) =>
-			divisions.map(({ id, name }) => ({
+			divisions.map(({ id, display, name }) => ({
 				value: id,
-				display: name.toUpperCase(),
+				display: display ?? name.toUpperCase(),
 				link: link
 					? linkOptions({
 							to: location.pathname,

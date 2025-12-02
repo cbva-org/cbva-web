@@ -34,6 +34,8 @@ function RouteComponent() {
 				Log Out
 			</Link>
 
+			{viewer?.role === "admin" && <Link to="/admin">Admin Dashboard</Link>}
+
 			<Suspense>
 				<pre className="p-6 rounded-lg border border-gray-900 bg-white">
 					{JSON.stringify(viewer, null, 2)}

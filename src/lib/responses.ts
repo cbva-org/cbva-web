@@ -7,6 +7,18 @@ export function badRequest(message = "BAD_REQUEST") {
 	return new Error(message);
 }
 
+export function unauthorized(message = "UNAUTHORIZED") {
+	setResponseStatus(401);
+
+	throw new Error(message);
+}
+
+export function forbidden(message = "FORBIDDEN") {
+	setResponseStatus(403);
+
+	throw new Error(message);
+}
+
 export function notFound() {
 	setResponseStatus(404);
 

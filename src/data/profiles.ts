@@ -35,6 +35,7 @@ import { tournamentDivisions } from "@/db/schema/tournament-divisions";
 import { tournaments } from "@/db/schema/tournaments";
 import { venues } from "@/db/schema/venues";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
+import { forbidden } from "@/lib/responses";
 import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 async function readViewerProfiles(userId: Viewer["id"]) {
@@ -200,8 +201,6 @@ export async function getProfileResultsHandler({
 		),
 	];
 
-	console.log({ venueIds, divisionIds });
-
 	// Add venue filter if provided
 	if (venueIds.length > 0) {
 		filters.push(inArray(tournaments.venueId, venueIds));
@@ -215,7 +214,7 @@ export async function getProfileResultsHandler({
 	// Shared where condition
 	const whereCondition = and(...filters);
 
-	// Get total count
+	// Get total count - need to include divisions join for division filter
 	const [totalResult] = await db
 		.select({ count: count() })
 		.from(tournamentDivisionTeams)
@@ -352,8 +351,6 @@ export async function getProfileResultsHandler({
 		};
 	});
 
-	console.log("->", data);
-
 	return {
 		data,
 		pageInfo: {
@@ -395,7 +392,7 @@ export const profileResultsQueryOptions = ({
 	});
 
 export const updatePlayerProfileFn = createServerFn({ method: "POST" })
-	.inputValidator(updatePlayerProfileSchema)
+	.inputValidator(updatePlayerProfileSchema.extend({ id: z.number() }))
 	.handler(async ({ data }) => {
 		const viewer = await getViewer();
 
@@ -404,6 +401,7 @@ export const updatePlayerProfileFn = createServerFn({ method: "POST" })
 		}
 
 		const {
+			id,
 			preferredName,
 			gender,
 			bio,
@@ -418,6 +416,21 @@ export const updatePlayerProfileFn = createServerFn({ method: "POST" })
 			collegeTeam,
 			collegeTeamYearsParticipated,
 		} = data;
+
+		const profile = await db.query.playerProfiles.findFirst({
+			columns: {
+				userId: true,
+			},
+			where: (t, { eq }) => eq(t.id, id),
+		});
+
+		if (!profile) {
+			throw notFound();
+		}
+
+		if (viewer.role !== "admin" && viewer.id !== profile.userId) {
+			throw forbidden();
+		}
 
 		const [result] = await db
 			.update(playerProfiles)
@@ -436,6 +449,7 @@ export const updatePlayerProfileFn = createServerFn({ method: "POST" })
 				collegeTeam,
 				collegeTeamYearsParticipated,
 			})
+			.where(eq(playerProfiles.id, id))
 			.returning({
 				id: playerProfiles.id,
 			});

@@ -1,25 +1,30 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-
+import type { Viewer } from "@/auth";
+import { authMiddleware } from "@/auth/shared";
 import { db } from "@/db/connection";
 import { findPaged } from "@/db/pagination";
 import { type TournamentDivision, tournamentDivisions } from "@/db/schema";
+import { isNotNull } from "@/utils/types";
 
-async function readTournaments({
-	page,
-	pageSize,
-	divisions,
-	venues,
-	genders,
-	past,
-}: {
-	page: number;
-	pageSize: number;
-	divisions: number[];
-	venues: number[];
-	genders: ("male" | "female" | "coed")[];
-	past: boolean;
-}) {
+async function readTournaments(
+	{
+		page,
+		pageSize,
+		divisions,
+		venues,
+		genders,
+		past,
+	}: {
+		page: number;
+		pageSize: number;
+		divisions: number[];
+		venues: number[];
+		genders: ("male" | "female" | "coed")[];
+		past: boolean;
+	},
+	viewer?: Pick<Viewer, "id" | "role">,
+) {
 	return await findPaged("tournaments", {
 		paging: { page, size: pageSize },
 		config: {
@@ -56,10 +61,11 @@ async function readTournaments({
 			},
 			where: (tournaments, { sql, gt, lt, and, eq, inArray, exists }) => {
 				const filters = [
+					viewer?.role === "admin" ? null : eq(tournaments.visible, true),
 					past
 						? lt(tournaments.date, sql`current_date`)
 						: gt(tournaments.date, sql`current_date`),
-				];
+				].filter(isNotNull);
 
 				if (divisions.length) {
 					filters.push(
@@ -119,7 +125,10 @@ export const getTournaments = createServerFn({
 				genders: TournamentDivision["gender"][];
 			},
 	)
-	.handler(async ({ data }) => await readTournaments(data));
+	.middleware([authMiddleware])
+	.handler(async ({ data, context }) => {
+		return await readTournaments(data, context.viewer);
+	});
 
 export const tournamentsQueryOptions = (data: {
 	divisions: number[];

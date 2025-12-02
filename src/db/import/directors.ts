@@ -80,7 +80,7 @@ export async function importDirectorsForYear(
 		(t) => toKey(t.beachId, t.startAt),
 	).flatMap(({ beachId, startAt, tournamentDirectors }) =>
 		tournamentDirectors.map(
-			({ rank, directorPreferences: { email, phoneNumber, userId } }) => {
+			({ rank, directorPreferences: { email, phone, userId } }) => {
 				if (!directors.get(userId)) {
 					throw new Error("hahsdf");
 				}
@@ -90,7 +90,7 @@ export async function importDirectorsForYear(
 					directorId: directors.get(userId) as number,
 					order: rank || 0,
 					email,
-					phoneNumber,
+					phoneNumber: phone,
 				};
 			},
 		),

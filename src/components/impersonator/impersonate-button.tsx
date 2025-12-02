@@ -38,11 +38,7 @@ export function ImpersonateButton({ userId }: { userId?: string | null }) {
 	}
 
 	return (
-		<Button
-			className="absolute top-6 right-6"
-			color="secondary"
-			onPress={() => impersonate(userId)}
-		>
+		<Button color="secondary" onPress={() => impersonate(userId)}>
 			<HatGlasses size={14} className="-ml" />
 			Impersonate
 		</Button>

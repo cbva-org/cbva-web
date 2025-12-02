@@ -15,8 +15,9 @@ export async function seedDivisions(db: Database) {
 				{ name: "14u", maxAge: 14 },
 				{ name: "16u", maxAge: 16 },
 				{ name: "18u", maxAge: 18 },
-			].map(({ name, maxAge }, idx) => ({
+			].map(({ name, maxAge, display }, idx) => ({
 				name,
+				display,
 				order: idx,
 				maxAge,
 			})),

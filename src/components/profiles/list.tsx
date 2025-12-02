@@ -54,7 +54,7 @@ export function ProfileList({
 						</span>
 
 						<Link
-							to="/profile/$profileId"
+							to="/profile/$profileId/edit"
 							params={{
 								profileId: id.toString(),
 							}}

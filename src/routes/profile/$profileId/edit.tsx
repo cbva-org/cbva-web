@@ -1,8 +1,9 @@
 import { parseDate } from "@internationalized/date";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { ChevronLeftIcon } from "lucide-react";
 import { Suspense } from "react";
-import { useViewerHasPermission } from "@/auth/shared";
+import { Link } from "@/components/base/link";
 import { title } from "@/components/base/primitives";
 import { ProfileForm } from "@/components/users/profile-form";
 import { profileQueryOptions } from "@/data/profiles";
@@ -35,24 +36,26 @@ function RouteComponent() {
 		},
 	});
 
-	const canImpersonate = useViewerHasPermission({
-		user: ["impersonate"],
-	});
-
-	console.log("canImpersonate", canImpersonate);
-
 	return (
-		<DefaultLayout
-			classNames={{
-				content: "py-12 max-w-lg mx-auto flex flex-col space-y-16",
-			}}
-		>
-			<h1 className={title({ className: "text-center" })}>Update Profile</h1>
+		<DefaultLayout classNames={{ content: "relative" }}>
+			<Link
+				className="absolute top-6 left-6 flex flex-row gap-2"
+				to="/profile/$profileId"
+				params={{
+					profileId,
+				}}
+			>
+				<ChevronLeftIcon /> <span>Back to profile</span>
+			</Link>
 
-			<div className="rounded-lg bg-white p-8 max-w-lg mx-auto">
-				<Suspense fallback={<>Nope</>}>
-					<ProfileForm initialValues={data ?? null} isEdit={true} />
-				</Suspense>
+			<div className="py-12 max-w-lg mx-auto flex flex-col space-y-16 relative">
+				<h1 className={title({ className: "text-center" })}>Update Profile</h1>
+
+				<div className="rounded-lg bg-white p-8 max-w-lg mx-auto">
+					<Suspense fallback={<>Nope</>}>
+						<ProfileForm initialValues={data ?? null} isEdit={true} />
+					</Suspense>
+				</div>
 			</div>
 		</DefaultLayout>
 	);

@@ -89,6 +89,7 @@ export function SelectField<Value extends Key>({
 			}}
 			isInvalid={field.state.meta.isBlurred && !field.state.meta.isValid}
 			isDisabled={!isMounted || props.isDisabled}
+			placeholder={placeholder}
 		>
 			{({ isOpen }) => (
 				<>
@@ -102,6 +103,7 @@ export function SelectField<Value extends Key>({
 								inputStyles(render),
 							)
 						}
+						isDisabled={!isMounted || props.isDisabled}
 						onBlur={() => {
 							if (!isOpen) {
 								field.handleBlur();
