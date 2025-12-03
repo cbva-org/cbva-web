@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { title } from "@/components/base/primitives";
-import { ForgotPasswordForm } from "@/components/users/forgot-password-form";
 import { ResetPasswordForm } from "@/components/users/reset-password-form";
 import { DefaultLayout } from "@/layouts/default";
 
