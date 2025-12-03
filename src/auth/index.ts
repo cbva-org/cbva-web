@@ -72,7 +72,8 @@ export const auth = betterAuth({
 			});
 		},
 	},
-	trustedOrigins: ["http://localhost:5173", "https://cbva-web.vercel.app"],
+	// trustedOrigins: ["*"]
+	// trustedOrigins: ["http://localhost:5173", "https://cbva-web.vercel.app"],
 });
 
 export type Session = typeof auth.$Infer.Session;
