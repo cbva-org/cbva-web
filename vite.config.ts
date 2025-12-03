@@ -5,10 +5,14 @@ import { defineConfig } from "vite"
 import viteTsConfigPaths from "vite-tsconfig-paths"
 // import { nitro } from "nitro/vite"
 import { nitroV2Plugin } from "@tanstack/nitro-v2-vite-plugin"
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // import { visualizer } from "rollup-plugin-visualizer"
 
 const config = defineConfig({
+  build: {
+    sourcemap: true, // Source map generation must be turned on
+  },
   plugins: [
     viteTsConfigPaths({
       projects: ["./tsconfig.json"],
@@ -22,6 +26,11 @@ const config = defineConfig({
     //   filename: "stats.html",
     //   template: "network",
     // }),
+    sentryVitePlugin({
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          org: "isaac-snow",
+          project: "cbva-vercel",
+        }),
   ],
 })
 

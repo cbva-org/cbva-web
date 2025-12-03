@@ -43,6 +43,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 			queryClient.ensureQueryData(viewerQueryOptions()),
 		]);
 	},
+	// errorComponent: ({ error }) => {
+	//    useEffect(() => {
+	//      Sentry.captureException(error)
+	//    }, [error])
+
+	//    return def
+	// },
+
 	component: () => (
 		<>
 			<Outlet />

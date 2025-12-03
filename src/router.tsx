@@ -5,9 +5,10 @@ import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 
 import { queryClient } from "./providers";
+import { initSentry } from "./services/sentry";
 
 export function getRouter() {
-	return createTanstackRouter({
+	const router = createTanstackRouter({
 		scrollRestoration: true,
 		scrollToTopSelectors: ["#scroll-ref"],
 		routeTree,
@@ -17,4 +18,10 @@ export function getRouter() {
 		// 	return <Provider>{props.children}</Provider>;
 		// },
 	});
+
+	if (!router.isServer) {
+		initSentry();
+	}
+
+	return router;
 }

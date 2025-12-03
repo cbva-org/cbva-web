@@ -5,6 +5,9 @@ import {
 	defaultStreamHandler,
 	defineHandlerCallback,
 } from "@tanstack/react-start/server";
+import { initSentry } from "./services/sentry";
+
+initSentry();
 
 const customHandler = defineHandlerCallback((ctx) => {
 	return defaultStreamHandler(ctx);
