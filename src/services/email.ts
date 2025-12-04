@@ -12,6 +12,8 @@ export async function sendEmail(message: MailDataRequired) {
 	if (process.env.LOG_EMAILS === "true") {
 		console.log(message);
 	} else {
+		console.log("sending email to:", message.to, message.subject);
+
 		sgMail
 			.send(message)
 			.then((response) => {
