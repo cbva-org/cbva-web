@@ -55,7 +55,7 @@ export const Route = createFileRoute("/tournaments/")({
 		deps: { page, pageSize, divisions, venues, genders, past },
 		context: { queryClient },
 	}) => {
-		queryClient.ensureQueryData(
+		await queryClient.ensureQueryData(
 			tournamentsQueryOptions({
 				page,
 				pageSize,
