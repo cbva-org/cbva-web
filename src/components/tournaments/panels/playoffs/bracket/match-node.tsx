@@ -1,13 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 import { Handle, Position } from "@xyflow/react";
 import clsx from "clsx";
-import { CircleDot } from "lucide-react";
+import { CircleDot, EditIcon } from "lucide-react";
+import { useState } from "react";
 import { tv } from "tailwind-variants";
+import { useViewerHasPermission } from "@/auth/shared";
 import { Button } from "@/components/base/button";
 import { TeamNames } from "@/components/teams/names";
+import { EditPlayoffMatchRefsForm } from "@/components/tournaments/controls/edit-playoff-match-refs";
 import { playoffsQueryOptions } from "@/data/playoffs";
-import type { MatchSet, PlayoffMatch } from "@/db/schema";
+import type {
+	MatchRefTeam,
+	MatchSet,
+	PlayerProfile,
+	PlayoffMatch,
+	Team,
+	TeamPlayer,
+	TournamentDivisionTeam,
+} from "@/db/schema";
 import { formatOrdinals } from "@/lib/numbers";
+import { dbg } from "@/utils/dbg";
 import { isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../../games/pool-match-grid";
 import { useActiveTeam, useSetActiveTeam, useSetNodeIdToCenter } from ".";
@@ -45,6 +57,13 @@ export function MatchNode({
 		sets: MatchSet[];
 		teamA?: MatchTeam;
 		teamB?: MatchTeam;
+		refTeams: (MatchRefTeam & {
+			team: Pick<TournamentDivisionTeam, "id"> & {
+				team: Pick<Team, "id"> & {
+					players: (TeamPlayer & { profile: PlayerProfile })[];
+				};
+			};
+		})[];
 		refetch: () => void;
 	};
 	type: string;
@@ -61,6 +80,7 @@ export function MatchNode({
 		teamBPreviousMatchId,
 		refetch,
 		tournamentDivisionId,
+		refTeams,
 	} = data;
 
 	const activeTeam = useActiveTeam();
@@ -92,198 +112,229 @@ export function MatchNode({
 
 	const setNodeIdToCenter = useSetNodeIdToCenter();
 
+	const canUpdate = useViewerHasPermission({
+		tournament: ["update"],
+	});
+
 	return (
-		<div
-			className="rounded-md overflow-hidden w-md border bg-white border-gray-300"
-			data-id={data.id}
-		>
-			<div className="grid grid-cols-6 items-center border-b border-gray-300">
-				<div
-					className={clsx(
-						"p-3 flex flex-row items-center space-x-3",
-						sets.length > 1 ? "col-span-3" : "col-span-5",
-					)}
-				>
-					{court ? (
-						<span>Court {court}</span>
-					) : (
-						<span>
-							{sets.length > 1 ? "Match" : "Game"} {matchNumber}
-						</span>
-					)}
-
-					{sets.some(({ status }) => status === "in_progress") ? (
-						<Button
-							size="sm"
-							className="rounded-sm px-2"
-							color="primary"
-							tooltip={<>Click to refresh</>}
-							onClick={refetch}
-						>
-							<CircleDot size={18} />
-							Live
-						</Button>
-					) : null}
-				</div>
-
-				{sets.map((s) => (
-					<div key={s.id} className="p-3 text-center col-span-1">
-						{sets.length > 1 ? <>Set {s.setNumber}</> : "Score"}
+		<div>
+			<div className="p-3 flex flex-row space-x-2 items-center">
+				{refTeams.length ? (
+					<div className="whitespace-nowrap text-ellipsis">
+						Refs:{" "}
+						{refTeams.map((team) => (
+							<TeamNames key={team.id} {...team.team.team} />
+						))}
 					</div>
-				))}
-			</div>
-			{[
-				isNotNullOrUndefined(teamA)
-					? {
-							...teamA,
-							previousMatchId: data.teamAPreviousMatchId,
-							type: "MatchTeam" as const,
-						}
-					: {
-							id: (data.teamAPreviousMatchId ??
-								data.teamAPoolId ??
-								("a" as const)) as number | "a" | "b",
-							type: "tbd" as const,
-						},
-				isNotNullOrUndefined(teamB)
-					? {
-							...teamB,
-							previousMatchId: data.teamBPreviousMatchId,
-							type: "MatchTeam" as const,
-						}
-					: {
-							id: (data.teamBPreviousMatchId ??
-								data.teamAPoolId ??
-								("b" as const)) as number | "a" | "b",
-							type: "tbd" as const,
-						},
-			].map((team, i) => (
-				<div
-					key={team.id}
-					className={clsx(
-						"grid grid-cols-6 items-stretch border-b border-gray-300 last-of-type:border-b-0",
-						team.id === activeTeam ? "bg-gray-200" : "bg-white",
-					)}
-					role="none"
-					tabIndex={-1}
-					onMouseEnter={() => {
-						if (typeof team.id === "number") {
-							setActiveTeam(team.id as number);
-						} else {
-							setActiveTeam(null);
-						}
-					}}
-					onMouseLeave={() => {
-						setActiveTeam(null);
-					}}
-				>
-					<Handle
-						type="target"
-						position={Position.Left}
-						id={team.id.toString()}
-						style={{
-							opacity: 0,
-							position: "absolute",
-							top: i === 0 ? "45%" : "78%",
-							right: 0,
-						}}
+				) : (
+					<div>Self Ref</div>
+				)}
+
+				{canUpdate && (
+					<EditPlayoffMatchRefsForm
+						tournamentDivisionId={tournamentDivisionId}
+						matchId={data.id}
 					/>
+				)}
+			</div>
+			<div
+				className="relative rounded-md overflow-hidden w-md border bg-white border-gray-300"
+				data-id={data.id}
+			>
+				<div className="grid grid-cols-6 items-center border-b border-gray-300">
 					<div
 						className={clsx(
-							"p-3 grid grid-cols-10 space-x-2 items-center",
+							"p-3 flex flex-row items-center space-x-3",
 							sets.length > 1 ? "col-span-3" : "col-span-5",
 						)}
 					>
-						{team.type === "MatchTeam" && (
-							<span
-								className={clsx(
-									"text-center",
-									team.playoffsSeed || team.wildcard ? "col-span-1" : "hidden",
-								)}
-								title={`Seed ${team.playoffsSeed ?? "?"} in playoffs`}
-							>
-								{team.playoffsSeed ?? (team.wildcard ? "WC" : null)}
+						{court ? (
+							<span className="whitespace-nowrap text-ellipsis">
+								Court {court}
+							</span>
+						) : (
+							<span className="whitespace-nowrap text-ellipsis">
+								{sets.length > 1 ? "Match" : "Game"} {matchNumber}
 							</span>
 						)}
 
+						{sets.some(({ status }) => status === "in_progress") ? (
+							<Button
+								size="sm"
+								className="rounded-sm px-2"
+								color="primary"
+								tooltip={<>Click to refresh</>}
+								onClick={refetch}
+							>
+								<CircleDot size={18} />
+								Live
+							</Button>
+						) : null}
+					</div>
+
+					{sets.map((s) => (
+						<div key={s.id} className="p-3 text-center col-span-1">
+							{sets.length > 1 ? <>Set {s.setNumber}</> : "Score"}
+						</div>
+					))}
+				</div>
+				{[
+					isNotNullOrUndefined(teamA)
+						? {
+								...teamA,
+								previousMatchId: data.teamAPreviousMatchId,
+								type: "MatchTeam" as const,
+							}
+						: {
+								id: (data.teamAPreviousMatchId ??
+									data.teamAPoolId ??
+									("a" as const)) as number | "a" | "b",
+								type: "tbd" as const,
+							},
+					isNotNullOrUndefined(teamB)
+						? {
+								...teamB,
+								previousMatchId: data.teamBPreviousMatchId,
+								type: "MatchTeam" as const,
+							}
+						: {
+								id: (data.teamBPreviousMatchId ??
+									data.teamAPoolId ??
+									("b" as const)) as number | "a" | "b",
+								type: "tbd" as const,
+							},
+				].map((team, i) => (
+					<div
+						key={team.id}
+						className={clsx(
+							"grid grid-cols-6 items-stretch border-b border-gray-300 last-of-type:border-b-0",
+							team.id === activeTeam ? "bg-gray-200" : "bg-white",
+						)}
+						role="none"
+						tabIndex={-1}
+						onMouseEnter={() => {
+							if (typeof team.id === "number") {
+								setActiveTeam(team.id as number);
+							} else {
+								setActiveTeam(null);
+							}
+						}}
+						onMouseLeave={() => {
+							setActiveTeam(null);
+						}}
+					>
+						<Handle
+							type="target"
+							position={Position.Left}
+							id={team.id.toString()}
+							style={{
+								opacity: 0,
+								position: "absolute",
+								top: i === 0 ? "45%" : "78%",
+								right: 0,
+							}}
+						/>
 						<div
 							className={clsx(
-								"flex flex-col col-span-9",
-								winnerId && winnerId === team.id && "font-bold",
-								winnerId && winnerId !== team.id && "text-gray-600",
+								"p-3 grid grid-cols-10 space-x-2 items-center",
+								sets.length > 1 ? "col-span-3" : "col-span-5",
 							)}
 						>
-							{team.type === "MatchTeam" ? (
-								<TeamNames
-									players={team?.team.players}
-									showFirst={false}
-									orientation="row"
-									separator="/"
-								/>
-							) : roundIdx === 0 ? (
-								<Wildcard
-									matchId={data.id}
-									a={team.id === "a"}
-									opponent={team.id === "a" ? teamB : teamA}
-								/>
-							) : (
-								<Button
-									className="px-0 self-start hover:underline"
-									variant="text"
-									onPress={() => {
-										if (typeof team.id === "number") {
-											setNodeIdToCenter(team.id as number);
-										}
-									}}
+							{team.type === "MatchTeam" && (
+								<span
+									className={clsx(
+										"text-center",
+										team.playoffsSeed || team.wildcard
+											? "col-span-1"
+											: "hidden",
+									)}
+									title={`Seed ${team.playoffsSeed ?? "?"} in playoffs`}
 								>
-									Winner of{" "}
-									{team.id === teamAPreviousMatchId
-										? teamAPreviousMatchName
-										: teamBPreviousMatchName}
-								</Button>
+									{team.playoffsSeed ?? (team.wildcard ? "WC" : null)}
+								</span>
 							)}
-							{team.type === "MatchTeam" && team.poolTeam?.finish && (
-								<div>
-									<span className="text-xs text-gray-500">
-										{formatOrdinals(team.poolTeam.finish)} in Pool{" "}
-										<span className="uppercase">{team.poolTeam.pool.name}</span>
-									</span>
-								</div>
-							)}
-						</div>
-					</div>
-					{sets
-						.sort((a, b) => a.setNumber - b.setNumber)
-						.map((s, i) => (
+
 							<div
-								key={s.id}
-								className={scoreTextStyles({
-									winner:
-										s.winnerId === null ? undefined : s.winnerId === team.id,
-									inProgress: Boolean(s.startedAt) && !s.endedAt,
-									last: i === sets.length - 1,
-								})}
+								className={clsx(
+									"flex flex-col col-span-9",
+									winnerId && winnerId === team.id && "font-bold",
+									winnerId && winnerId !== team.id && "text-gray-600",
+								)}
 							>
-								{s.startedAt
-									? teamA?.id === team.id
-										? s.teamAScore
-										: s.teamBScore
-									: "-"}
+								{team.type === "MatchTeam" ? (
+									<TeamNames
+										players={team?.team.players}
+										showFirst={false}
+										orientation="row"
+										separator="/"
+									/>
+								) : roundIdx === 0 ? (
+									<Wildcard
+										matchId={data.id}
+										a={team.id === "a"}
+										opponent={team.id === "a" ? teamB : teamA}
+									/>
+								) : (
+									<Button
+										className="px-0 self-start hover:underline"
+										variant="text"
+										onPress={() => {
+											if (typeof team.id === "number") {
+												setNodeIdToCenter(team.id as number);
+											}
+										}}
+									>
+										Winner of{" "}
+										{team.id === teamAPreviousMatchId
+											? teamAPreviousMatchName
+											: teamBPreviousMatchName}
+									</Button>
+								)}
+								{team.type === "MatchTeam" && team.poolTeam?.finish && (
+									<div>
+										<span className="text-xs text-gray-500">
+											{formatOrdinals(team.poolTeam.finish)} in Pool{" "}
+											<span className="uppercase">
+												{team.poolTeam.pool.name}
+											</span>
+										</span>
+									</div>
+								)}
 							</div>
-						))}
-					<Handle
-						type="source"
-						position={Position.Right}
-						id={team.id.toString()}
-						style={{
-							opacity: 0,
-							position: "absolute",
-							top: i === 0 ? "45%" : "78%",
-							right: 0,
-						}}
-					/>
-				</div>
-			))}
+						</div>
+						{sets
+							.sort((a, b) => a.setNumber - b.setNumber)
+							.map((s, i) => (
+								<div
+									key={s.id}
+									className={scoreTextStyles({
+										winner:
+											s.winnerId === null ? undefined : s.winnerId === team.id,
+										inProgress: Boolean(s.startedAt) && !s.endedAt,
+										last: i === sets.length - 1,
+									})}
+								>
+									{s.startedAt
+										? teamA?.id === team.id
+											? s.teamAScore
+											: s.teamBScore
+										: "-"}
+								</div>
+							))}
+						<Handle
+							type="source"
+							position={Position.Right}
+							id={team.id.toString()}
+							style={{
+								opacity: 0,
+								position: "absolute",
+								top: i === 0 ? "45%" : "78%",
+								right: 0,
+							}}
+						/>
+					</div>
+				))}
+			</div>
 		</div>
 	);
 }

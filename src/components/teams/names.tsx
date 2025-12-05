@@ -2,11 +2,13 @@ import type { PlayerProfile } from "@/db/schema";
 import { ProfileName, type ProfileNameProps } from "../profiles/name";
 
 export function TeamNames({
+	className,
 	players,
 	orientation = "col",
 	separator = " & ",
 	...props
 }: {
+	className?: string;
 	players: {
 		profile: Pick<
 			PlayerProfile,
@@ -17,7 +19,7 @@ export function TeamNames({
 	separator?: "/" | " & ";
 } & Pick<ProfileNameProps, "link" | "showFirst">) {
 	return (
-		<span>
+		<span className={className}>
 			{players.map(({ profile }, i) => (
 				<span key={profile.id}>
 					<ProfileName {...profile} {...props} />

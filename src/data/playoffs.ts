@@ -54,6 +54,23 @@ async function readPlayoffs({
 					},
 				},
 			},
+			refTeams: {
+				with: {
+					team: {
+						with: {
+							team: {
+								with: {
+									players: {
+										with: {
+											profile: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
 		orderBy: (t, { asc }) => asc(t.matchNumber),
