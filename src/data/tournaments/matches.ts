@@ -7,16 +7,19 @@ import { requireAuthenticated, requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
 	type MatchSet,
+	matchRefTeams,
 	matchSets,
 	playoffMatches,
 	poolMatches,
 	selectMatchSetSchema,
 	selectTournamentDivisionSchema,
+	type Transaction,
 	type UpdateMatchSet,
+	type UpdatePlayoffMatch,
 	type UpdatePoolMatch,
 } from "@/db/schema";
 import { isSetDone } from "@/lib/matches";
-import { notFound } from "@/lib/responses";
+import { internalServerError, notFound } from "@/lib/responses";
 
 const findMatchSetSchema = selectMatchSetSchema.pick({
 	id: true,
@@ -192,56 +195,185 @@ export const overrideScoreFn = createServerFn()
 		const teamBId =
 			matchSet.poolMatch?.teamBId ?? matchSet.playoffMatch?.teamBId;
 
-		const [{ playoffMatchId, poolMatchId, status }] = await db
-			.update(matchSets)
-			.set({
-				status: isDone ? "completed" : "in_progress",
-				endedAt: isDone ? new Date() : sql`null`,
-				teamAScore,
-				teamBScore,
-				winnerId: isDone ? (teamAScore > teamBScore ? teamAId : teamBId) : null,
-			})
-			.where(eq(matchSets.id, id))
-			.returning({
-				playoffMatchId: matchSets.playoffMatchId,
-				poolMatchId: matchSets.poolMatchId,
-				status: matchSets.status,
-			});
+		await db.transaction(async (txn) => {
+			const [{ playoffMatchId, poolMatchId, status }] = await db
+				.update(matchSets)
+				.set({
+					status: isDone ? "completed" : "in_progress",
+					endedAt: isDone ? new Date() : sql`null`,
+					teamAScore,
+					teamBScore,
+					winnerId: isDone
+						? teamAScore > teamBScore
+							? teamAId
+							: teamBId
+						: null,
+				})
+				.where(eq(matchSets.id, id))
+				.returning({
+					playoffMatchId: matchSets.playoffMatchId,
+					poolMatchId: matchSets.poolMatchId,
+					status: matchSets.status,
+				});
 
-		if (status === "completed") {
-			if (poolMatchId) {
-				return await handleCompletedPoolMatchSet(poolMatchId);
+			if (status === "completed") {
+				if (poolMatchId) {
+					return await handleCompletedPoolMatchSet(txn, poolMatchId);
+				}
+
+				if (playoffMatchId) {
+					return await handleCompletedPlayoffMatchSet(txn, playoffMatchId);
+				}
 			}
 
-			if (playoffMatchId) {
-				return await handleCompletedPlayoffMatchSet(playoffMatchId);
-			}
-		}
+			return {
+				success: true,
+			};
+		});
 	});
 
+function getWinnerId(
+	{ teamAId, teamBId }: { teamAId: number; teamBId: number },
+	sets: MatchSet[],
+) {
+	const { winnerId } = sets.reduce(
+		(memo, set) => {
+			if (set.winnerId === teamAId) {
+				memo.aWins += 1;
+
+				if (memo.aWins > Math.floor(sets.length / 2)) {
+					memo.winnerId = teamAId;
+				}
+			} else if (set.winnerId === teamBId) {
+				memo.bWins += 1;
+
+				if (memo.bWins > Math.floor(sets.length / 2)) {
+					memo.winnerId = teamBId;
+				}
+			}
+
+			return memo;
+		},
+		{ winnerId: null as number | null, aWins: 0, bWins: 0 },
+	);
+
+	return winnerId;
+}
+
 const handleCompletedPoolMatchSet = createServerOnlyFn(
-	async (poolMatchId: number) => {
-		throw new Error("not yet implemented");
-	},
-);
+	async (txn: Transaction, poolMatchId: number) => {
+		const match = await txn.query.poolMatches.findFirst({
+			with: {
+				sets: true,
+			},
+			where: (t, { eq }) => eq(t.id, poolMatchId),
+		});
 
-const handleCompletedPlayoffMatchSet = createServerOnlyFn(
-	async (playoffMatchId: number) => {
-		const [{ allSetsCompleted }] = await db
-			.select({
-				allSetsCompleted: sql<boolean>`(
-      		SELECT COUNT(*) = COUNT(*) FILTER (WHERE status = 'completed')
-      		FROM ${matchSets}
-      		WHERE ${matchSets.playoffMatchId} = ${playoffMatchId}
-       	)`,
-			})
-			.from(playoffMatches);
+		if (!match?.teamAId || !match?.teamBId) {
+			throw internalServerError(
+				`expected to find match in handleCompletedPoolMatchSet(${poolMatchId})`,
+			);
+		}
 
-		if (!allSetsCompleted) {
+		const winnerId = getWinnerId(
+			{
+				teamAId: match.teamAId,
+				teamBId: match.teamBId,
+			},
+			match.sets,
+		);
+
+		if (!winnerId) {
 			return {
 				success: true,
 			};
 		}
+
+		await db
+			.update(poolMatches)
+			.set({
+				winnerId,
+				status: "completed",
+			})
+			.where(eq(poolMatches.id, poolMatchId));
+
+		return {
+			success: true,
+		};
+	},
+);
+
+const handleCompletedPlayoffMatchSet = createServerOnlyFn(
+	async (txn: Transaction, playoffMatchId: number) => {
+		const match = await txn.query.playoffMatches.findFirst({
+			with: {
+				sets: true,
+				nextMatch: true,
+			},
+			where: (t, { eq }) => eq(t.id, playoffMatchId),
+		});
+
+		if (!match?.teamAId || !match?.teamBId) {
+			throw internalServerError(
+				`expected to find match in handleCompletedPlayoffMatchSet(${playoffMatchId})`,
+			);
+		}
+
+		const winnerId = getWinnerId(
+			{
+				teamAId: match.teamAId,
+				teamBId: match.teamBId,
+			},
+			match.sets,
+		);
+
+		if (!winnerId) {
+			return {
+				success: true,
+			};
+		}
+
+		const matchUpdates: (Omit<UpdatePlayoffMatch, "id"> & { id: number })[] = [
+			{
+				id: playoffMatchId,
+				winnerId,
+				status: "completed",
+			},
+		];
+
+		if (match.nextMatch) {
+			matchUpdates.push({
+				id: match.nextMatch.id,
+				teamAId:
+					match.teamAPreviousMatchId === playoffMatchId ? winnerId : null,
+				teamBId:
+					match.teamBPreviousMatchId === playoffMatchId ? winnerId : null,
+			});
+		}
+
+		await Promise.all(
+			matchUpdates.map(({ id, ...update }) =>
+				txn.update(playoffMatches).set(update).where(eq(playoffMatches.id, id)),
+			),
+		);
+
+		const refTeamId =
+			winnerId === match.teamAId ? match.teamBId : match.teamAId;
+
+		if (match.nextMatchId) {
+			await db
+				.delete(matchRefTeams)
+				.where(eq(matchRefTeams.playoffMatchId, match.nextMatchId));
+
+			await txn.insert(matchRefTeams).values({
+				teamId: refTeamId,
+				playoffMatchId: match.nextMatchId,
+			});
+		}
+
+		return {
+			success: true,
+		};
 	},
 );
 

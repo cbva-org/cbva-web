@@ -1,5 +1,4 @@
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-
 import { accounts, users } from "./auth";
 import { blocks, pages } from "./blocks";
 import { directorRelations, directors } from "./directors";
@@ -104,3 +103,4 @@ const schema = {
 };
 
 export type Database = PostgresJsDatabase<typeof schema>;
+export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];

@@ -252,6 +252,15 @@ describe("referee assignments", () => {
 				},
 			});
 		}
+
+		const refTeamId = teamAWins ? match.teamBId : match.teamAId;
+
+		const refTeam = await db.query.matchRefTeams.findFirst({
+			where: (t, { and, eq }) =>
+				and(eq(t.teamId, refTeamId!), eq(t.playoffMatchId, match.nextMatchId!)),
+		});
+
+		assert(refTeam, "did not find a referee assignment for losing team");
 	});
 });
 

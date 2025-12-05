@@ -90,5 +90,9 @@ export const playoffMatchRelations = relations(
 			references: [tournamentDivisionTeams.id],
 		}),
 		refTeams: many(matchRefTeams),
+		nextMatch: one(playoffMatches, {
+			fields: [playoffMatches.nextMatchId],
+			references: [playoffMatches.id],
+		}),
 	}),
 );
