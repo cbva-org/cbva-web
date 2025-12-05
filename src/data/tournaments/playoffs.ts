@@ -6,7 +6,10 @@ import z from "zod";
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
+	type CreateMatchRefTeam,
 	type CreateMatchSet,
+	type MatchRefTeam,
+	matchRefTeams,
 	matchSets,
 	type PlayoffMatch,
 	type PoolTeam,
@@ -114,6 +117,8 @@ export const createPlayoffsFn = createServerFn()
 					| "teamBPreviousMatchId"
 				>[] = [];
 
+				const refTeamsToCreate: CreateMatchRefTeam[] = [];
+
 				for (const [i, round] of bracket.entries()) {
 					roundIds[i] = [];
 
@@ -177,11 +182,35 @@ export const createPlayoffsFn = createServerFn()
 								teamBPreviousMatchId,
 							});
 
+							if (
+								roundIndex === 1 &&
+								isNotNull(teamAId) &&
+								!isNotNull(teamBId)
+							) {
+								refTeamsToCreate.push({
+									teamId: teamAId,
+									playoffMatchId: teamBPreviousMatchId,
+								});
+							} else if (
+								roundIndex === 1 &&
+								!isNotNull(teamAId) &&
+								isNotNull(teamBId)
+							) {
+								refTeamsToCreate.push({
+									teamId: teamBId,
+									playoffMatchId: teamAPreviousMatchId,
+								});
+							}
+
 							matchNumber += 1;
 						} else {
 							roundIds[i].push(null);
 						}
 					}
+				}
+
+				if (refTeamsToCreate.length) {
+					await txn.insert(matchRefTeams).values(refTeamsToCreate);
 				}
 
 				// Set nextMatchId for all playoff matches
@@ -213,6 +242,15 @@ export const createPlayoffsFn = createServerFn()
 						}
 					}
 				}
+
+				// for (const node of bracket[1]) {
+				// 	const currentMatch = currentRound[j];
+				// 	const currentMatchId = roundIds[i][j];
+
+				// 	if (!match?.teamAId && !match?.teamBId) {
+				// 		// ...
+				// 	}
+				// }
 
 				const matchSetValues: CreateMatchSet[] = roundIds
 					.flatMap((ids) => ids.filter(isNotNull))
