@@ -43,7 +43,7 @@ export function ComboBoxField<T extends Key>({
 			isDisabled={!isMounted || !Boolean(options) || isDisabled}
 		>
 			{(item) => (
-				<ComboBoxItem id={item.value}>
+				<ComboBoxItem id={item.value} textValue={item.display}>
 					{item.beforeDisplay} {item.display}
 				</ComboBoxItem>
 			)}
