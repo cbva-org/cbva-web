@@ -1,21 +1,16 @@
 import { User } from "@react-aria/test-utils";
 import { render } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { range } from "lodash-es";
-import { beforeAll, describe, expect, test } from "vitest";
+import { assert, describe, expect, test } from "vitest";
 import { page } from "vitest/browser";
-// import { render } from "vitest-browser-react";
 import { ComboBox, ComboBoxItem } from "./combo-box";
 
 describe("ComboBox", () => {
-	// beforeAll(()=> {
-	//   jsdom
-	// })
-
 	const testUtilUser = new User({ interactionType: "mouse" });
+	const user = userEvent.setup();
 
 	test("ComboBox can select an option via keyboard", async () => {
-		// Render your test component/app and initialize the combobox tester
-		// const { getByTestId } =
 		render(
 			<ComboBox
 				data-testid="test-combobox"
@@ -42,101 +37,80 @@ describe("ComboBox", () => {
 		await comboboxTester.open();
 		expect(comboboxTester.listbox).toBeInTheDocument();
 
-		const options = comboboxTester.options();
+		let options = comboboxTester.options();
+
+		console.log(options);
+
+		expect(options).toHaveLength(10);
+
 		await comboboxTester.selectOption({ option: options[0] });
 		expect(comboboxTester.combobox.value).toBe("Item 0");
 
-		// TODO: comboboxTester arrow down ;
-		// TODO:
-		// comboboxTester.
+		await comboboxTester.open({
+			interactionType: "mouse",
+		});
 
-		// expect(comboboxTester.listbox).not.toBeInTheDocument();
+		options = comboboxTester.options();
+
+		// await user.keyboard("{ArrowDown}");
+
+		await comboboxTester.selectOption({ option: options[1] });
+		expect(comboboxTester.combobox.value).toBe("Item 1");
+
+		// Trigger arrow down keyboard event
+		// await page.;
+
+		await comboboxTester.open({
+			interactionType: "keyboard",
+		});
+
+		assert(comboboxTester.listbox, "list box not open");
+
+		// Get initial focus - should be on Item 1 (the selected item)
+		let focusedOption = comboboxTester.focusedOption;
+		console.log("Initial focus:", focusedOption?.textContent);
+		expect(focusedOption?.textContent).toBe("Item 1");
+
+		// Dispatch ArrowDown event directly to the listbox
+		const listbox = comboboxTester.listbox;
+		assert(listbox, "listbox not found");
+
+		// Fire keydown event
+		listbox.dispatchEvent(
+			new KeyboardEvent("keydown", {
+				key: "ArrowDown",
+				code: "ArrowDown",
+				bubbles: true,
+				cancelable: true,
+			}),
+		);
+
+		// Small delay to let the UI update
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		focusedOption = comboboxTester.focusedOption;
+		console.log("After arrow down:", focusedOption?.textContent);
+
+		assert(focusedOption, "nothing focused after arrow down");
+
+		// Should have moved from Item 1 to Item 2
+		expect(focusedOption?.textContent).toBe("Item 2");
+
+		// Press ArrowDown again
+		listbox.dispatchEvent(
+			new KeyboardEvent("keydown", {
+				key: "ArrowDown",
+				code: "ArrowDown",
+				bubbles: true,
+				cancelable: true,
+			}),
+		);
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		focusedOption = comboboxTester.focusedOption;
+		console.log("After second arrow down:", focusedOption?.textContent);
+
+		// Should have moved from Item 2 to Item 3 (not Item 4!)
+		expect(focusedOption?.textContent).toBe("Item 3");
 	});
-
-	// test("keyboard navigation moves one element at a time", async () => {
-	// 	const user = userEvent.setup();
-
-	// 	render(
-	// 		<ComboBox label="Test ComboBox" items={testItems}>
-	// 			{(item) => <ComboBoxItem id={item.id}>{item.name}</ComboBoxItem>}
-	// 		</ComboBox>,
-	// 	);
-
-	// 	const input = screen.getByRole("combobox");
-
-	// 	// Focus the input to open the listbox
-	// 	await user.click(input);
-
-	// 	// Wait for the listbox to appear
-	// 	const listbox = await screen.findByRole("listbox");
-	// 	expect(listbox).toBeInTheDocument();
-
-	// 	// Get all options
-	// 	const options = screen.getAllByRole("option");
-	// 	expect(options).toHaveLength(5);
-
-	// 	// Press down arrow once - should focus first item
-	// 	await user.keyboard("{ArrowDown}");
-	// 	expect(options[0]).toHaveAttribute("data-focused", "true");
-
-	// 	// Press down arrow again - should focus second item
-	// 	await user.keyboard("{ArrowDown}");
-	// 	expect(options[1]).toHaveAttribute("data-focused", "true");
-	// 	expect(options[0]).not.toHaveAttribute("data-focused", "true");
-
-	// 	// Press down arrow again - should focus third item
-	// 	await user.keyboard("{ArrowDown}");
-	// 	expect(options[2]).toHaveAttribute("data-focused", "true");
-	// 	expect(options[1]).not.toHaveAttribute("data-focused", "true");
-
-	// 	// Press up arrow - should focus second item
-	// 	await user.keyboard("{ArrowUp}");
-	// 	expect(options[1]).toHaveAttribute("data-focused", "true");
-	// 	expect(options[2]).not.toHaveAttribute("data-focused", "true");
-
-	// 	// Press up arrow again - should focus first item
-	// 	await user.keyboard("{ArrowUp}");
-	// 	expect(options[0]).toHaveAttribute("data-focused", "true");
-	// 	expect(options[1]).not.toHaveAttribute("data-focused", "true");
-	// });
-
-	// test("keyboard navigation does not skip items", async () => {
-	// 	const user = userEvent.setup();
-
-	// 	render(
-	// 		<ComboBox label="Test ComboBox" items={testItems}>
-	// 			{(item) => <ComboBoxItem id={item.id}>{item.name}</ComboBoxItem>}
-	// 		</ComboBox>,
-	// 	);
-
-	// 	const input = screen.getByRole("combobox");
-	// 	await user.click(input);
-
-	// 	const options = screen.getAllByRole("option");
-
-	// 	// Press down arrow and track which items get focused
-	// 	const focusedIndices: number[] = [];
-
-	// 	await user.keyboard("{ArrowDown}");
-	// 	const firstFocused = options.findIndex((opt) =>
-	// 		opt.hasAttribute("data-focused"),
-	// 	);
-	// 	focusedIndices.push(firstFocused);
-
-	// 	await user.keyboard("{ArrowDown}");
-	// 	const secondFocused = options.findIndex((opt) =>
-	// 		opt.hasAttribute("data-focused"),
-	// 	);
-	// 	focusedIndices.push(secondFocused);
-
-	// 	await user.keyboard("{ArrowDown}");
-	// 	const thirdFocused = options.findIndex((opt) =>
-	// 		opt.hasAttribute("data-focused"),
-	// 	);
-	// 	focusedIndices.push(thirdFocused);
-
-	// 	// Each press should increment by exactly 1
-	// 	expect(focusedIndices[1] - focusedIndices[0]).toBe(1);
-	// 	expect(focusedIndices[2] - focusedIndices[1]).toBe(1);
-	// });
 });
