@@ -6,12 +6,13 @@ import {
 	Collection,
 	composeRenderProps,
 	Header,
+	type Key,
 	type ListBoxItemProps,
 	ListBoxSection,
 	type SectionProps,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
-
+import type { Option } from "./select";
 import { composeTailwindRenderProps, focusRing } from "./utils";
 
 interface ListBoxProps<T>
@@ -85,10 +86,13 @@ export const dropdownItemStyles = tv({
 	],
 });
 
-export function DropdownItem(props: ListBoxItemProps) {
+export function DropdownItem<Value extends Key>(
+	props: ListBoxItemProps<Option<Value>>,
+) {
 	const textValue =
 		props.textValue ||
 		(typeof props.children === "string" ? props.children : undefined);
+
 	return (
 		<AriaListBoxItem
 			{...props}

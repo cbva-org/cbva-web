@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { linkOptions } from "@tanstack/react-router";
 import { Label } from "react-aria-components";
-import { ComboBox, ComboBoxItem } from "@/components/base/combo-box";
+import { ComboBox } from "@/components/base/combo-box";
 import { venuesQueryOptions } from "@/data/venues";
 import type { Venue } from "@/db/schema";
 
@@ -44,13 +44,7 @@ export function FilterVenues({ values }: FilterVenuesProps) {
 				items={options}
 				placeholder="Locations"
 				multi={true}
-			>
-				{(item) => (
-					<ComboBoxItem id={item.value} link={item.link}>
-						{item.display}
-					</ComboBoxItem>
-				)}
-			</ComboBox>
+			/>
 		</div>
 	);
 }

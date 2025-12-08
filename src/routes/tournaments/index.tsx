@@ -4,7 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import { ConstructionIcon } from "lucide-react";
-import { Button, button } from "@/components/base/button";
+import { button } from "@/components/base/button";
 import { Checkbox } from "@/components/base/checkbox";
 import { Pagination } from "@/components/base/pagination";
 import { FilterDivisions } from "@/components/tournaments/filters/divisions";

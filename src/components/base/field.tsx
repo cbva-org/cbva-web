@@ -88,13 +88,13 @@ export function FieldGroup(props: GroupProps) {
 
 export const Input = forwardRef(
 	(props: InputProps, ref: React.ForwardedRef<HTMLInputElement>) => {
-		const [mergedProps, mergedRef] = useContextProps(props, ref, InputContext);
+		// const [mergedProps, mergedRef] = useContextProps(props, ref, InputContext);
 		const isMounted = useIsMounted();
 
 		return (
 			<RACInput
-				ref={mergedRef}
-				{...mergedProps}
+				ref={ref}
+				{...props}
 				disabled={!isMounted || props.disabled}
 				className={composeTailwindRenderProps(
 					props.className,
@@ -106,13 +106,13 @@ export const Input = forwardRef(
 );
 
 // export function Input(props: InputProps) {
-//   return (
-//     <RACInput
-//       {...props}
-//       className={composeTailwindRenderProps(
-//         props.className,
-//         "px-2 py-1.5 flex-1 min-w-0 border-0 outline-0 bg-white text-sm text-content-foreground"
-//       )}
-//     />
-//   )
+// 	return (
+// 		<RACInput
+// 			{...props}
+// 			className={composeTailwindRenderProps(
+// 				props.className,
+// 				"px-2 py-1.5 flex-1 min-w-0 border-0 outline-0 bg-white text-sm text-content-foreground",
+// 			)}
+// 		/>
+// 	);
 // }

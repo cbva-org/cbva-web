@@ -32,6 +32,7 @@ export function Popover({
 	...props
 }: PopoverProps) {
 	const popoverContext = useSlottedContext(PopoverContext)!;
+
 	const isSubmenu = popoverContext?.trigger === "SubmenuTrigger";
 	let offset = showArrow ? 12 : 8;
 	offset = isSubmenu ? offset - 6 : offset;

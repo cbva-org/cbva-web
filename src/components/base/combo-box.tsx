@@ -6,12 +6,14 @@ import {
 	type ComboBoxProps as AriaComboBoxProps,
 	type Key,
 	ListBox,
+	ListBoxItem,
 	type ListBoxItemProps,
 	type ValidationResult,
 } from "react-aria-components";
 import { isNotNullOrUndefined } from "@/utils/types";
 import { Button } from "./button";
 import { Description, FieldError, FieldGroup, Input, Label } from "./field";
+import { itemStyles } from "./form/fields/select";
 import {
 	DropdownItem,
 	DropdownSection,
@@ -59,6 +61,10 @@ export function ComboBox<T extends Key>({
 
 	const inputRef = useRef<HTMLInputElement>(null);
 
+	const filteredItems = Array.from(items).filter(
+		({ value }) => !selectedKeysSet.has(value),
+	);
+
 	return (
 		<AriaComboBox
 			{...props}
@@ -94,7 +100,7 @@ export function ComboBox<T extends Key>({
 					{Array.from(selectedKeys)
 						.map((key) => itemsMap.get(key))
 						.filter(isNotNullOrUndefined)
-						.map(({ display, value, link }) =>
+						.map(({ beforeDisplay, display, value, link }) =>
 							link ? (
 								<Link
 									key={value}
@@ -121,22 +127,31 @@ export function ComboBox<T extends Key>({
 
 			<Popover className="w-(--trigger-width)">
 				<ListBox
-					items={Array.from(items).filter(
-						({ value }) => !selectedKeysSet.has(value),
-					)}
+					items={filteredItems}
 					className="outline-0 p-1 max-h-[inherit] overflow-auto [clip-path:inset(0_0_0_0_round_.75rem)]"
 				>
-					{children}
+					{filteredItems.map((item) => (
+						<ComboBoxItem
+							key={item.value}
+							id={item.value}
+							link={item.link}
+							textValue={item.display}
+						>
+							{item.beforeDisplay}
+
+							{item.display}
+						</ComboBoxItem>
+					))}
 				</ListBox>
 			</Popover>
 		</AriaComboBox>
 	);
 }
 
-export function ComboBoxItem({
+export function ComboBoxItem<Value extends Key>({
 	link,
 	...props
-}: ListBoxItemProps & { link?: LinkOptions }) {
+}: ListBoxItemProps<Option<Value>> & { link?: LinkOptions }) {
 	const router = useRouter();
 
 	const href = useMemo(() => {
@@ -149,7 +164,7 @@ export function ComboBoxItem({
 		return location.href;
 	}, [router, link]);
 
-	return <DropdownItem {...props} href={href} />;
+	return <DropdownItem {...props} href={href} className={itemStyles} />;
 }
 
 export function ComboBoxSection<T extends object>(
