@@ -5,19 +5,14 @@ import {
 	useSuspenseQuery,
 } from "@tanstack/react-query";
 import clsx from "clsx";
-import { EditIcon, PlusIcon, XIcon } from "lucide-react";
+import { EditIcon, PlusIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Disclosure, DisclosurePanel, Heading } from "react-aria-components";
 import { Button } from "@/components/base/button";
-import { useAppForm } from "@/components/base/form";
 import { Modal, ModalHeading } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
 import { divisionsQueryOptions } from "@/data/divisions";
 import { tournamentQueryOptions } from "@/data/tournaments";
-import {
-	removeTournamentDivisionMutationOptions,
-	removeTournamentDivisionSchema,
-} from "@/data/tournaments/divisions";
+import { removeTournamentDivisionMutationOptions } from "@/data/tournaments/divisions";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 // import { teamsQueryOptions } from "@/data/teams";
 // import {
@@ -40,33 +35,9 @@ export function EditDivisionsForm({
 	isOpen,
 	...props
 }: EditDivisionsFormProps) {
-	const { data: divisionOptions } = useSuspenseQuery({
-		...divisionsQueryOptions(),
-		select: (divisions) =>
-			divisions.map(({ id, name, maxAge }) => ({
-				value: id,
-				display: name.toUpperCase(),
-				hasMaxAge: isNotNullOrUndefined(maxAge),
-			})),
-	});
-
 	const { data: tournamentDivisions } = useSuspenseQuery({
 		...tournamentQueryOptions(tournamentId),
 		select: (data) => data?.tournamentDivisions,
-	});
-
-	const queryClient = useQueryClient();
-
-	const { mutate, failureReason } = useMutation({
-		...removeTournamentDivisionMutationOptions(),
-		onSuccess: () => {
-			// queryClient.invalidateQueries({
-			// 	queryKey: teamsQueryOptions({ tournamentDivisionId: division.id })
-			// 		.queryKey,
-			// });
-
-			onOpenChange(false);
-		},
 	});
 
 	const [addingOrEditId, setAddingOrEditId] = useState<

@@ -20,7 +20,6 @@ import {
 	updateScoreMutationOptions,
 } from "@/data/tournaments/matches";
 import { DefaultLayout } from "@/layouts/default";
-import { dbg } from "@/utils/dbg";
 import { playerNames } from "@/utils/profiles";
 import { isNotNull } from "@/utils/types";
 

@@ -2,30 +2,34 @@ import { type CalendarDate, parseDate } from "@internationalized/date";
 import { mutationOptions } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { and, gte, lte } from "drizzle-orm";
+import { and, gte, lte, sql } from "drizzle-orm";
 import z from "zod";
 import { requirePermissions, requireRole } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
-	type CreateTournament,
 	type CreateTournamentDirector,
 	type CreateTournamentDivision,
+	type CreateTournamentDivisionRequirement,
 	createTournamentSchema,
-	type Director,
 	selectTournamentSchema,
 	type Tournament,
 	type TournamentDirector,
 	type TournamentDivision,
+	type TournamentDivisionRequirement,
 	tournamentDirectors,
+	tournamentDivisionRequirements,
 	tournamentDivisions,
 	tournaments,
 	type Venue,
 } from "@/db/schema";
 import { calendarDateSchema } from "@/lib/schemas";
+import { isNotNull } from "@/utils/types";
 
 async function duplicateTournaments(
 	templates: (Tournament & {
-		tournamentDivisions: TournamentDivision[];
+		tournamentDivisions: (TournamentDivision & {
+			requirements: TournamentDivisionRequirement[];
+		})[];
 		directors: TournamentDirector[];
 		venue: Venue;
 	})[],
@@ -65,17 +69,19 @@ async function duplicateTournaments(
 		template: templates[i],
 	}));
 
-	const divisionValues: CreateTournamentDivision[] = zipped.flatMap(
-		({ id, template }) =>
-			template.tournamentDivisions.map(
-				({ divisionId, gender, name, teamSize }) => ({
-					tournamentId: id,
-					divisionId,
-					gender,
-					name,
-					teamSize,
-				}),
-			),
+	const divisionValues: (CreateTournamentDivision & {
+		requirements: CreateTournamentDivisionRequirement[];
+	})[] = zipped.flatMap(({ id, template }) =>
+		template.tournamentDivisions.map(
+			({ divisionId, gender, name, teamSize, requirements }) => ({
+				tournamentId: id,
+				divisionId,
+				gender,
+				name,
+				teamSize,
+				requirements: requirements.map(({ id, ...reqs }) => reqs),
+			}),
+		),
 	);
 
 	const directorValues: CreateTournamentDirector[] = zipped.flatMap(
@@ -87,10 +93,50 @@ async function duplicateTournaments(
 			})),
 	);
 
-	await Promise.all([
-		db.insert(tournamentDivisions).values(divisionValues),
+	const [divisions, _] = await Promise.all([
+		db
+			.insert(tournamentDivisions)
+			.values(divisionValues.map(({ requirements, ...values }) => values))
+			.returning({
+				id: tournamentDivisions.id,
+				tournamentId: tournamentDivisions.tournamentId,
+				divisionId: tournamentDivisions.divisionId,
+			}),
 		db.insert(tournamentDirectors).values(directorValues),
 	]);
+
+	const divisionsMap = new Map(
+		divisions.map(({ id, tournamentId, divisionId }) => [
+			[tournamentId, divisionId].join(":"),
+			id,
+		]),
+	);
+
+	// const divisionReqsMap = new Map(
+	// 	divisionValues.map(({ id, requirements }) => [id, requirements]),
+	// );
+
+	// const requirements = divisions
+	// 	.map(({ id, tournamentId, divisionId }) =>
+	// 		divisionValues.find(
+	// 			(v) => v.tournamentId === tournamentId && v.divisionId === divisionId,
+	// 		),
+	// 	)
+	// 	.filter(isNotNull).map(v => );
+
+	const requirements: CreateTournamentDivisionRequirement[] =
+		divisionValues.flatMap(({ tournamentId, divisionId, requirements }) =>
+			requirements.map((req) => ({
+				...req,
+				tournamentDivisionId: divisionsMap.get(
+					[tournamentId, divisionId].join(":"),
+				) as unknown as number,
+			})),
+		);
+
+	if (requirements.length) {
+		await db.insert(tournamentDivisionRequirements).values(requirements);
+	}
 
 	return createdTournaments;
 }
@@ -115,7 +161,11 @@ export const duplicateTournamentFn = createServerFn({ method: "POST" })
 			with: {
 				venue: true,
 				directors: true,
-				tournamentDivisions: true,
+				tournamentDivisions: {
+					with: {
+						requirements: true,
+					},
+				},
 			},
 		});
 
@@ -144,7 +194,7 @@ export const duplicateScheduleSchema = z.object({
 export type DuplicateScheduleParams = z.infer<typeof duplicateScheduleSchema>;
 
 export const duplicateScheduleFn = createServerFn()
-	.middleware([requireRole("admin")])
+	.middleware([requireRole(["admin"])])
 	.inputValidator(duplicateScheduleSchema)
 	.handler(async ({ data: { startDate, endDate, addDays } }) => {
 		// consider doing this all at once using $with
@@ -154,7 +204,11 @@ export const duplicateScheduleFn = createServerFn()
 			with: {
 				venue: true,
 				directors: true,
-				tournamentDivisions: true,
+				tournamentDivisions: {
+					with: {
+						requirements: true,
+					},
+				},
 			},
 			where: (t, { gte, lte, and }) =>
 				and(gte(t.date, startDate.toString()), lte(t.date, endDate.toString())),
@@ -182,7 +236,7 @@ export const deleteScheduleSchema = z.object({
 export type DeleteScheduleParams = z.infer<typeof deleteScheduleSchema>;
 
 export const deleteScheduleFn = createServerFn()
-	.middleware([requireRole("admin")])
+	.middleware([requireRole(["admin"])])
 	.inputValidator(deleteScheduleSchema)
 	.handler(async ({ data: { startDate, endDate } }) => {
 		await db

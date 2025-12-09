@@ -9,9 +9,8 @@ import {
 	type UpdateMatchSet,
 } from "@/db/schema";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
-import { dbg } from "@/utils/dbg";
 import { isNotNull } from "@/utils/types";
-import { overrideScoreFn, overrideScoreMutationOptions } from "./matches";
+import { overrideScoreFn } from "./matches";
 import { createPlayoffsFn } from "./playoffs";
 
 describe("Generating playoffs", () => {

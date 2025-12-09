@@ -16,22 +16,28 @@ import {
 	DisclosureStateContext,
 	Heading,
 } from "react-aria-components";
-import { tv } from "tailwind-variants";
-import { dbg } from "@/utils/dbg";
+import { tv, type VariantProps } from "tailwind-variants";
 import { composeTailwindRenderProps, focusRing } from "./utils";
 
 const disclosure = tv({
-	base: "group min-w-64 border border-gray-200 dark:border-zinc-600 rounded-lg text-gray-900",
+	base: "group min-w-64 rounded-lg text-gray-900",
 	variants: {
+		card: {
+			true: "border border-gray-200 dark:border-zinc-600",
+			false: "",
+		},
 		isInGroup: {
 			true: "border-0 border-b rounded-t-none first:rounded-t-lg last:border-b-0 rounded-b-none last:rounded-b-lg",
 		},
+	},
+	defaultVariants: {
+		card: true,
 	},
 });
 
 const disclosureButton = tv({
 	extend: focusRing,
-	base: "bg-transparent border-0 rounded-lg flex gap-2 items-center w-full text-start p-2 cursor-default",
+	base: "bg-transparent border-0 rounded-lg flex gap-2 items-center w-full text-start cursor-default",
 	variants: {
 		isDisabled: {
 			true: "text-gray-500 dark:text-zinc-600 forced-colors:text-[GrayText]",
@@ -39,6 +45,13 @@ const disclosureButton = tv({
 		isInGroup: {
 			true: "-outline-offset-2 rounded-none group-first:rounded-t-lg group-last:rounded-b-lg",
 		},
+		card: {
+			true: "p-2",
+			false: "py-2",
+		},
+	},
+	defaultVariants: {
+		card: true,
 	},
 });
 
@@ -54,18 +67,18 @@ const chevron = tv({
 	},
 });
 
-export interface DisclosureProps extends AriaDisclosureProps {
+export type DisclosureProps = AriaDisclosureProps & {
 	children: React.ReactNode;
-}
+} & VariantProps<typeof disclosure>;
 
-export function Disclosure({ children, ...props }: DisclosureProps) {
+export function Disclosure({ card, children, ...props }: DisclosureProps) {
 	const isInGroup = useContext(DisclosureGroupStateContext) !== null;
 
 	return (
 		<AriaDisclosure
 			{...props}
 			className={composeRenderProps(props.className, (className, renderProps) =>
-				disclosure({ ...renderProps, isInGroup, className }),
+				disclosure({ ...renderProps, isInGroup, card, className }),
 			)}
 		>
 			{children}
@@ -73,23 +86,41 @@ export function Disclosure({ children, ...props }: DisclosureProps) {
 	);
 }
 
-export interface DisclosureHeaderProps {
+const headerStyles = tv({
+	base: "font-semibold m-0",
+	variants: {
+		size: {
+			sm: ["text-sm"],
+			md: ["text-base"],
+			lg: ["text-lg"],
+		},
+	},
+	defaultVariants: {
+		size: "lg",
+	},
+});
+
+export type DisclosureHeaderProps = {
 	className?: string;
 	children: React.ReactNode;
-}
+} & VariantProps<typeof headerStyles> &
+	VariantProps<typeof disclosureButton>;
 
 export function DisclosureHeader({
 	className,
 	children,
+	card,
+	size = "lg",
 }: DisclosureHeaderProps) {
 	const { isExpanded } = useContext(DisclosureStateContext)!;
 	const isInGroup = useContext(DisclosureGroupStateContext) !== null;
+
 	return (
-		<Heading className={clsx("text-lg font-semibold m-0", className)}>
+		<Heading className={headerStyles({ className, size })}>
 			<Button
 				slot="trigger"
 				className={(renderProps) =>
-					dbg(disclosureButton({ ...renderProps, isInGroup }))
+					disclosureButton({ ...renderProps, isInGroup, card })
 				}
 			>
 				{({ isDisabled }) => (
@@ -97,6 +128,13 @@ export function DisclosureHeader({
 						<ChevronRight
 							aria-hidden
 							className={chevron({ isExpanded, isDisabled })}
+							size={
+								{
+									sm: 8,
+									md: 12,
+									lg: 16,
+								}[size]
+							}
 						/>
 						{children}
 					</>
@@ -107,10 +145,15 @@ export function DisclosureHeader({
 }
 
 export interface DisclosurePanelProps extends AriaDisclosurePanelProps {
+	card?: boolean;
 	children: React.ReactNode;
 }
 
-export function DisclosurePanel({ children, ...props }: DisclosurePanelProps) {
+export function DisclosurePanel({
+	card = true,
+	children,
+	...props
+}: DisclosurePanelProps) {
 	return (
 		<AriaDisclosurePanel
 			{...props}
@@ -119,7 +162,7 @@ export function DisclosurePanel({ children, ...props }: DisclosurePanelProps) {
 				"h-(--disclosure-panel-height) motion-safe:transition-[height] overflow-clip",
 			)}
 		>
-			<div className="px-4 py-2">{children}</div>
+			<div className={clsx("py-2", card ? "px-4" : "")}>{children}</div>
 		</AriaDisclosurePanel>
 	);
 }

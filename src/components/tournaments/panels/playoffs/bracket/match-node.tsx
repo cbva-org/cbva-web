@@ -19,7 +19,6 @@ import type {
 	TournamentDivisionTeam,
 } from "@/db/schema";
 import { formatOrdinals } from "@/lib/numbers";
-import { dbg } from "@/utils/dbg";
 import { isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../../games/pool-match-grid";
 import { useActiveTeam, useSetActiveTeam, useSetNodeIdToCenter } from ".";

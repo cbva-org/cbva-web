@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { index, integer, pgTable, serial } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
@@ -45,3 +46,13 @@ export type CreateTournamentDivisionRequirement = z.infer<
 export type UpdateTournamentDivisionRequirement = z.infer<
 	typeof updateTournamentDivisionRequirementSchema
 >;
+
+export const tournamentDivisionRequirementsRelations = relations(
+	tournamentDivisionRequirements,
+	({ one }) => ({
+		tournamentDivisions: one(tournamentDivisions, {
+			fields: [tournamentDivisionRequirements.tournamentDivisionId],
+			references: [tournamentDivisions.id],
+		}),
+	}),
+);

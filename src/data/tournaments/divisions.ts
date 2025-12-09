@@ -14,6 +14,7 @@ import { isNotNullOrUndefined } from "@/utils/types";
 export const upsertTournamentDivisionSchema =
 	createTournamentDivisionSchema.extend({
 		id: z.number().optional(),
+		showDefaultDisplay: z.boolean().optional().default(true),
 	});
 
 export const upsertTournamentDivisionFn = createServerFn()

@@ -7,21 +7,36 @@ export function getLevelDisplay(level: Level | null) {
 }
 
 export function getTournamentDivisionDisplay({
+	name,
 	teamSize,
 	gender,
-	division: { maxAge, name, display: divisionDisplay },
+	displayGender,
+	displayDivision,
+	division: { maxAge, name: divisionName, display: divisionDisplay },
 }: Pick<TournamentDivision, "name" | "teamSize" | "gender"> & {
+	displayGender?: boolean;
+	displayDivision?: boolean;
 	division: Pick<Division, "maxAge" | "name" | "display">;
 }) {
-	let display = maxAge
-		? gender === "male"
-			? "Boy's"
-			: "Girl's"
-		: gender === "male"
-			? "Men's"
-			: "Women's";
+	let display = `${name ?? ""}`;
 
-	display += ` ${divisionDisplay ?? name.toUpperCase()}`;
+	if (!name || displayGender) {
+		if (display.length) {
+			display += " ";
+		}
+
+		display += maxAge
+			? gender === "male"
+				? "Boy's"
+				: "Girl's"
+			: gender === "male"
+				? "Men's"
+				: "Women's";
+	}
+
+	if (!name || displayDivision) {
+		display += ` ${divisionDisplay ?? divisionName.toUpperCase()}`;
+	}
 
 	if (teamSize === 4) {
 		display += " quads";

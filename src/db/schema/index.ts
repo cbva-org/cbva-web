@@ -18,7 +18,10 @@ import {
 	tournamentDirectorRelations,
 	tournamentDirectors,
 } from "./tournament-directors";
-import { tournamentDivisionRequirements } from "./tournament-division-requirements";
+import {
+	tournamentDivisionRequirements,
+	tournamentDivisionRequirementsRelations,
+} from "./tournament-division-requirements";
 import {
 	tournamentDivisionTeams,
 	tournamentDivisionTeamsRelations,
@@ -93,6 +96,7 @@ export const relationships = {
 	teamRelations,
 	tournamentDirectorRelations,
 	tournamentDivisionRelations,
+	tournamentDivisionRequirementsRelations,
 	tournamentDivisionTeamsRelations,
 	tournamentRelations,
 };

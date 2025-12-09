@@ -14,6 +14,7 @@ import { z } from "zod";
 import { divisions } from "./divisions";
 import { pools } from "./pools";
 import { genderEnum } from "./shared";
+import { tournamentDivisionRequirements } from "./tournament-division-requirements";
 import { tournamentDivisionTeams } from "./tournament-division-teams";
 import { tournaments } from "./tournaments";
 
@@ -38,6 +39,8 @@ export const tournamentDivisions = pgTable(
 		capacity: integer().notNull().default(10),
 		waitlistCapacity: integer().notNull().default(5),
 		autopromoteWaitlist: boolean().notNull().default(true),
+		displayGender: boolean(),
+		displayDivision: boolean(),
 		externalRef: uuid().unique(),
 	},
 	(table) => [
@@ -81,5 +84,6 @@ export const tournamentDivisionRelations = relations(
 		}),
 		teams: many(tournamentDivisionTeams),
 		pools: many(pools),
+		requirements: many(tournamentDivisionRequirements),
 	}),
 );

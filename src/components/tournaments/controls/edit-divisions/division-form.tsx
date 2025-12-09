@@ -4,7 +4,13 @@ import {
 	useSuspenseQuery,
 } from "@tanstack/react-query";
 import { Button } from "@/components/base/button";
+import {
+	Disclosure,
+	DisclosureHeader,
+	DisclosurePanel,
+} from "@/components/base/disclosure";
 import { useAppForm } from "@/components/base/form";
+import { Information } from "@/components/base/information";
 import { title } from "@/components/base/primitives";
 import { divisionsQueryOptions } from "@/data/divisions";
 import { tournamentQueryOptions } from "@/data/tournaments";
@@ -14,6 +20,7 @@ import {
 } from "@/data/tournaments/divisions";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { isNotNullOrUndefined } from "@/utils/types";
+import { InformationPanel } from "../../panels/information";
 
 export type DivisionFormProps = {
 	tournamentId: number;
@@ -69,6 +76,9 @@ export function DivisionForm({
 			waitlistCapacity: editDivision?.waitlistCapacity,
 			autopromoteWaitlist: editDivision?.autopromoteWaitlist,
 			teamSize: editDivision?.teamSize ?? 2,
+			displayGender: true,
+			displayDivision: true,
+			requirements: editDivision?.requirements,
 		},
 		validators: {
 			onMount: schema,
@@ -207,17 +217,47 @@ export function DivisionForm({
 							: undefined;
 
 					return (
-						<form.AppField
-							name="name"
-							children={(field) => (
-								<field.Text
-									label="Name"
-									field={field}
-									placeholder={placeholder}
-									className="col-span-full"
+						<>
+							<form.AppField
+								name="name"
+								children={(field) => (
+									<field.Text
+										label={
+											<>
+												Name: <span>{placeholder}</span>
+											</>
+										}
+										field={field}
+										placeholder={placeholder}
+										className="col-span-full"
+									/>
+								)}
+							/>
+							<div className="col-span-full flex flex-row space-x-2">
+								<form.AppField
+									name="displayGender"
+									children={(field) => (
+										<field.Checkbox
+											label={<>Display gender</>}
+											field={field}
+											className="col-span-3"
+											isDisabled={!name}
+										/>
+									)}
 								/>
-							)}
-						/>
+								<form.AppField
+									name="displayDivision"
+									children={(field) => (
+										<field.Checkbox
+											label={<>Display division</>}
+											field={field}
+											className="col-span-3"
+											isDisabled={!name}
+										/>
+									)}
+								/>
+							</div>
+						</>
 					);
 				}}
 			</form.Subscribe>
@@ -256,6 +296,72 @@ export function DivisionForm({
 					/>
 				)}
 			/>
+
+			<form.AppField name="requirements" mode="array">
+				{(field) => (
+					<Disclosure card={false} className="col-span-full">
+						<DisclosureHeader size="sm" card={false}>
+							Requirements
+						</DisclosureHeader>
+						<DisclosurePanel card={false}>
+							<div className="flex flex-col space-y-2">
+								{field.state.value?.map((req, i) => {
+									const selectedDivision = divisionOptions.find(
+										({ value }) => value === req.qualifiedDivisionId,
+									);
+
+									return (
+										<>
+											<span className="font-semibold">
+												Player {i + 1} requirement
+											</span>
+											<form.AppField name={`requirements[${i}].gender`}>
+												{(subField) => (
+													<>
+														<subField.Select
+															label="Gender"
+															field={subField}
+															options={[
+																{
+																	value: "male",
+																	display: selectedDivision?.hasMaxAge
+																		? "Boy's"
+																		: "Men's",
+																},
+																{
+																	value: "female",
+																	display: selectedDivision?.hasMaxAge
+																		? "Girl's"
+																		: "Women's",
+																},
+															]}
+															placeholder="Select a gender"
+															className="col-span-full"
+														/>
+													</>
+												)}
+											</form.AppField>
+											<form.AppField
+												name={`requirements[${i}].qualifiedDivisionId`}
+											>
+												{(subField) => (
+													<subField.Select
+														label="Division"
+														field={subField}
+														options={divisionOptions}
+														placeholder="Select a division"
+														className="col-span-full"
+													/>
+												)}
+											</form.AppField>
+										</>
+									);
+								})}
+							</div>
+						</DisclosurePanel>
+					</Disclosure>
+				)}
+			</form.AppField>
 
 			<form.AppForm>
 				<form.Footer>
