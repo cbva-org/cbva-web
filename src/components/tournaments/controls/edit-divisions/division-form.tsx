@@ -316,8 +316,6 @@ export function DivisionForm({
 										({ value }) => value === req.qualifiedDivisionId,
 									);
 
-									console.log("1", selectedDivision);
-
 									return (
 										<>
 											<span className="font-semibold">
