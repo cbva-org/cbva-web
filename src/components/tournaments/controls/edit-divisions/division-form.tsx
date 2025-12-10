@@ -307,7 +307,7 @@ export function DivisionForm({
 				{(field) => (
 					<Disclosure card={false} className="col-span-full">
 						<DisclosureHeader size="sm" card={false}>
-							Requirements
+							Special Requirements
 						</DisclosureHeader>
 						<DisclosurePanel card={false}>
 							<div className="flex flex-col space-y-2">
