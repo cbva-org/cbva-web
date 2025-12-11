@@ -3,7 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { roleHasPermission, viewerQueryOptions } from "@/auth/shared";
 import { card, title } from "@/components/base/primitives";
-import { UpsertTournamentForm } from "@/components/tournaments/upsert-form";
+import { TournamentFormsGroup } from "@/components/tournaments/forms";
 import { tournamentQueryOptions } from "@/data/tournaments";
 import { DefaultLayout } from "@/layouts/default";
 
@@ -23,7 +23,7 @@ function RouteComponent() {
 					New Tournament
 				</h1>
 				<div className={card({ class: "w-full max-w-lg mx-auto" })}>
-					<UpsertTournamentForm />
+					<TournamentFormsGroup />
 				</div>
 			</Suspense>
 		</DefaultLayout>
