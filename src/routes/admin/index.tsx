@@ -1,12 +1,17 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { viewerQueryOptions } from "@/auth/shared";
+import { authMiddleware } from "@/auth/shared";
 import { ScheduleDashboard } from "@/components/admin/schedule";
 import { UsersList } from "@/components/admin/users-list";
 import { DefaultLayout } from "@/layouts/default";
 
 export const Route = createFileRoute("/admin/")({
-	loader: async ({ context: { queryClient } }) => {
-		const viewer = await queryClient.ensureQueryData(viewerQueryOptions());
+	// server: {
+	// 	middleware: [authMiddleware],
+	// },
+	loader: async ({ context: { queryClient, ...context }, serverContext }) => {
+		console.log("heer", { context, serverContext });
+
+		const viewer = context.viewer ?? serverContext?.viewer;
 
 		// Check if user is admin
 		if (!viewer || viewer.role !== "admin") {

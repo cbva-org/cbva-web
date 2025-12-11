@@ -1,4 +1,4 @@
-import type { QueryClient } from "@tanstack/query-core";
+import { isServer, type QueryClient } from "@tanstack/query-core";
 import {
 	createRootRouteWithContext,
 	HeadContent,
@@ -7,7 +7,11 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type * as React from "react";
-import { viewerIdQueryOptions, viewerQueryOptions } from "@/auth/shared";
+import {
+	getViewerFn,
+	viewerIdQueryOptions,
+	viewerQueryOptions,
+} from "@/auth/shared";
 import { Provider } from "@/providers";
 import appCss from "../styles.css?url";
 
@@ -16,6 +20,18 @@ interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+	beforeLoad: async ({ context: { queryClient } }) => {
+		const viewer = await getViewerFn();
+
+		if (viewer) {
+			queryClient.setQueryData(viewerQueryOptions().queryKey, viewer);
+			queryClient.setQueryData(viewerIdQueryOptions().queryKey, viewer.id);
+		}
+
+		return {
+			viewer,
+		};
+	},
 	head: () => ({
 		meta: [
 			{
@@ -37,12 +53,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 		],
 	}),
 	shellComponent: RootDocument,
-	beforeLoad: async ({ context: { queryClient } }) => {
-		await Promise.all([
-			queryClient.ensureQueryData(viewerIdQueryOptions()),
-			queryClient.ensureQueryData(viewerQueryOptions()),
-		]);
-	},
+	// beforeLoad: async ({ context: { queryClient } }) => {
+	// 	await Promise.all([
+	// 		queryClient.ensureQueryData(viewerIdQueryOptions()),
+	// 		queryClient.ensureQueryData(viewerQueryOptions()),
+	// 	]);
+	// },
 	// errorComponent: ({ error }) => {
 	//    useEffect(() => {
 	//      Sentry.captureException(error)

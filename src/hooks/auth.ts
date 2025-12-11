@@ -1,16 +1,18 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 
 import type { Viewer } from "@/auth";
 import { authClient } from "@/auth/client";
 import type { FileRouteTypes } from "@/routeTree.gen";
 
-export function useRedirect(to: FileRouteTypes["to"], predicate: boolean) {
+export function useRedirect(
+	to: FileRouteTypes["to"],
+	predicate: boolean | undefined,
+) {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (predicate) {
+		if (predicate === true) {
 			navigate({
 				replace: true,
 				to,

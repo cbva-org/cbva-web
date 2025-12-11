@@ -7,12 +7,27 @@ import { authClient } from "./client";
 import type { Permissions, Role } from "./permissions";
 import { getViewer } from "./server";
 
+export const maybeAuthMiddleware = createMiddleware()
+	.server(async ({ next, context }) => {
+		console.log("server", context);
+		return await next({
+			context: {
+				boop: 1,
+			},
+		});
+	})
+	.client(async ({ next, context }) => {
+		console.log("client", context);
+
+		return await next();
+	});
+
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
-	console.log("hmmmmmm");
+	// console.log("hmmmmmm");
 
 	const { impersonatedBy, ...viewer } = await getViewer();
 
-	console.log("uuuuuh", viewer);
+	// console.log("uuuuuh", viewer);
 
 	return await next({
 		context: {
@@ -71,16 +86,9 @@ export function useIsLoggedIn() {
 //   });
 
 export const getViewerFn = createServerFn({ method: "GET" })
-	.middleware([
-		// async (next) => {
-		// 	console.log("what");
-
-		// 	return await next();
-		// },
-		authMiddleware,
-	])
+	.middleware([authMiddleware])
 	.handler(async ({ context }) => {
-		console.log("eeep, ", context);
+		// console.log("eeep, ", context);
 
 		return context?.viewer ?? null;
 	});
@@ -106,7 +114,7 @@ export function useViewerRole() {
 export function useViewerIsAdmin() {
 	const { data: viewer } = useSuspenseQuery(viewerQueryOptions());
 
-	return viewer?.role === "admin";
+	return viewer ? viewer.role === "admin" : undefined;
 }
 
 export function useViewerHasPermission<P extends Permissions>(permissions: P) {
