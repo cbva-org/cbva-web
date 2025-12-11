@@ -6,6 +6,10 @@ export function isNotNullOrUndefined<T>(t: T | null | undefined): t is T {
 	return t !== null && t !== undefined;
 }
 
+export function isDefined<T>(t: T | null | undefined): t is T {
+	return t !== null && t !== undefined;
+}
+
 export class ValidationError extends Error {
 	kind: string;
 

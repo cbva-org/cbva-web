@@ -101,12 +101,14 @@ const headerStyles = tv({
 });
 
 export type DisclosureHeaderProps = {
+	onPress?: () => void;
 	className?: string;
 	children: React.ReactNode;
 } & VariantProps<typeof headerStyles> &
 	VariantProps<typeof disclosureButton>;
 
 export function DisclosureHeader({
+	onPress,
 	className,
 	children,
 	card,
@@ -118,7 +120,8 @@ export function DisclosureHeader({
 	return (
 		<Heading className={headerStyles({ className, size })}>
 			<Button
-				slot="trigger"
+				slot={onPress ? undefined : "trigger"}
+				onPress={onPress}
 				className={(renderProps) =>
 					disclosureButton({ ...renderProps, isInGroup, card })
 				}

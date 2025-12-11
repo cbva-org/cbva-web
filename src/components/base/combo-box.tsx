@@ -6,10 +6,10 @@ import {
 	type ComboBoxProps as AriaComboBoxProps,
 	type Key,
 	ListBox,
-	ListBoxItem,
 	type ListBoxItemProps,
 	type ValidationResult,
 } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
 import { isNotNullOrUndefined } from "@/utils/types";
 import { Button } from "./button";
 import { Description, FieldError, FieldGroup, Input, Label } from "./field";
@@ -73,7 +73,7 @@ export function ComboBox<T extends Key>({
 				"group flex flex-col gap-1",
 			)}
 		>
-			{label && <Label>{label}</Label>}
+			{label && <Label isRequired={props.isRequired}>{label}</Label>}
 
 			<FieldGroup>
 				<Input
@@ -81,6 +81,11 @@ export function ComboBox<T extends Key>({
 						selectedText.length ? selectedText.join(", ") : placeholder
 					}
 					ref={inputRef}
+					className={
+						selectedText.length
+							? "placeholder:text-black placeholder:non-italic"
+							: ""
+					}
 				/>
 				<Button
 					variant="icon"
@@ -100,7 +105,7 @@ export function ComboBox<T extends Key>({
 					{Array.from(selectedKeys)
 						.map((key) => itemsMap.get(key))
 						.filter(isNotNullOrUndefined)
-						.map(({ beforeDisplay, display, value, link }) =>
+						.map(({ display, value, link }) =>
 							link ? (
 								<Link
 									key={value}

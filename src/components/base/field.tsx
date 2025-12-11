@@ -20,12 +20,14 @@ import { tv } from "tailwind-variants";
 import { useIsMounted } from "@/lib/dom";
 import { composeTailwindRenderProps, focusRing } from "./utils";
 
-export function Label(props: LabelProps) {
+export function Label(props: LabelProps & { isRequired?: boolean }) {
 	return (
 		<RACLabel
 			{...props}
 			className={twMerge(
-				"text-sm text-gray-500 dark:text-zinc-400 font-medium cursor-default w-fit",
+				"text-sm text-black font-medium cursor-default w-fit",
+				props.isRequired &&
+					"after:ml-0.5 after:text-red-500 after:content-['*']",
 				props.className,
 			)}
 		/>

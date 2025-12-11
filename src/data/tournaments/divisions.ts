@@ -49,7 +49,7 @@ const upsertRequirements = createServerOnlyFn(
 export const upsertTournamentDivisionSchema =
 	createTournamentDivisionSchema.extend({
 		id: z.number().optional(),
-		requirements: z.array(updateTournamentDivisionRequirementSchema),
+		requirements: z.array(updateTournamentDivisionRequirementSchema).optional(),
 	});
 
 export const upsertTournamentDivisionFn = createServerFn()
@@ -93,7 +93,7 @@ export const upsertTournamentDivisionFn = createServerFn()
 					})
 					.where(eq(tournamentDivisions.id, tournamentDivisionId));
 
-				if (requirements.length) {
+				if (requirements?.length) {
 					await upsertRequirements(tournamentDivisionId, requirements);
 				}
 
@@ -120,7 +120,7 @@ export const upsertTournamentDivisionFn = createServerFn()
 					id: tournamentDivisions.id,
 				});
 
-			if (requirements.length) {
+			if (requirements?.length) {
 				await upsertRequirements(id, requirements);
 			}
 

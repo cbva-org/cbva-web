@@ -5,6 +5,8 @@ import {
 } from "@tanstack/react-query";
 import { pick } from "lodash-es";
 import { PlusIcon } from "lucide-react";
+import { useState } from "react";
+import { Header } from "react-aria-components";
 import { Button } from "@/components/base/button";
 import {
 	Disclosure,
@@ -20,6 +22,7 @@ import {
 	upsertTournamentDivisionSchema,
 } from "@/data/tournaments/divisions";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
+import { dbg } from "@/utils/dbg";
 import { isNotNullOrUndefined } from "@/utils/types";
 
 export type DivisionFormProps = {
@@ -72,9 +75,9 @@ export function DivisionForm({
 			divisionId: editDivision?.divisionId,
 			name: editDivision?.name,
 			gender: editDivision?.gender,
-			capacity: editDivision?.capacity,
-			waitlistCapacity: editDivision?.waitlistCapacity,
-			autopromoteWaitlist: editDivision?.autopromoteWaitlist,
+			capacity: editDivision?.capacity ?? 10,
+			waitlistCapacity: editDivision?.waitlistCapacity ?? 5,
+			autopromoteWaitlist: editDivision?.autopromoteWaitlist ?? true,
 			teamSize: editDivision?.teamSize ?? 2,
 			displayGender: true,
 			displayDivision: true,
@@ -305,93 +308,90 @@ export function DivisionForm({
 
 			<form.AppField name="requirements" mode="array">
 				{(field) => (
-					<Disclosure card={false} className="col-span-full">
-						<DisclosureHeader size="sm" card={false}>
-							Special Requirements
-						</DisclosureHeader>
-						<DisclosurePanel card={false}>
-							<div className="flex flex-col space-y-2">
-								{field.state.value?.map((req, i) => {
-									const selectedDivision = divisionOptions.find(
-										({ value }) => value === req.qualifiedDivisionId,
-									);
+					<div className="col-span-full grid grid-cols-6 gap-3">
+						<Header className="col-span-full">Special Requirements</Header>
+						<div className="col-span-full flex flex-col items-stretch space-y-2">
+							{field.state.value?.map((req, i) => {
+								const selectedDivision = divisionOptions.find(
+									({ value }) => value === req.qualifiedDivisionId,
+								);
 
-									return (
-										<>
-											<span className="font-semibold">
-												Player {i + 1} requirement
-											</span>
-											<form.AppField name={`requirements[${i}].gender`}>
-												{(subField) => (
-													<>
-														<subField.Select
-															label="Gender"
-															field={subField}
-															options={[
-																{
-																	value: "male",
-																	display: selectedDivision?.hasMaxAge
-																		? "Boy's"
-																		: "Men's",
-																},
-																{
-																	value: "female",
-																	display: selectedDivision?.hasMaxAge
-																		? "Girl's"
-																		: "Women's",
-																},
-															]}
-															placeholder="Select a gender"
-															className="col-span-full"
-														/>
-													</>
-												)}
-											</form.AppField>
-											<form.AppField
-												name={`requirements[${i}].qualifiedDivisionId`}
-											>
-												{(subField) => (
+								return (
+									<>
+										<span className="font-semibold">
+											Player {i + 1} requirement
+										</span>
+										<form.AppField name={`requirements[${i}].gender`}>
+											{(subField) => (
+												<>
 													<subField.Select
-														label="Division"
+														label="Gender"
 														field={subField}
-														options={divisionOptions}
-														placeholder="Select a division"
+														options={[
+															{
+																value: "male",
+																display: selectedDivision?.hasMaxAge
+																	? "Boy's"
+																	: "Men's",
+															},
+															{
+																value: "female",
+																display: selectedDivision?.hasMaxAge
+																	? "Girl's"
+																	: "Women's",
+															},
+														]}
+														placeholder="Select a gender"
 														className="col-span-full"
 													/>
-												)}
-											</form.AppField>
-										</>
-									);
-								})}
-								<form.Subscribe
-									selector={(state) =>
-										pick(state.values, ["requirements", "teamSize", "gender"])
-									}
-								>
-									{({ teamSize, requirements }) => (
-										<Button
-											color="primary"
-											size="sm"
-											isDisabled={
-												requirements ? requirements.length >= teamSize : false
-											}
-											onPress={() => {
-												field.handleChange((curr) =>
-													(curr ?? []).concat({
-														gender: null,
-														qualifiedDivisionId: null,
-														tournamentDivisionId: divisionId,
-													}),
-												);
-											}}
+												</>
+											)}
+										</form.AppField>
+										<form.AppField
+											name={`requirements[${i}].qualifiedDivisionId`}
 										>
-											<PlusIcon /> Add requirement
-										</Button>
-									)}
-								</form.Subscribe>
-							</div>
-						</DisclosurePanel>
-					</Disclosure>
+											{(subField) => (
+												<subField.Select
+													label="Division"
+													field={subField}
+													options={divisionOptions}
+													placeholder="Select a division"
+													className="col-span-full"
+												/>
+											)}
+										</form.AppField>
+									</>
+								);
+							})}
+							<form.Subscribe
+								selector={(state) =>
+									pick(state.values, ["requirements", "teamSize", "gender"])
+								}
+							>
+								{({ teamSize, requirements }) => (
+									<Button
+										className="cols-span-full "
+										color="primary"
+										size="sm"
+										isDisabled={
+											requirements ? requirements.length >= teamSize : false
+										}
+										onPress={() => {
+											field.handleChange((curr) =>
+												(curr ?? []).concat({
+													gender: null,
+													qualifiedDivisionId: null,
+													tournamentDivisionId: divisionId,
+												}),
+											);
+										}}
+									>
+										<PlusIcon /> Add requirement
+									</Button>
+								)}
+							</form.Subscribe>
+						</div>
+					</div>
 				)}
 			</form.AppField>
 

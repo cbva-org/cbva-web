@@ -32,6 +32,7 @@ export const tournaments = pgTable("tournaments", {
 export const selectTournamentSchema = createSelectSchema(tournaments);
 export const createTournamentSchema = createInsertSchema(tournaments).omit({
 	id: true,
+	externalRef: true,
 });
 export const updateTournamentSchema = createUpdateSchema(tournaments);
 

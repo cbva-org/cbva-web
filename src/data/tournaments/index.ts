@@ -1,7 +1,7 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
-import type z from "zod";
+import z from "zod";
 import { authMiddleware, requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
 import { findPaged } from "@/db/pagination";
@@ -11,7 +11,7 @@ import {
 	tournamentDivisions,
 	tournaments,
 } from "@/db/schema";
-import { isNotNull } from "@/utils/types";
+import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 export const getTournaments = createServerFn({
 	method: "GET",
@@ -176,7 +176,78 @@ export const getTournament = createServerFn({
 export const tournamentQueryOptions = (id?: number) =>
 	queryOptions({
 		queryKey: ["tournament", id],
-		queryFn: () => (id ? getTournament({ data: { id: id as number } }) : null),
+		queryFn: () => {
+			if (id) {
+				return getTournament({ data: { id: id as number } });
+			}
+
+			return null;
+		},
+	});
+
+export const upsertTournamentSchema = selectTournamentSchema
+	.pick({
+		name: true,
+		date: true,
+		startTime: true,
+		venueId: true,
+	})
+	.extend({
+		id: z.number().optional(),
+	});
+
+export type UpsertTournamentParams = z.infer<typeof upsertTournamentSchema>;
+
+export const upsertTournamentFn = createServerFn({ method: "POST" })
+	.middleware([
+		requirePermissions({
+			tournament: ["update"],
+		}),
+	])
+	.inputValidator(upsertTournamentSchema)
+	.handler(
+		async ({ data: { id: tournamentId, name, date, startTime, venueId } }) => {
+			if (isNotNullOrUndefined(tournamentId)) {
+				const [{ id }] = await db
+					.update(tournaments)
+					.set({
+						name,
+						date,
+						startTime,
+						venueId,
+					})
+					.where(eq(tournaments.id, tournamentId));
+
+				return {
+					success: true,
+					data: { id },
+				};
+			}
+
+			const [{ id }] = await db
+				.insert(tournaments)
+				.values({
+					name,
+					date,
+					startTime,
+					venueId,
+				})
+				.returning({
+					id: tournaments.id,
+				});
+
+			return {
+				success: true,
+				data: { id },
+			};
+		},
+	);
+
+export const upsertTournamentMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: UpsertTournamentParams) => {
+			return upsertTournamentFn({ data });
+		},
 	});
 
 export const editTournamentSchema = selectTournamentSchema.pick({
@@ -195,12 +266,13 @@ export const editTournamentFn = createServerFn({ method: "POST" })
 		}),
 	])
 	.inputValidator(editTournamentSchema)
-	.handler(async ({ data: { id, date, startTime } }) => {
+	.handler(async ({ data: { id, date, startTime, venueId } }) => {
 		await db
 			.update(tournaments)
 			.set({
 				date,
 				startTime,
+				venueId,
 			})
 			.where(eq(tournaments.id, id));
 
