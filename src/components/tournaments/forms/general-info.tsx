@@ -8,6 +8,7 @@ import {
 	upsertTournamentSchema,
 } from "@/data/tournaments";
 import { useVenueFilterOptions } from "@/data/venues";
+import { getDefaultTimeZone } from "@/lib/dates";
 import { calendarDateSchema, timeSchema } from "@/lib/schemas";
 import { isDefined } from "@/utils/types";
 import { useAppForm } from "../../base/form";

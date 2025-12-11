@@ -32,6 +32,7 @@ import {
 } from "@/data/profiles";
 import { useVenueFilterOptions } from "@/data/venues";
 import { DefaultLayout } from "@/layouts/default";
+import { getDefaultTimeZone } from "@/lib/dates";
 import { isNotNullOrUndefined } from "@/utils/types";
 
 export const Route = createFileRoute("/profile/$profileId/")({

@@ -7,6 +7,7 @@ import {
 	useUpdatePlayerProfile,
 } from "@/data/profiles";
 import type { CreatePlayerProfile } from "@/db/schema";
+import { getDefaultTimeZone } from "@/lib/dates";
 
 const schema = z.object({
 	firstName: z

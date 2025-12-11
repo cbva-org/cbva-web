@@ -1,6 +1,7 @@
 import { today } from "@internationalized/date";
 import { assert, describe, expect, test } from "vitest";
 import { db } from "@/db/connection";
+import { getDefaultTimeZone } from "@/lib/dates";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
 import { createDirectors } from "@/tests/utils/users";
 import { createVenues } from "@/tests/utils/venues";
