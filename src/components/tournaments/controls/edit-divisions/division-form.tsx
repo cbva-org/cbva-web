@@ -236,7 +236,7 @@ export function DivisionForm({
 									<field.Text
 										label={
 											<>
-												Name: <span>{placeholder}</span>
+												Name: <span>{placeholder ?? "-"}</span>
 											</>
 										}
 										field={field}
@@ -310,12 +310,16 @@ export function DivisionForm({
 			/>
 
 			<Disclosure className="col-span-full" card={false}>
-				<DisclosureHeader card={false}>
+				<DisclosureHeader
+					card={false}
+					info={
+						<>
+							Add requirements to run special formats such as Mother/Daughter,
+							coed, etc.
+						</>
+					}
+				>
 					<span>Special Requirements</span>
-					<Information>
-						Add requirements to run special formats such as Mother/Daughter,
-						coed, etc.
-					</Information>
 				</DisclosureHeader>
 
 				<DisclosurePanel card={false}>

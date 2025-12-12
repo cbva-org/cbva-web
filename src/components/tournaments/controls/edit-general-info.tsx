@@ -3,6 +3,7 @@ import {
 	parseDate,
 	parseTime,
 	type Time,
+	today,
 } from "@internationalized/date";
 import {
 	useMutation,
@@ -20,17 +21,20 @@ import {
 	tournamentQueryOptions,
 } from "@/data/tournaments";
 import { useVenueFilterOptions } from "@/data/venues";
+import { getDefaultTimeZone } from "@/lib/dates";
 import { calendarDateSchema, timeSchema } from "@/lib/schemas";
 
 export type EditGeneralInfoFormProps = {
 	tournamentId: number;
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
+	onSuccess: () => void;
 };
 
 export function EditGeneralInfoForm({
 	tournamentId,
 	onOpenChange,
+	onSuccess,
 	...props
 }: EditGeneralInfoFormProps) {
 	const { data: tournament } = useSuspenseQuery({
@@ -52,33 +56,41 @@ export function EditGeneralInfoForm({
 		onSuccess: () => {
 			queryClient.invalidateQueries(tournamentQueryOptions(tournamentId));
 
+			if (onSuccess) {
+				onSuccess();
+			}
+
 			onOpenChange(false);
 		},
 	});
 
-	const schema = editTournamentSchema.pick({ venueId: true }).extend({
-		date: calendarDateSchema().refine((date) => {
-			return true;
-		}),
-		startTime: timeSchema(),
-	});
+	const schema = editTournamentSchema
+		.pick({ venueId: true, name: true })
+		.extend({
+			date: calendarDateSchema().refine((date) => {
+				return true;
+			}),
+			startTime: timeSchema(),
+		});
 
 	const form = useAppForm({
 		defaultValues: {
 			date: tournament?.date as CalendarDate,
 			startTime: tournament?.startTime as Time,
 			venueId: tournament?.venueId as number,
+			name: tournament?.name as string,
 		},
 		validators: {
 			onMount: schema,
 			onChange: schema,
 		},
-		onSubmit: ({ value: { date, startTime, venueId } }) => {
+		onSubmit: ({ value: { date, startTime, venueId, name } }) => {
 			mutate({
 				id: tournamentId,
 				date: date.toString(),
 				startTime: startTime.toString(),
 				venueId,
+				name,
 			});
 		},
 	});
@@ -89,11 +101,11 @@ export function EditGeneralInfoForm({
 		<Modal {...props} onOpenChange={onOpenChange}>
 			<div className="p-3 flex flex-col space-y-4 relative">
 				<Heading className={title({ size: "sm" })} slot="title">
-					Edit Scheduling
+					Edit General Info
 				</Heading>
 
 				<form
-					className="flex flex-col space-y-6"
+					className="flex flex-col space-y-3"
 					onSubmit={(e) => {
 						e.preventDefault();
 
@@ -115,6 +127,7 @@ export function EditGeneralInfoForm({
 							<field.ComboBox
 								label="Location"
 								field={field}
+								isRequired={true}
 								options={venueOptions.map(({ display, value }) => ({
 									display,
 									value,
@@ -126,24 +139,32 @@ export function EditGeneralInfoForm({
 					<form.AppField
 						name="date"
 						children={(field) => (
-							<field.DatePicker label="Date" field={field} />
+							<field.DatePicker
+								label="Date"
+								field={field}
+								isRequired={true}
+								minValue={today(getDefaultTimeZone())}
+							/>
 						)}
 					/>
 
 					<form.AppField
 						name="startTime"
 						children={(field) => (
-							<field.Time label="Start Time" field={field} />
+							<field.Time label="Start Time" isRequired={true} field={field} />
 						)}
+					/>
+
+					<form.AppField
+						name="name"
+						children={(field) => <field.Text label="Name" field={field} />}
 					/>
 
 					<form.AppForm>
 						<form.Footer>
 							<Button onPress={() => onOpenChange(false)}>Cancel</Button>
 
-							<form.SubmitButton requireChange={false}>
-								Calculate
-							</form.SubmitButton>
+							<form.SubmitButton requireChange={false}>Save</form.SubmitButton>
 						</form.Footer>
 					</form.AppForm>
 				</form>

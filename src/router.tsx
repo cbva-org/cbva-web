@@ -5,10 +5,13 @@ import { routeTree } from "./routeTree.gen";
 
 import "./styles.css";
 
+import { QueryClient } from "@tanstack/query-core";
 import { queryClient } from "./providers";
 import { initSentry } from "./services/sentry";
 
 export function getRouter() {
+	const queryClient = new QueryClient();
+
 	const router = createTanstackRouter({
 		scrollRestoration: true,
 		scrollToTopSelectors: ["#scroll-ref"],

@@ -2,7 +2,7 @@ import { type CalendarDate, parseDate } from "@internationalized/date";
 import { mutationOptions } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { and, gte, lte, sql } from "drizzle-orm";
+import { and, gte, lte } from "drizzle-orm";
 import z from "zod";
 import { requirePermissions, requireRole } from "@/auth/shared";
 import { db } from "@/db/connection";
@@ -23,7 +23,6 @@ import {
 	type Venue,
 } from "@/db/schema";
 import { calendarDateSchema } from "@/lib/schemas";
-import { isNotNull } from "@/utils/types";
 
 async function duplicateTournaments(
 	templates: (Tournament & {

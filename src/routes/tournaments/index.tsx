@@ -1,16 +1,15 @@
 import { parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
 import clsx from "clsx";
 import { ConstructionIcon } from "lucide-react";
-import { useViewerHasPermission } from "@/auth/shared";
-import { button } from "@/components/base/button";
-import { Checkbox } from "@/components/base/checkbox";
 import { Pagination } from "@/components/base/pagination";
-import { FilterDivisions } from "@/components/tournaments/filters/divisions";
-import { FilterGender } from "@/components/tournaments/filters/gender";
-import { FilterVenues } from "@/components/tournaments/filters/venues";
+import {
+	TournamentListFilters,
+	tournamentListFilterSchema,
+} from "@/components/tournaments/filters";
 import { tournamentsQueryOptions } from "@/data/tournaments";
 import type {
 	Division,
@@ -24,35 +23,8 @@ import { getDefaultTimeZone } from "@/lib/dates";
 
 export const Route = createFileRoute("/tournaments/")({
 	component: RouteComponent,
-	validateSearch: (
-		search: Record<string, unknown>,
-	): {
-		page: number;
-		pageSize: number;
-		divisions: number[];
-		venues: number[];
-		genders: ("male" | "female" | "coed")[];
-		past: boolean;
-	} => {
-		return {
-			page: Math.max(Number(search?.page ?? 1), 1),
-			pageSize: Math.max(Number(search?.pageSize ?? 25), 25),
-			divisions: Array.isArray(search?.divisions) ? search.divisions : [],
-			venues: Array.isArray(search?.venues) ? search.venues : [],
-			genders: Array.isArray(search?.genders) ? search.genders : [],
-			past: Boolean(search?.past ?? false),
-		};
-	},
-	loaderDeps: ({
-		search: { page, pageSize, divisions, venues, genders, past },
-	}) => ({
-		page,
-		pageSize,
-		divisions,
-		venues,
-		genders,
-		past,
-	}),
+	validateSearch: zodValidator(tournamentListFilterSchema),
+	loaderDeps: ({ search }) => search,
 	loader: async ({
 		deps: { page, pageSize, divisions, venues, genders, past },
 		context: { queryClient },
@@ -71,8 +43,9 @@ export const Route = createFileRoute("/tournaments/")({
 });
 
 function RouteComponent() {
-	const { page, pageSize, divisions, venues, genders, past } =
-		Route.useSearch();
+	const search = Route.useSearch();
+
+	const { page, pageSize, divisions, venues, genders, past } = search;
 
 	const { data } = useSuspenseQuery(
 		tournamentsQueryOptions({
@@ -87,44 +60,10 @@ function RouteComponent() {
 
 	const { data: tournaments, pageInfo } = data;
 
-	const navigate = useNavigate();
-
-	const canCreate = useViewerHasPermission({
-		tournament: ["create"],
-	});
-
 	return (
 		<DefaultLayout classNames={{ content: "pb-12 space-y-12 w-full relative" }}>
 			<div className="py-8 w-full bg-slate-300 scroll-ref">
-				<div className="max-w-xl mx-auto flex flex-col space-y-2 px-2">
-					<FilterVenues values={new Set(venues)} />
-					<FilterDivisions values={new Set(divisions)} />
-					<FilterGender values={new Set(genders)} />
-					<Checkbox
-						isSelected={past}
-						onChange={(value) => {
-							navigate({
-								to: "/tournaments",
-								search: {
-									page,
-									pageSize,
-									divisions,
-									venues,
-									genders,
-									past: value,
-								},
-							});
-						}}
-						label={<>Past Tournaments Only</>}
-					/>
-					<Link
-						className={button({ class: "mt-2" })}
-						to="/tournaments"
-						search={{}}
-					>
-						Clear Filters
-					</Link>
-				</div>
+				<TournamentListFilters {...search} />
 			</div>
 			<div className="flex flex-col space-y-6 max-w-xl mx-auto pb-6">
 				{tournaments.length ? (
@@ -174,9 +113,9 @@ function TournamentListItem({
 } & {
 	tournamentDivisions: (Pick<
 		TournamentDivision,
-		"id" | "name" | "teamSize" | "gender"
+		"id" | "name" | "teamSize" | "gender" | "displayDivision" | "displayGender"
 	> & {
-		division: Pick<Division, "name" | "maxAge">;
+		division: Pick<Division, "name" | "maxAge" | "display">;
 	})[];
 }) {
 	const parsedDate = parseDate(date);
@@ -198,10 +137,16 @@ function TournamentListItem({
 					to="/tournaments/$tournamentId/"
 					params={{ tournamentId: id.toString() }}
 				>
-					{name && <span className="font-semibold text-lg">{name}</span>}
+					{name && (
+						<span className="font-semibold text-lg flex flex-row items-center space-x-2">
+							{!visible && <ConstructionIcon size={18} />}
+							<span>{name}</span>
+						</span>
+					)}
+
 					<span className="flex flex-row justify-between">
 						<span className="flex flex-row gap-2 items-center">
-							{!visible && <ConstructionIcon size={18} />}
+							{!visible && !name && <ConstructionIcon size={18} />}
 							<span className="font-semibold">
 								{venue?.name}, {venue?.city}
 							</span>
@@ -216,7 +161,7 @@ function TournamentListItem({
 					</span>
 				</Link>
 			</div>
-			<div className="px-2 py-3 bg-white">
+			<div className="relative px-2 py-3 bg-white">
 				<ul>
 					{tournamentDivisions?.map(({ id: tdid, ...info }) => {
 						return (

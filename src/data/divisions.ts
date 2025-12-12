@@ -24,7 +24,6 @@ export const divisionsQueryOptions = (includeJuniors?: boolean) =>
 	queryOptions({
 		queryKey: ["divisions", includeJuniors],
 		queryFn: () => {
-			console.log("divisionsQueryOptions");
 			return getDivisions({ data: { includeJuniors } });
 		},
 	});

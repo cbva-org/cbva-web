@@ -75,6 +75,7 @@ export function RemoveDivisionForm({
 					isDisabled={isDisabled}
 					size="sm"
 					description="Removing a division will delete any data related to this division such as teams and matches."
+					requireChange={false}
 				>
 					<XIcon size={12} /> Remove
 				</form.ConfirmSubmitButton>

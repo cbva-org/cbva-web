@@ -53,20 +53,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 		],
 	}),
 	shellComponent: RootDocument,
-	// beforeLoad: async ({ context: { queryClient } }) => {
-	// 	await Promise.all([
-	// 		queryClient.ensureQueryData(viewerIdQueryOptions()),
-	// 		queryClient.ensureQueryData(viewerQueryOptions()),
-	// 	]);
-	// },
-	// errorComponent: ({ error }) => {
-	//    useEffect(() => {
-	//      Sentry.captureException(error)
-	//    }, [error])
-
-	//    return def
-	// },
-
 	component: () => (
 		<>
 			<Outlet />
@@ -76,13 +62,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	const { queryClient } = Route.useRouteContext();
+
 	return (
 		<html lang="en">
 			<head>
 				<HeadContent />
 			</head>
 			<body>
-				<Provider>{children}</Provider>
+				<Provider queryClient={queryClient}>{children}</Provider>
 				<Scripts />
 			</body>
 		</html>

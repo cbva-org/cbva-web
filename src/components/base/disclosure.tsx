@@ -16,7 +16,9 @@ import {
 	DisclosureStateContext,
 	Heading,
 } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
 import { tv, type VariantProps } from "tailwind-variants";
+import { Information } from "./information";
 import { composeTailwindRenderProps, focusRing } from "./utils";
 
 const disclosure = tv({
@@ -104,6 +106,7 @@ export type DisclosureHeaderProps = {
 	onPress?: () => void;
 	className?: string;
 	children: React.ReactNode;
+	info?: React.ReactNode;
 } & VariantProps<typeof headerStyles> &
 	VariantProps<typeof disclosureButton>;
 
@@ -113,12 +116,18 @@ export function DisclosureHeader({
 	children,
 	card,
 	size = "lg",
+	info,
 }: DisclosureHeaderProps) {
 	const { isExpanded } = useContext(DisclosureStateContext)!;
 	const isInGroup = useContext(DisclosureGroupStateContext) !== null;
 
 	return (
-		<Heading className={headerStyles({ className, size })}>
+		<Heading
+			className={headerStyles({
+				className,
+				size,
+			})}
+		>
 			<Button
 				slot={onPress ? undefined : "trigger"}
 				onPress={onPress}
@@ -140,6 +149,7 @@ export function DisclosureHeader({
 							}
 						/>
 						{children}
+						{info && <Information>{info}</Information>}
 					</>
 				)}
 			</Button>

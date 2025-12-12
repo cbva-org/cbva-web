@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { authMiddleware, requirePermissions } from "@/auth/shared";
+import { tournamentListFilterSchema } from "@/components/tournaments/filters";
 import { db } from "@/db/connection";
 import { findPaged } from "@/db/pagination";
 import {
@@ -17,15 +18,14 @@ export const getTournaments = createServerFn({
 	method: "GET",
 })
 	.inputValidator(
-		(i) =>
-			i as {
-				divisions: number[];
-				venues: number[];
-				past: boolean;
-				page: number;
-				pageSize: number;
-				genders: TournamentDivision["gender"][];
-			},
+		tournamentListFilterSchema.pick({
+			divisions: true,
+			venues: true,
+			past: true,
+			page: true,
+			pageSize: true,
+			genders: true,
+		}),
 	)
 	.middleware([authMiddleware])
 	.handler(
@@ -74,8 +74,14 @@ export const getTournaments = createServerFn({
 						const filters = [
 							viewer?.role === "admin" ? null : eq(tournaments.visible, true),
 							past
-								? lt(tournaments.date, sql`current_date`)
-								: gt(tournaments.date, sql`current_date`),
+								? lt(
+										tournaments.date,
+										sql`current_date at time zone 'america/los_angeles'`,
+									)
+								: gt(
+										tournaments.date,
+										sql`current_date at time zone 'america/los_angeles'`,
+									),
 						].filter(isNotNull);
 
 						if (divisions.length) {
@@ -133,34 +139,10 @@ export const tournamentsQueryOptions = (data: {
 }) =>
 	queryOptions({
 		queryKey: ["tournaments", JSON.stringify(data)],
-		queryFn: () => getTournaments({ data }),
+		queryFn: async () => {
+			return await getTournaments({ data });
+		},
 	});
-
-// async function readTournament({ id }: { id: number }) {
-// 	const res = await db.query.tournaments.findFirst({
-// 		where: (table, { eq }) => eq(table.id, id),
-// 		with: {
-// 			venue: true,
-// 			directors: {
-// 				with: {
-// 					director: {
-// 						with: {
-// 							profile: true,
-// 						},
-// 					},
-// 				},
-// 			},
-// 			tournamentDivisions: {
-// 				with: {
-// 					division: true,
-// 					requirements: true,
-// 				},
-// 			},
-// 		},
-// 	});
-
-// 	return res;
-// }
 
 export const getTournament = createServerFn({
 	method: "GET",
@@ -278,6 +260,7 @@ export const editTournamentSchema = selectTournamentSchema.pick({
 	date: true,
 	startTime: true,
 	venueId: true,
+	name: true,
 });
 
 export type EditTournamentParams = z.infer<typeof editTournamentSchema>;
@@ -289,10 +272,11 @@ export const editTournamentFn = createServerFn({ method: "POST" })
 		}),
 	])
 	.inputValidator(editTournamentSchema)
-	.handler(async ({ data: { id, date, startTime, venueId } }) => {
+	.handler(async ({ data: { id, name, date, startTime, venueId } }) => {
 		await db
 			.update(tournaments)
 			.set({
+				name,
 				date,
 				startTime,
 				venueId,
@@ -308,5 +292,35 @@ export const editTournamentMutationOptions = () =>
 	mutationOptions({
 		mutationFn: async (data: EditTournamentParams) => {
 			return editTournamentFn({ data });
+		},
+	});
+
+export const deleteTournamentSchema = selectTournamentSchema.pick({
+	id: true,
+});
+
+export type DeleteTournamentParams = z.infer<typeof deleteTournamentSchema>;
+
+export const deleteTournamentFn = createServerFn({ method: "POST" })
+	.middleware([
+		requirePermissions({
+			tournament: ["delete"],
+		}),
+	])
+	.inputValidator(deleteTournamentSchema)
+	.handler(async ({ data: { id } }) => {
+		// TODO: do checks to make sure the tournament is in the future and no one has signed up.
+
+		await db.delete(tournaments).where(eq(tournaments.id, id));
+
+		return {
+			success: true,
+		};
+	});
+
+export const deleteTournamentMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: EditTournamentParams) => {
+			return deleteTournamentFn({ data });
 		},
 	});
