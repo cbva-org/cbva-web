@@ -1,11 +1,12 @@
 import { parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { DeleteIcon, EditIcon, SettingsIcon } from "lucide-react";
+import { DeleteIcon, EditIcon, PlusIcon, SettingsIcon } from "lucide-react";
 import { Suspense, useState } from "react";
 import { Pressable } from "react-aria-components";
 import type z from "zod";
-import { Button } from "@/components/base/button";
+import { Button, button } from "@/components/base/button";
+import { Link } from "@/components/base/link";
 import { Pagination } from "@/components/base/pagination";
 import { DeleteTournamentForm } from "@/components/tournaments/controls/delete";
 import { EditGeneralInfoForm } from "@/components/tournaments/controls/edit-general-info";
@@ -19,7 +20,6 @@ import {
 	tournamentsQueryOptions,
 } from "@/data/tournaments";
 import { getDefaultTimeZone } from "@/lib/dates";
-import { dbg } from "@/utils/dbg";
 
 export const bulkEditScheduleSearchSchema = tournamentListFilterSchema
 	.omit({
@@ -49,10 +49,23 @@ export function BulkEditSchedule(props: BulkEditScheduleProps) {
 			<div className="py-8 bg-slate-300">
 				<TournamentListFilters {...props.params} />
 			</div>
+
+			<div className="max-w-lg mx-auto pt-6 pb-2 flex flex-row justify-end">
+				<Link
+					to="/tournaments/create"
+					className={button({
+						variant: "solid",
+						color: "alternate",
+						class: "flex flex-row gap-2 items-center",
+					})}
+				>
+					<PlusIcon size={16} /> <span>Create tournament</span>
+				</Link>
+			</div>
 			<Suspense
-				fallback={<div className="max-w-lg mx-auto py-12">Loading...</div>}
+				fallback={<div className="max-w-lg mx-auto pt-4 pb-12">Loading...</div>}
 			>
-				<div className="flex flex-col space-y-4 max-w-lg mx-auto py-12">
+				<div className="flex flex-col space-y-4 max-w-lg mx-auto pt-4 pb-12">
 					{tournaments?.data.map(
 						({ id, name, date, venue: { name: venueName, city } }) => {
 							const parsedDate = parseDate(date);

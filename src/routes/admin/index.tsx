@@ -1,14 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { authMiddleware } from "@/auth/shared";
 import { ScheduleDashboard } from "@/components/admin/schedule";
 import { UsersList } from "@/components/admin/users-list";
 import { DefaultLayout } from "@/layouts/default";
 
 export const Route = createFileRoute("/admin/")({
-	loader: async ({ context: { queryClient, ...context }, serverContext }) => {
+	loader: async ({ context: { queryClient, ...context } }) => {
 		const viewer = context.viewer;
 
-		// Check if user is admin
 		if (!viewer || viewer.role !== "admin") {
 			throw redirect({ to: "/not-found" });
 		}

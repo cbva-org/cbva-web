@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { ChevronLeft } from "lucide-react";
 import { Suspense } from "react";
 import { roleHasPermission } from "@/auth/shared";
 import { Link } from "@/components/base/link";
@@ -45,12 +46,19 @@ function RouteComponent() {
 	return (
 		<DefaultLayout
 			classNames={{
-				content: "py-12 flex flex-col items-center space-y-16",
+				content: "py-12 flex flex-col items-center space-y-8",
 			}}
 		>
+			<Link
+				className="mx-auto text-center absolute left-3 top-3 flex flex-row space-x-2"
+				to="/admin/schedule"
+			>
+				<ChevronLeft /> <span>Scheduling dashboard</span>
+			</Link>
+
 			<Suspense>
 				<div className="mx-auto text-center">
-					<h1 className={title({ class: "mx-auto mb-2" })}>Edit Tournament</h1>
+					<h1 className={title({ class: "mx-auto mb-6" })}>Edit Tournament</h1>
 
 					{(tournament?.tournamentDivisions.length ?? 0) > 0 && (
 						<Link

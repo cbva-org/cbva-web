@@ -55,9 +55,11 @@ export function ComboBox<T extends Key>({
 		...(selectedKeys ? Array.from(selectedKeys) : []),
 	]);
 
-	const selectedText = Array.from(items)
-		.filter(({ value }) => selectedKeysSet.has(value))
-		.map(({ display }) => display);
+	const selectedText = multi
+		? []
+		: Array.from(items)
+				.filter(({ value }) => selectedKeysSet.has(value))
+				.map(({ display }) => display);
 
 	const inputRef = useRef<HTMLInputElement>(null);
 
