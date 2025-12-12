@@ -12,6 +12,7 @@ import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./auth";
 import { richText, venueStatusEnum } from "./shared";
+import { tournaments } from "./tournaments";
 import { venueDirectors } from "./venue-directors";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
@@ -58,4 +59,5 @@ export const venueRelations = relations(venues, ({ one, many }) => ({
 		references: [users.id],
 	}),
 	directors: many(venueDirectors),
+	tournaments: many(tournaments),
 }));

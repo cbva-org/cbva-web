@@ -76,7 +76,7 @@ export function VenueDisplay<TournamentId extends number | undefined>({
 							{canEdit && (
 								<AddDirector
 									mode={tournamentId ? "tournament" : "venue"}
-									targetId={venue.id}
+									targetId={tournamentId ?? venue.id}
 									existingDirectorIds={venue.directors.map((d) => d.directorId)}
 								/>
 							)}
@@ -96,7 +96,7 @@ export function VenueDisplay<TournamentId extends number | undefined>({
 													id={td.id}
 													name={name}
 													mode={tournamentId ? "tournament" : "venue"}
-													targetId={venue.id}
+													targetId={tournamentId ?? venue.id}
 													isDisabled={venue.directors.length === 1}
 												/>
 											)}

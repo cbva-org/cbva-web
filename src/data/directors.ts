@@ -1,6 +1,6 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type z from "zod";
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
@@ -33,10 +33,17 @@ export const directorsQueryOptions = () =>
 
 export const insertTournamentDirectorFn = createServerFn({ method: "POST" })
 	.inputValidator(createTournamentDirectorSchema)
-	.handler(async ({ data }) => {
-		const [res] = await db.insert(tournamentDirectors).values(data).returning({
-			id: tournamentDirectors.id,
-		});
+	.handler(async ({ data: { tournamentId, directorId } }) => {
+		const [res] = await db
+			.insert(tournamentDirectors)
+			.values({
+				tournamentId,
+				directorId,
+				order: sql`(SELECT COALESCE(MAX("order"), 0) + 1 FROM ${tournamentDirectors} WHERE "tournament_id" = ${tournamentId})`,
+			})
+			.returning({
+				id: tournamentDirectors.id,
+			});
 
 		const created = await db.query.tournamentDirectors.findFirst({
 			where: (t, { eq }) => eq(t.id, res.id),
@@ -88,7 +95,12 @@ export const deleteTournamentDirectorFn = createServerFn({ method: "POST" })
 
 		await db
 			.delete(tournamentDirectors)
-			.where(eq(tournamentDirectors.id, data.id));
+			.where(
+				and(
+					eq(tournamentDirectors.id, data.id),
+					eq(tournamentDirectors.tournamentId, data.tournamentId),
+				),
+			);
 	});
 
 export const deleteTournamentDirectorMutationOptions = () =>
@@ -152,7 +164,14 @@ export const deleteVenueDirectorFn = createServerFn({ method: "POST" })
 			);
 		}
 
-		await db.delete(venueDirectors).where(eq(venueDirectors.id, data.id));
+		await db
+			.delete(venueDirectors)
+			.where(
+				and(
+					eq(venueDirectors.id, data.id),
+					eq(venueDirectors.venueId, data.venueId),
+				),
+			);
 	});
 
 export const deleteVenueDirectorMutationOptions = () =>

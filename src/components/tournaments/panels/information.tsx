@@ -27,9 +27,12 @@ export function InformationPanel({
 	const queryClient = useQueryClient();
 	const tournamentQuery = tournamentQueryOptions(id);
 
+	console.log(directors);
+
 	return (
 		<TabPanel id="info">
 			<VenueDisplay
+				tournamentId={id}
 				venue={{
 					...venue,
 					directors,

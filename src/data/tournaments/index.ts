@@ -169,6 +169,7 @@ export const getTournament = createServerFn({
 							},
 						},
 					},
+					orderBy: (t, { asc }) => asc(t.order),
 				},
 				tournamentDivisions: {
 					with: {
@@ -216,8 +217,6 @@ export const upsertTournamentFn = createServerFn({ method: "POST" })
 	.inputValidator(upsertTournamentSchema)
 	.handler(
 		async ({ data: { id: tournamentId, name, date, startTime, venueId } }) => {
-			console.log("hmm", tournamentId);
-
 			if (isNotNullOrUndefined(tournamentId)) {
 				const results = await db
 					.select({ venueId: tournaments.venueId })

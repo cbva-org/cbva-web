@@ -10,6 +10,7 @@ import {
 } from "@/data/directors";
 import { tournamentQueryOptions } from "@/data/tournaments";
 import { venueQueryOptions } from "@/data/venues";
+import { dbg } from "@/utils/dbg";
 import { Button, type ButtonProps } from "../base/button";
 import { useAppForm } from "../base/form";
 import { Modal } from "../base/modal";
@@ -85,10 +86,10 @@ export function AddDirector({
 
 			if (mode === "tournament") {
 				insertTournamentDirector(
-					{
+					dbg({
 						tournamentId: targetId,
 						directorId: value.directorId,
-					},
+					}),
 					{
 						onSuccess,
 					},
