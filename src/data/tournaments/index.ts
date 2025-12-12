@@ -1,4 +1,5 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
+import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import z from "zod";
@@ -9,9 +10,12 @@ import { findPaged } from "@/db/pagination";
 import {
 	selectTournamentSchema,
 	type TournamentDivision,
+	tournamentDirectors,
 	tournamentDivisions,
 	tournaments,
+	venueDirectors,
 } from "@/db/schema";
+import { dbg } from "@/utils/dbg";
 import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 export const getTournaments = createServerFn({
@@ -212,7 +216,21 @@ export const upsertTournamentFn = createServerFn({ method: "POST" })
 	.inputValidator(upsertTournamentSchema)
 	.handler(
 		async ({ data: { id: tournamentId, name, date, startTime, venueId } }) => {
+			console.log("hmm", tournamentId);
+
 			if (isNotNullOrUndefined(tournamentId)) {
+				const results = await db
+					.select({ venueId: tournaments.venueId })
+					.from(tournaments)
+					.where(eq(tournaments.id, tournamentId))
+					.limit(1);
+
+				if (!results.length) {
+					throw notFound();
+				}
+
+				const [current] = results;
+
 				const [{ id }] = await db
 					.update(tournaments)
 					.set({
@@ -221,7 +239,28 @@ export const upsertTournamentFn = createServerFn({ method: "POST" })
 						startTime,
 						venueId,
 					})
-					.where(eq(tournaments.id, tournamentId));
+					.where(eq(tournaments.id, tournamentId))
+					.returning({
+						id: tournaments.id,
+					});
+
+				if (venueId !== current.venueId) {
+					await db
+						.delete(tournamentDirectors)
+						.where(eq(tournamentDirectors.tournamentId, tournamentId));
+
+					const directors = await db
+						.select()
+						.from(venueDirectors)
+						.where(eq(venueDirectors.venueId, venueId));
+
+					await db.insert(tournamentDirectors).values(
+						directors.map(({ id, venueId, ...values }) => ({
+							...values,
+							tournamentId,
+						})),
+					);
+				}
 
 				return {
 					success: true,
@@ -240,6 +279,18 @@ export const upsertTournamentFn = createServerFn({ method: "POST" })
 				.returning({
 					id: tournaments.id,
 				});
+
+			const directors = await db
+				.select()
+				.from(venueDirectors)
+				.where(eq(venueDirectors.venueId, venueId));
+
+			await db.insert(tournamentDirectors).values(
+				directors.map(({ id: _, venueId, ...values }) => ({
+					...values,
+					tournamentId: id,
+				})),
+			);
 
 			return {
 				success: true,
@@ -272,21 +323,60 @@ export const editTournamentFn = createServerFn({ method: "POST" })
 		}),
 	])
 	.inputValidator(editTournamentSchema)
-	.handler(async ({ data: { id, name, date, startTime, venueId } }) => {
-		await db
-			.update(tournaments)
-			.set({
-				name,
-				date,
-				startTime,
-				venueId,
-			})
-			.where(eq(tournaments.id, id));
+	.handler(
+		async ({ data: { id: tournamentId, name, date, startTime, venueId } }) => {
+			const results = await db
+				.select({ venueId: tournaments.venueId })
+				.from(tournaments)
+				.where(eq(tournaments.id, tournamentId))
+				.limit(1);
 
-		return {
-			success: true,
-		};
-	});
+			if (!results.length) {
+				throw notFound();
+			}
+
+			const [current] = results;
+
+			await db.transaction(async (txn) => {
+				await txn
+					.update(tournaments)
+					.set({
+						name,
+						date,
+						startTime,
+						venueId,
+					})
+					.where(eq(tournaments.id, tournamentId));
+
+				if (venueId !== current.venueId) {
+					await txn
+						.delete(tournamentDirectors)
+						.where(eq(tournamentDirectors.tournamentId, tournamentId));
+
+					const directors = await txn
+						.select()
+						.from(venueDirectors)
+						.where(eq(venueDirectors.venueId, venueId));
+
+					const res = await txn
+						.insert(tournamentDirectors)
+						.values(
+							directors.map(({ id: _, venueId, ...values }) => ({
+								...values,
+								tournamentId,
+							})),
+						)
+						.returning({
+							id: tournamentDirectors.id,
+						});
+				}
+			});
+
+			return {
+				success: true,
+			};
+		},
+	);
 
 export const editTournamentMutationOptions = () =>
 	mutationOptions({

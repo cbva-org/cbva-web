@@ -1,7 +1,13 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DeleteIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { DialogTrigger, Heading } from "react-aria-components";
-import { useDeleteTournamentDirector } from "@/data/directors";
+import {
+	deleteTournamentDirectorMutationOptions,
+	deleteVenueDirectorMutationOptions,
+} from "@/data/directors";
+import { tournamentQueryOptions } from "@/data/tournaments";
+import { venueQueryOptions } from "@/data/venues";
 import { Button } from "../base/button";
 import { useAppForm } from "../base/form";
 import { Modal } from "../base/modal";
@@ -10,34 +16,65 @@ import { title } from "../base/primitives";
 export type DirectorsModalProps = {
 	id: number;
 	name: string;
-	tournamentId: number;
+	targetId: number;
+	mode: "venue" | "tournament";
 	isDisabled: boolean;
 };
 
 export function RemoveDirector({
 	id,
 	name,
-	tournamentId,
+	mode,
+	targetId,
 	isDisabled,
 }: DirectorsModalProps) {
 	const [isOpen, setOpen] = useState(false);
 
-	const { mutate: removeTournamentDirector, failureReason } =
-		useDeleteTournamentDirector();
+	const queryClient = useQueryClient();
+
+	const { mutate: deleteTournamentDirector, failureReason: tdFailureReason } =
+		useMutation({
+			...deleteTournamentDirectorMutationOptions(),
+			onSuccess: () => {
+				queryClient.invalidateQueries(tournamentQueryOptions(targetId));
+			},
+		});
+
+	const { mutate: deleteVenueDirector, failureReason: vFailureReason } =
+		useMutation({
+			...deleteVenueDirectorMutationOptions(),
+			onSuccess: () => {
+				queryClient.invalidateQueries(venueQueryOptions(targetId));
+			},
+		});
 
 	const form = useAppForm({
 		onSubmit: () => {
-			removeTournamentDirector(
-				{
-					id,
-					tournamentId,
-				},
-				{
-					onSuccess: () => {
-						setOpen(false);
+			const onSuccess = () => {
+				setOpen(false);
+			};
+
+			if (mode === "tournament") {
+				deleteTournamentDirector(
+					{
+						id,
+						tournamentId: targetId,
 					},
-				},
-			);
+					{
+						onSuccess,
+					},
+				);
+			} else {
+				deleteVenueDirector(
+					{
+						id,
+						venueId: targetId,
+					},
+					{
+						onSuccess,
+					},
+				);
+			}
 		},
 	});
 
@@ -85,9 +122,12 @@ export function RemoveDirector({
 							form.handleSubmit();
 						}}
 					>
-						{failureReason && (
+						{(tdFailureReason || vFailureReason) && (
 							<form.AppForm>
-								<form.Alert title="Oops!" description={failureReason.message} />
+								<form.Alert
+									title="Uh oh!"
+									description={(tdFailureReason || vFailureReason)?.message}
+								/>
 							</form.AppForm>
 						)}
 

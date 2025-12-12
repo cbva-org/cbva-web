@@ -27,7 +27,8 @@ export function DirectorsSection({ tournamentId }: { tournamentId: number }) {
 						<RemoveDirector
 							id={id}
 							name={`${director.profile.preferredName ?? director.profile.firstName} ${director.profile.lastName}`}
-							tournamentId={tournamentId}
+							targetId={tournamentId}
+							mode="tournament"
 							isDisabled={directors.length === 1}
 						/>
 					</div>
@@ -44,7 +45,8 @@ export function DirectorsSection({ tournamentId }: { tournamentId: number }) {
 						</>
 					),
 				}}
-				tournamentId={tournamentId}
+				targetId={tournamentId}
+				mode="tournament"
 				existingDirectorIds={directors?.map(({ id }) => id) ?? []}
 			/>
 		</div>

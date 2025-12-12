@@ -12,6 +12,7 @@ import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./auth";
 import { richText, venueStatusEnum } from "./shared";
+import { venueDirectors } from "./venue-directors";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({ zodInstance: z });
@@ -51,9 +52,10 @@ export type Venue = z.infer<typeof selectVenueSchema>;
 export type CreateVenue = z.infer<typeof createVenueSchema>;
 export type UpdateVenue = z.infer<typeof updateVenueSchema>;
 
-export const venueRelations = relations(venues, ({ one }) => ({
+export const venueRelations = relations(venues, ({ one, many }) => ({
 	director: one(users, {
 		fields: [venues.directorId],
 		references: [users.id],
 	}),
+	directors: many(venueDirectors),
 }));

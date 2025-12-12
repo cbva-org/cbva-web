@@ -68,20 +68,21 @@ export function UpsertTournamentForm({
 			onMount: schema,
 			onChange: schema,
 		},
-		onSubmit: ({ value: { name, date, startTime, venueId } }) => {
-			console.log({
-				name,
-				date,
-				startTime,
-				venueId,
-			});
-
-			mutate({
-				name,
-				date: date.toString(),
-				startTime: startTime.toString(),
-				venueId,
-			});
+		onSubmit: ({ value: { name, date, startTime, venueId }, formApi }) => {
+			mutate(
+				{
+					id: tournamentId,
+					name,
+					date: date.toString(),
+					startTime: startTime.toString(),
+					venueId,
+				},
+				{
+					onSuccess: () => {
+						formApi.reset();
+					},
+				},
+			);
 		},
 	});
 
@@ -137,9 +138,7 @@ export function UpsertTournamentForm({
 
 			<form.AppForm>
 				<form.Footer className="col-span-full">
-					<form.SubmitButton>
-						{isCreate ? "Create" : "Submit"}
-					</form.SubmitButton>
+					<form.SubmitButton>{isCreate ? "Create" : "Save"}</form.SubmitButton>
 				</form.Footer>
 			</form.AppForm>
 		</form>

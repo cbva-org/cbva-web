@@ -1,12 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { EditIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { DialogTrigger, Heading } from "react-aria-components";
 import z from "zod";
 import {
 	directorsQueryOptions,
-	useInsertTournamentDirector,
+	insertTournamentDirectorMutationOptions,
+	insertVenueDirectorMutationOptions,
 } from "@/data/directors";
+import { tournamentQueryOptions } from "@/data/tournaments";
+import { venueQueryOptions } from "@/data/venues";
 import { Button, type ButtonProps } from "../base/button";
 import { useAppForm } from "../base/form";
 import { Modal } from "../base/modal";
@@ -14,7 +17,8 @@ import { title } from "../base/primitives";
 
 export type DirectorsModalProps = {
 	triggerProps?: ButtonProps;
-	tournamentId: number;
+	targetId: number;
+	mode: "venue" | "tournament";
 	existingDirectorIds: number[];
 };
 
@@ -30,13 +34,29 @@ export function AddDirector({
 		className: "text-blue-500",
 		children: <EditIcon size={16} />,
 	},
-	tournamentId,
+	targetId,
+	mode,
 	existingDirectorIds,
 }: DirectorsModalProps) {
+	const queryClient = useQueryClient();
+
 	const [isOpen, setOpen] = useState(false);
 
-	const { mutate: insertTournamentDirector, failureReason } =
-		useInsertTournamentDirector();
+	const { mutate: insertTournamentDirector, failureReason: tdFailureReason } =
+		useMutation({
+			...insertTournamentDirectorMutationOptions(),
+			onSuccess: () => {
+				queryClient.invalidateQueries(tournamentQueryOptions(targetId));
+			},
+		});
+
+	const { mutate: insertVenueDirector, failureReason: vFailureReason } =
+		useMutation({
+			...insertVenueDirectorMutationOptions(),
+			onSuccess: () => {
+				queryClient.invalidateQueries(venueQueryOptions(targetId));
+			},
+		});
 
 	const { data: options } = useQuery({
 		...directorsQueryOptions(),
@@ -57,19 +77,33 @@ export function AddDirector({
 			onChange: schema,
 		},
 		onSubmit: ({ value, formApi }) => {
-			insertTournamentDirector(
-				{
-					tournamentId,
-					directorId: value.directorId,
-				},
-				{
-					onSuccess: () => {
-						setOpen(false);
+			const onSuccess = () => {
+				setOpen(false);
 
-						formApi.reset();
+				formApi.reset();
+			};
+
+			if (mode === "tournament") {
+				insertTournamentDirector(
+					{
+						tournamentId: targetId,
+						directorId: value.directorId,
 					},
-				},
-			);
+					{
+						onSuccess,
+					},
+				);
+			} else {
+				insertVenueDirector(
+					{
+						venueId: targetId,
+						directorId: value.directorId,
+					},
+					{
+						onSuccess,
+					},
+				);
+			}
 		},
 	});
 
@@ -100,11 +134,11 @@ export function AddDirector({
 							form.handleSubmit();
 						}}
 					>
-						{failureReason && (
+						{(tdFailureReason || vFailureReason) && (
 							<form.AppForm>
 								<form.Alert
 									title="Uh oh!"
-									description={failureReason.message}
+									description={(tdFailureReason || vFailureReason)?.message}
 								/>
 							</form.AppForm>
 						)}

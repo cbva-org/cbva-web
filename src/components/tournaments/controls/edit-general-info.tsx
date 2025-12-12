@@ -23,6 +23,7 @@ import {
 import { useVenueFilterOptions } from "@/data/venues";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { calendarDateSchema, timeSchema } from "@/lib/schemas";
+import { dbg } from "@/utils/dbg";
 
 export type EditGeneralInfoFormProps = {
 	tournamentId: number;
@@ -45,6 +46,7 @@ export function EditGeneralInfoForm({
 						date: parseDate(data.date),
 						startTime: parseTime(data.startTime),
 						venueId: data.venueId,
+						name: data.name,
 					}
 				: undefined,
 	});
@@ -78,7 +80,7 @@ export function EditGeneralInfoForm({
 			date: tournament?.date as CalendarDate,
 			startTime: tournament?.startTime as Time,
 			venueId: tournament?.venueId as number,
-			name: tournament?.name as string,
+			name: (tournament?.name ?? null) as string | null,
 		},
 		validators: {
 			onMount: schema,
@@ -90,7 +92,7 @@ export function EditGeneralInfoForm({
 				date: date.toString(),
 				startTime: startTime.toString(),
 				venueId,
-				name,
+				name: name ?? null,
 			});
 		},
 	});
@@ -161,6 +163,8 @@ export function EditGeneralInfoForm({
 					/>
 
 					<form.AppForm>
+						<form.StateDebugger className="col-span-full" />
+
 						<form.Footer>
 							<Button onPress={() => onOpenChange(false)}>Cancel</Button>
 

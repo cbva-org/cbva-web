@@ -31,6 +31,7 @@ import {
 	tournamentDivisions,
 } from "./tournament-divisions";
 import { tournamentRelations, tournaments } from "./tournaments";
+import { venueDirectorRelations, venueDirectors } from "./venue-directors";
 import { venueRelations, venues } from "./venues";
 
 export * from "./auth";
@@ -53,6 +54,7 @@ export * from "./tournament-division-requirements";
 export * from "./tournament-division-teams";
 export * from "./tournament-divisions";
 export * from "./tournaments";
+export * from "./venue-directors";
 export * from "./venues";
 
 export const tables = {
@@ -80,6 +82,7 @@ export const tables = {
 	users,
 	accounts,
 	venues,
+	venueDirectors,
 };
 
 export const relationships = {
@@ -100,6 +103,7 @@ export const relationships = {
 	tournamentDivisionTeamsRelations,
 	tournamentRelations,
 	venueRelations,
+	venueDirectorRelations,
 };
 
 const schema = {

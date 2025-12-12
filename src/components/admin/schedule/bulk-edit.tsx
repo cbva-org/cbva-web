@@ -112,23 +112,29 @@ export function BulkEditSchedule(props: BulkEditScheduleProps) {
 											<DivisionsForm tournamentId={id} />
 										</div>
 									</div>
-									<EditGeneralInfoForm
-										tournamentId={id}
-										isOpen={editGeneralId === id}
-										onOpenChange={() => setEditGeneralId(undefined)}
-										onSuccess={() => {
-											queryClient.invalidateQueries(queryProps);
-											queryClient.invalidateQueries(tournamentQueryOptions(id));
-										}}
-									/>
-									<DeleteTournamentForm
-										tournamentId={id}
-										isOpen={deleteId === id}
-										onOpenChange={() => setDeleteId(undefined)}
-										onSuccess={() => {
-											queryClient.invalidateQueries(queryProps);
-										}}
-									/>
+									{editGeneralId === id && (
+										<EditGeneralInfoForm
+											tournamentId={id}
+											isOpen={editGeneralId === id}
+											onOpenChange={() => setEditGeneralId(undefined)}
+											onSuccess={() => {
+												queryClient.invalidateQueries(queryProps);
+												queryClient.invalidateQueries(
+													tournamentQueryOptions(id),
+												);
+											}}
+										/>
+									)}
+									{deleteId === id && (
+										<DeleteTournamentForm
+											tournamentId={id}
+											isOpen={deleteId === id}
+											onOpenChange={() => setDeleteId(undefined)}
+											onSuccess={() => {
+												queryClient.invalidateQueries(queryProps);
+											}}
+										/>
+									)}
 								</div>
 							);
 						},

@@ -43,6 +43,13 @@
       "when": 1765487780635,
       "tag": "0005_noisy_shriek",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1765571063798,
+      "tag": "0006_equal_firedrake",
+      "breakpoints": true
     }
   ]
 }
