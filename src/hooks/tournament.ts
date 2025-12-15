@@ -25,13 +25,17 @@ export function getTournamentDivisionDisplay({
 			display += " ";
 		}
 
-		display += maxAge
-			? gender === "male"
-				? "Boy's"
-				: "Girl's"
-			: gender === "male"
-				? "Men's"
-				: "Women's";
+		if (gender === "coed") {
+			display += "Coed";
+		} else {
+			display += maxAge
+				? gender === "male"
+					? "Boy's"
+					: "Girl's"
+				: gender === "male"
+					? "Men's"
+					: "Women's";
+		}
 	}
 
 	if (!name || displayDivision) {
