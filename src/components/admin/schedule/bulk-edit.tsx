@@ -89,11 +89,11 @@ export function BulkEditSchedule(props: BulkEditScheduleProps) {
 										>
 											<div className="p-2 bg-navbar-background text-navbar-foreground cursor-pointer hover:underline">
 												{name && (
-													<div className="text-lg flex flex-row space-x-2 items-center">
+													<div className="flex flex-row space-x-2 items-center">
 														<EditIcon size={18} /> <span>{name}</span>
 													</div>
 												)}
-												<div className="flex flex-row justify-between">
+												<div className="flex flex-row justify-between font-semibold">
 													<div className="flex flex-row items-center space-x-2">
 														{!name && <EditIcon size={18} />}
 														<span>
