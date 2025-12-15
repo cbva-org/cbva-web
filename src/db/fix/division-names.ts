@@ -15,6 +15,23 @@ async function main() {
 		.update(tournamentDivisions)
 		.set({
 			displayDivision: true,
+			displayGender: true,
+		})
+		.where(
+			inArray(tournamentDivisions.name, [
+				"Surf City Days",
+				"Surf City Days $2,000",
+				"Coed Junior Championships",
+				"CBVA Fall Championship Bid + AVP Bid Event",
+				"Mich Ultra Premier Tour: $2,000",
+				"Mich Ultra Premier Tour: $4,000 Gene Selznick",
+			]),
+		);
+
+	await db
+		.update(tournamentDivisions)
+		.set({
+			displayDivision: true,
 			displayGender: false,
 		})
 		.where(
@@ -23,6 +40,8 @@ async function main() {
 				"Mother/Daughter",
 				"Father/Son",
 				"Father/Daughter",
+				"Mike Cook Marine Street Father/Daughter",
+				"Mike Cook Marine Street Mixed",
 			]),
 		);
 
