@@ -43,9 +43,9 @@ export function getTournamentDivisionDisplay({
 	}
 
 	if (teamSize === 4) {
-		display += " quads";
+		display += " 4's";
 	} else if (teamSize === 6) {
-		display += " sixes";
+		display += " 6's";
 	}
 
 	return display;
