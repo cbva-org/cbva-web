@@ -1,7 +1,7 @@
 import { parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { DeleteIcon, EditIcon, PlusIcon, SettingsIcon } from "lucide-react";
+import { DeleteIcon, EditIcon, PlusIcon } from "lucide-react";
 import { Suspense, useState } from "react";
 import { Pressable } from "react-aria-components";
 import type z from "zod";
