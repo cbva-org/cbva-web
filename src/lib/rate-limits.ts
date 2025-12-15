@@ -1,64 +1,51 @@
+import { createMiddleware } from "@tanstack/react-start";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { RateLimiterDrizzle } from "rate-limiter-flexible";
+import {
+	type IRateLimiterOptions,
+	RateLimiterDrizzle,
+	type RateLimiterRes,
+} from "rate-limiter-flexible";
+import { getViewer } from "@/auth/server";
 import { rateLimiterFlexibleSchema } from "@/db/schema";
+import { internalServerError, tooManyRequests } from "./responses";
+import { db } from "@/db/connection";
 
-const db = drizzle("postgres://root:secret@127.0.0.1:5432");
+// Limit example: allow 10 signed upload URLs per minute, with burst up to 5 at once.
 
-const rateLimiter = new RateLimiterDrizzle({
-	storeClient: db,
-	schema: rateLimiterFlexibleSchema,
-	points: 3, // Number of points
-	duration: 1, // Per second
-});
+export const rateLimitMiddleware = ({
+	keyPrefix,
+	points,
+	duration,
+	blockDuration,
+}: Pick<
+	IRateLimiterOptions,
+	"keyPrefix" | "points" | "duration" | "blockDuration"
+>) =>
+	createMiddleware().server(async ({ next }) => {
+		const rateLimiter = new RateLimiterDrizzle({
+			storeClient: db,
+			schema: rateLimiterFlexibleSchema,
+			keyPrefix,
+			points,
+			duration,
+			blockDuration,
+		});
 
-export async function rateLimitMiddleware(key: string) {
-	try {
-		const rlRes = await rateLimiter.consume(userId, 1); // consume 1 point
-		console.log(rlRes);
-		// {
-		//   remainingPoints: 2,
-		//   msBeforeNext: 976,
-		//   consumedPoints: 1,
-		//   isFirstInDuration: true
-		// }
-	} catch (rejRes) {
-		if (rejRes instanceof Error) {
-			// Some error
-			// It never happens if `insuranceLimiter` is configured
-		} else {
-			// If there is no error, rejRes promise is rejected with number of ms before next request allowed
-			//
-			// For example, in express.js you could set headers and send 429
-			// const secs = Math.round(rejRes.msBeforeNext / 1000) || 1;
-			// res.set('Retry-After', String(secs));
-			// res.status(429).send('Too Many Requests');
+		const viewer = await getViewer();
+
+		try {
+			await rateLimiter.consume(viewer.id, 1);
+
+			return next();
+		} catch (rejection) {
+			if (rejection instanceof Error) {
+				throw internalServerError(rejection.message);
+			}
+
+			const result = rejection as RateLimiterRes;
+
+			const retrySecs = Math.round(result.msBeforeNext / 1000) || 1;
+
+			throw tooManyRequests(retrySecs);
 		}
-
-		throw rejRes;
-	}
-}
-
-export const authMiddleware = createMiddleware().server(async ({ next }) => {
-	// console.log("hmmmmmm");
-
-	const { impersonatedBy, ...viewer } = await getViewer();
-
-	// console.log("uuuuuh", viewer);
-
-	return await next({
-		context: {
-			viewer: !isEmpty(viewer)
-				? {
-						id: viewer.id,
-						name: viewer.name,
-						role: viewer.role,
-						email: viewer.email,
-						emailVerified: viewer.emailVerified,
-						phoneNumber: viewer.phoneNumber,
-						phoneNumberVerified: viewer.phoneNumberVerified,
-					}
-				: undefined,
-			impersonatorId: impersonatedBy,
-		},
 	});
-});

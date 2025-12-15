@@ -10,27 +10,40 @@ import { createServerFn, useServerFn } from "@tanstack/react-start";
 import Tus from "@uppy/tus";
 import z from "zod";
 import { requireAuthenticated } from "@/auth/shared";
+import { rateLimitMiddleware } from "@/lib/rate-limits";
 import { internalServerError } from "@/lib/responses";
 import { getSupabaseServerClient } from "@/supabase/server";
+import { v4 as uuidv4 } from "uuid";
+import { dbg } from "@/utils/dbg";
+
+// Limit example: allow 10 signed upload URLs per minute, with burst up to 5 at once.
 
 const getSignedUploadTokenFn = createServerFn()
-	.middleware([requireAuthenticated])
+	.middleware([
+		requireAuthenticated,
+		rateLimitMiddleware({
+			keyPrefix: "signed-upload",
+			points: 10,
+			duration: 60,
+			// blockDuration: 60 * 60 * 24,
+		}),
+	])
 	.inputValidator(z.object({ filename: z.string() }))
 	.handler(async ({ data: { filename } }) => {
 		const supabase = getSupabaseServerClient();
 
 		try {
+			// const uniqueFilename = `${uuidv4()}_${filename}`
+
 			const { data, error } = await supabase.storage
 				.from("venues")
-				.createSignedUploadUrl(filename, {
-					upsert: true,
-				});
+				.createSignedUploadUrl(filename);
 
 			if (error) {
 				throw internalServerError(error.message);
 			}
 
-			return { token: data.token };
+			return { token: data.token, filename };
 		} catch (error) {
 			throw internalServerError((error as Error).message);
 		}
@@ -95,6 +108,8 @@ export function Uploader() {
 		return uppyInstance;
 	});
 
+	const [serverUniqueFilename, setServerUniqueFilename] = useState<string | undefined>()
+
 	// Step 3: Handle event listeners
 	useEffect(() => {
 		const successHandler = (file, response) => {
@@ -114,9 +129,11 @@ export function Uploader() {
 		const fileAddedHandler = async <M extends Meta, B extends Body>(
 			file: UppyFile<M, B>,
 		) => {
+		  const objectName = `${uuidv4()}-${file.name}`
+
 			const supabaseMetadata = {
 				bucketName: "venues",
-				objectName: file.name,
+				objectName,
 				contentType: file.type,
 			};
 
@@ -125,12 +142,11 @@ export function Uploader() {
 				...supabaseMetadata,
 			};
 
-			// Important - add signing token header
 			const { token } = await getSignedUploadToken({
-				data: { filename: file.name },
+				data: { filename: objectName } // file.name },
 			});
 
-			console.log({ token });
+			setServerUniqueFilename(objectName)
 
 			uppy.setFileState(file.id, {
 				tus: {
@@ -139,11 +155,33 @@ export function Uploader() {
 					},
 				},
 			});
+
+			// uppy.setFileState(file.id, {
+			//   name: filename,
+			// 	meta: {
+			// 	  ...file.meta,
+			// 		name: filename,
+			// 	}
+			// });
 		};
+
+		const uploadStartHandler = async <M extends Meta, B extends Body>(
+			file: UppyFile<M, B>,
+		) => {
+		console.log(file)
+		// uppy.setFileState(file.id, {
+		//   name: serverUniqueFilename,
+		// 	meta: {
+		// 	  ...file.meta,
+		// 		name: serverUniqueFilename,
+		// 	}
+		// });
+		}
 
 		uppy.on("file-added", fileAddedHandler);
 
 		// Add event listeners
+		uppy.on('upload-start', uploadStartHandler)
 		uppy.on("upload-success", successHandler);
 		uppy.on("upload-error", errorHandler);
 		uppy.on("complete", completeHandler);
@@ -151,6 +189,7 @@ export function Uploader() {
 		// Cleanup function to remove specific event listeners
 		return () => {
 			uppy.off("file-added", fileAddedHandler);
+			uppy.off('upload-start', uploadStartHandler)
 			uppy.off("upload-success", successHandler);
 			uppy.off("upload-error", errorHandler);
 			uppy.off("complete", completeHandler);
