@@ -1,4 +1,9 @@
-import Uppy, { type Body, type Meta, type UppyFile } from "@uppy/core";
+import Uppy, {
+	type Body,
+	type Meta,
+	type UploadResult,
+	type UppyFile,
+} from "@uppy/core";
 import ImageEditor from "@uppy/image-editor";
 import Dashboard from "@uppy/react/dashboard";
 import { useEffect, useState } from "react";
@@ -6,50 +11,19 @@ import { useEffect, useState } from "react";
 import "@uppy/react/css/style.css";
 import "@uppy/dashboard/css/style.min.css";
 import "@uppy/image-editor/css/style.min.css";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@tanstack/react-start";
 import Tus from "@uppy/tus";
-import z from "zod";
-import { requireAuthenticated } from "@/auth/shared";
-import { rateLimitMiddleware } from "@/lib/rate-limits";
-import { internalServerError } from "@/lib/responses";
-import { getSupabaseServerClient } from "@/supabase/server";
-import { v4 as uuidv4 } from "uuid";
-import { dbg } from "@/utils/dbg";
+import { getSignedUploadTokenFn } from "@/data/storage";
 
-// Limit example: allow 10 signed upload URLs per minute, with burst up to 5 at once.
-
-const getSignedUploadTokenFn = createServerFn()
-	.middleware([
-		requireAuthenticated,
-		rateLimitMiddleware({
-			keyPrefix: "signed-upload",
-			points: 10,
-			duration: 60,
-			// blockDuration: 60 * 60 * 24,
-		}),
-	])
-	.inputValidator(z.object({ filename: z.string() }))
-	.handler(async ({ data: { filename } }) => {
-		const supabase = getSupabaseServerClient();
-
-		try {
-			// const uniqueFilename = `${uuidv4()}_${filename}`
-
-			const { data, error } = await supabase.storage
-				.from("venues")
-				.createSignedUploadUrl(filename);
-
-			if (error) {
-				throw internalServerError(error.message);
-			}
-
-			return { token: data.token, filename };
-		} catch (error) {
-			throw internalServerError((error as Error).message);
-		}
-	});
-
-export function Uploader() {
+export function Uploader({
+	bucket,
+	prefix,
+	onUploadSuccess,
+}: {
+	bucket: string;
+	prefix: string;
+	onUploadSuccess: (source: string) => void;
+}) {
 	const getSignedUploadToken = useServerFn(getSignedUploadTokenFn);
 
 	const [uppy] = useState(() => {
@@ -80,13 +54,6 @@ export function Uploader() {
 			},
 		});
 
-		// uppyInstance.use(XHRUpload, {
-		// endpoint: "/api/files",
-		// fieldName: "file",
-		// });
-
-		// supabase.co/storage/v1/upload/resumable
-		//
 		uppyInstance.use(Tus, {
 			endpoint: `${import.meta.env.VITE_SUPABASE_STORAGE_URL}/storage/v1/upload/resumable/sign`,
 			headers: {
@@ -108,7 +75,7 @@ export function Uploader() {
 		return uppyInstance;
 	});
 
-	const [serverUniqueFilename, setServerUniqueFilename] = useState<string | undefined>()
+	const [storagePath, setStoragePath] = useState<string | undefined>();
 
 	// Step 3: Handle event listeners
 	useEffect(() => {
@@ -122,17 +89,27 @@ export function Uploader() {
 			console.error("Error details:", error);
 		};
 
-		const completeHandler = (result) => {
-			console.log("Upload complete! Files:", result.successful);
+		const completeHandler = <M extends Meta, B extends Body>(
+			result: UploadResult<M, B>,
+		) => {
+			console.log("Upload complete! Files:", result.successful, result);
+
+			if (result.successful?.length && storagePath) {
+				onUploadSuccess(storagePath);
+			}
 		};
 
 		const fileAddedHandler = async <M extends Meta, B extends Body>(
 			file: UppyFile<M, B>,
 		) => {
-		  const objectName = `${uuidv4()}-${file.name}`
+			const { token, storagePath: objectName } = await getSignedUploadToken({
+				data: { bucket, prefix, filename: file.name },
+			});
+
+			setStoragePath(objectName);
 
 			const supabaseMetadata = {
-				bucketName: "venues",
+				bucketName: bucket,
 				objectName,
 				contentType: file.type,
 			};
@@ -142,46 +119,25 @@ export function Uploader() {
 				...supabaseMetadata,
 			};
 
-			const { token } = await getSignedUploadToken({
-				data: { filename: objectName } // file.name },
-			});
-
-			setServerUniqueFilename(objectName)
-
 			uppy.setFileState(file.id, {
 				tus: {
 					headers: {
 						"x-signature": token,
 					},
 				},
+				meta: file.meta,
 			});
-
-			// uppy.setFileState(file.id, {
-			//   name: filename,
-			// 	meta: {
-			// 	  ...file.meta,
-			// 		name: filename,
-			// 	}
-			// });
 		};
 
-		const uploadStartHandler = async <M extends Meta, B extends Body>(
-			file: UppyFile<M, B>,
+		const startHandler = <M extends Meta, B extends Body>(
+			files: UppyFile<M, B>[],
 		) => {
-		console.log(file)
-		// uppy.setFileState(file.id, {
-		//   name: serverUniqueFilename,
-		// 	meta: {
-		// 	  ...file.meta,
-		// 		name: serverUniqueFilename,
-		// 	}
-		// });
-		}
-
-		uppy.on("file-added", fileAddedHandler);
+			// console.log("Starting upload:", files);
+		};
 
 		// Add event listeners
-		uppy.on('upload-start', uploadStartHandler)
+		uppy.on("file-added", fileAddedHandler);
+		uppy.on("upload-start", startHandler);
 		uppy.on("upload-success", successHandler);
 		uppy.on("upload-error", errorHandler);
 		uppy.on("complete", completeHandler);
@@ -189,12 +145,19 @@ export function Uploader() {
 		// Cleanup function to remove specific event listeners
 		return () => {
 			uppy.off("file-added", fileAddedHandler);
-			uppy.off('upload-start', uploadStartHandler)
+			uppy.off("upload-start", startHandler);
 			uppy.off("upload-success", successHandler);
 			uppy.off("upload-error", errorHandler);
 			uppy.off("complete", completeHandler);
 		};
-	}, [uppy, getSignedUploadToken]);
+	}, [
+		uppy,
+		getSignedUploadToken,
+		bucket,
+		prefix,
+		onUploadSuccess,
+		storagePath,
+	]);
 
 	return (
 		<Dashboard
