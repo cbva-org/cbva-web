@@ -9,16 +9,9 @@ async function main() {
 			displayDivision: true,
 			displayGender: true,
 		})
-		.where(eq(tournamentDivisions.name, "Cal Cup Bid + AVP Bid Event"));
-
-	await db
-		.update(tournamentDivisions)
-		.set({
-			displayDivision: true,
-			displayGender: true,
-		})
 		.where(
 			inArray(tournamentDivisions.name, [
+				"Cal Cup Bid + AVP Bid Event",
 				"Surf City Days",
 				"Surf City Days $2,000",
 				"Coed Junior Championships",
