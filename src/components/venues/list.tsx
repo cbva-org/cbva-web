@@ -71,6 +71,7 @@ export function VenuesList() {
 								</div>
 							</Link>
 							<EditableImage
+								editable={canCreateVenue}
 								source={thumbnailImageSource ?? ""}
 								bucket="venues"
 								prefix="thumbnails"

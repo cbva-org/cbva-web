@@ -10,6 +10,7 @@ export type EditableImageProps = UploadImageModalProps & {
 	className?: string;
 	onSave: (source: string) => void;
 	onDiscard: (originalSource: string) => void;
+	editable: boolean;
 };
 
 export function EditableImage({
@@ -19,9 +20,10 @@ export function EditableImage({
 	onSave,
 	onDiscard,
 	onUploadSuccess,
+	editable,
 	...uploaderProps
 }: EditableImageProps) {
-	const [originalSource] = useState<string>(source);
+	const [originalSource, setOriginalSource] = useState<string>(source);
 	const [updatedSource, setUpdatedSource] = useState<string | undefined>();
 
 	const src = `${STORAGE_URL}/${uploaderProps.bucket}/${updatedSource ?? source}`;
@@ -30,37 +32,39 @@ export function EditableImage({
 		<>
 			{alt && <img src={src} alt={alt} className={className} />}
 
-			{updatedSource ? (
-				<div className="absolute top-3 right-3 flex flex-row space-x-2">
-					<Button
-						onPress={() => {
-							onDiscard(originalSource);
-							setUpdatedSource(undefined);
+			{editable &&
+				(updatedSource ? (
+					<div className="absolute top-3 right-3 flex flex-row space-x-2">
+						<Button
+							onPress={() => {
+								onDiscard(originalSource);
+								setUpdatedSource(undefined);
 
-							// TODO: delete object in bucket
+								// TODO: delete object in bucket
+							}}
+						>
+							Discard
+						</Button>
+						<Button
+							color="primary"
+							onPress={() => {
+								onSave(updatedSource);
+								setOriginalSource(updatedSource);
+								setUpdatedSource(undefined);
+							}}
+						>
+							Save
+						</Button>
+					</div>
+				) : (
+					<UploadImageModal
+						{...uploaderProps}
+						onUploadSuccess={(source) => {
+							onUploadSuccess(source);
+							setUpdatedSource(source);
 						}}
-					>
-						Discard
-					</Button>
-					<Button
-						color="primary"
-						onPress={() => {
-							onSave(updatedSource);
-							setUpdatedSource(undefined);
-						}}
-					>
-						Save
-					</Button>
-				</div>
-			) : (
-				<UploadImageModal
-					{...uploaderProps}
-					onUploadSuccess={(source) => {
-						onUploadSuccess(source);
-						setUpdatedSource(source);
-					}}
-				/>
-			)}
+					/>
+				))}
 		</>
 	);
 }

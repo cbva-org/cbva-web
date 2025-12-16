@@ -4,6 +4,7 @@ import {
 	useSuspenseQuery,
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useViewerHasPermission } from "@/auth/shared";
 import { EditableImage } from "@/components/base/editable-image";
 import { subtitle, title } from "@/components/base/primitives";
 import { VenueDisplay } from "@/components/venues/display";
@@ -22,6 +23,10 @@ export const Route = createFileRoute("/venues/$venueId")({
 function RouteComponent() {
 	const params = Route.useParams();
 
+	const canUpdate = useViewerHasPermission({
+		venues: ["update"],
+	});
+
 	const queryOptions = venueQueryOptions(Number.parseInt(params.venueId, 10));
 
 	const queryClient = useQueryClient();
@@ -38,6 +43,7 @@ function RouteComponent() {
 	return (
 		<DefaultLayout classNames={{ content: "bg-white" }}>
 			<EditableImage
+				editable={canUpdate}
 				className="h-[25svh] w-full object-cover"
 				alt={`${venue.name}, ${venue.city}`}
 				source={venue.headerImageSource ?? ""}
