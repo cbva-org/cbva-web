@@ -77,7 +77,7 @@ async function cleanupBucket<TTableName extends ConfiguredBuckets>(
 
 	const objectsToDelete = objects.filter(({ path }) => !activePaths.has(path));
 
-	const { data, error } = await supabase.storage
+	const { error } = await supabase.storage
 		.from(bucketName)
 		.remove(objectsToDelete.map(({ path }) => path));
 
@@ -93,7 +93,7 @@ async function cleanupBucket<TTableName extends ConfiguredBuckets>(
 export const Route = createFileRoute("/api/tasks/cleanup/storage")({
 	server: {
 		handlers: {
-			POST: async ({ request }: { request: Request }) => {
+			POST: async () => {
 				// TODO:
 				// - read all objects in each bucket
 				// - check each location a file is stored to see if it is referenced
@@ -107,9 +107,17 @@ export const Route = createFileRoute("/api/tasks/cleanup/storage")({
 				}
 
 				for (const bucket of result.data) {
+					if (!(bucket.name in bucketLookupColumns)) {
+						continue;
+					}
+
 					const paths = await walk(supabase, bucket.name);
 
-					await cleanupBucket(supabase, bucket.name as TableNames, paths);
+					await cleanupBucket(
+						supabase,
+						bucket.name as ConfiguredBuckets,
+						paths,
+					);
 				}
 
 				return new Response(JSON.stringify({ success: true }), {
