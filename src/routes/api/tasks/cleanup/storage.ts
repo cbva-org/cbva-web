@@ -39,13 +39,11 @@ type TableNames = keyof typeof db.query;
 type Schema = NonNullable<typeof db._.schema>;
 
 type BucketLookupColumns = {
-	[bucket in TableNames]?: {
-		[column in keyof Schema[bucket]["columns"]]?: boolean;
-	};
+	[bucket in TableNames]?: (keyof Schema[bucket]["columns"])[];
 };
 
 const bucketLookupColumns: BucketLookupColumns = {
-	venues: { headerImageSource: true, thumbnailImageSource: true },
+	venues: ["headerImageSource", "thumbnailImageSource"],
 };
 
 async function cleanupBucket(
@@ -54,6 +52,9 @@ async function cleanupBucket(
 	objects: { path: string; createdAt: string; updatedAt: string }[],
 ) {
 	const lookupColumns = bucketLookupColumns[bucketName];
+	if (!lookupColumns) {
+		throw internalServerError(`bucket name not accounted for: ${bucketName}`);
+	}
 
 	// TODO: dynamically search through tables with the same name as bucketName and check to see if values
 	// of columns named in lookupColumns reference object paths in the objects list.
@@ -63,11 +64,12 @@ async function cleanupBucket(
 	const query = db.query[bucketName];
 
 	const result = await query.findMany({
-		columns: lookupColumns,
+		columns: lookupColumns.reduce((memo, key) => {
+			memo[key] = true;
+			return memo;
+		}, {}),
 		where: (t, { or, inArray }) => {
-			const filters = Object.keys(lookupColumns).map((key) =>
-				inArray(t[key], storagePaths),
-			);
+			const filters = lookupColumns.map((key) => inArray(t[key], storagePaths));
 
 			return or(...filters);
 		},
@@ -75,17 +77,19 @@ async function cleanupBucket(
 
 	const activePaths = new Set(result.flatMap((row) => Object.values(row)));
 
-	const toDelete = objects.filter(({ path }) => !activePaths.has(path));
+	const objectsToDelete = objects.filter(({ path }) => !activePaths.has(path));
 
-	console.log(
-		Array.from(activePaths),
-		toDelete,
-		objects.length,
-		"-",
-		toDelete.length,
-		"=",
-		objects.length - toDelete.length,
-	);
+	const { data, error } = await supabase.storage
+		.from(bucketName)
+		.remove(objectsToDelete.map(({ path }) => path));
+
+	if (error) {
+		throw internalServerError(error.message);
+	}
+
+	return {
+		success: true,
+	};
 }
 
 export const Route = createFileRoute("/api/tasks/cleanup/storage")({
