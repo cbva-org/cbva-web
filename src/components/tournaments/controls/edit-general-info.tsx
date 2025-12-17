@@ -23,7 +23,6 @@ import {
 import { useVenueFilterOptions } from "@/data/venues";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { calendarDateSchema, timeSchema } from "@/lib/schemas";
-import { dbg } from "@/utils/dbg";
 
 export type EditGeneralInfoFormProps = {
 	tournamentId: number;
