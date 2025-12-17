@@ -1,30 +1,20 @@
 import {
 	mutationOptions,
-	type QueryKey,
 	queryOptions,
-	useMutation,
-	useQueryClient,
 	useSuspenseQuery,
 } from "@tanstack/react-query";
 import { linkOptions, notFound, useRouterState } from "@tanstack/react-router";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
+import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { authMiddleware, requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
-import {
-	createVenueSchema,
-	selectVenueSchema,
-	type UpdateVenue,
-	updateVenueSchema,
-	venues,
-} from "@/db/schema";
-import { dbg } from "@/utils/dbg";
+import { selectVenueSchema, updateVenueSchema, venues } from "@/db/schema";
 
 async function readVenues() {
 	return await db.query.venues.findMany({
 		where: (venues, { eq }) => eq(venues.status, "active"),
-		orderBy: (venues, { asc }) => asc(venues.city),
+		orderBy: (venues, { asc }) => [asc(venues.city), asc(venues.name)],
 	});
 }
 
