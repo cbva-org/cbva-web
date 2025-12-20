@@ -129,22 +129,11 @@ export const getTournaments = createServerFn({
 						return and(...filters);
 					},
 					orderBy: (table, { desc, asc }) => {
-						const venueCity = sql`(SELECT city FROM venues WHERE id = ${table.venueId})`;
-						const venueName = sql`(SELECT name FROM venues WHERE id = ${table.venueId})`;
+						const venueLocation = sql`(SELECT city || ' ' || name FROM venues WHERE id = ${table.venueId})`;
 
 						return past
-							? [
-									desc(table.date),
-									asc(venueCity),
-									asc(venueName),
-									desc(table.id),
-								]
-							: [
-									asc(table.date),
-									asc(venueCity),
-									asc(venueName),
-									asc(table.id),
-								];
+							? [desc(table.date), asc(venueLocation), desc(table.id)]
+							: [asc(table.date), asc(venueLocation), asc(table.id)];
 					},
 					// orderBy: (table, { desc, asc }) =>
 					// 	past
@@ -152,18 +141,6 @@ export const getTournaments = createServerFn({
 					// 		: [asc(table.date), asc(table.id)],
 				},
 			});
-
-			console.log(data.pageInfo, data.data.length);
-			console.log(
-				"Tournament IDs:",
-				data.data.map((t) => t.id),
-			);
-			console.log("First tournament:", data.data[0]?.id, data.data[0]?.name);
-			console.log(
-				"Last tournament:",
-				data.data[data.data.length - 1]?.id,
-				data.data[data.data.length - 1]?.name,
-			);
 
 			return data;
 		},
