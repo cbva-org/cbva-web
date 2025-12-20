@@ -5,8 +5,6 @@ import {
 } from "@tanstack/react-query";
 import { pick } from "lodash-es";
 import { PlusIcon } from "lucide-react";
-import { useState } from "react";
-import { Header } from "react-aria-components";
 import { Button } from "@/components/base/button";
 import {
 	Disclosure,
@@ -14,7 +12,6 @@ import {
 	DisclosurePanel,
 } from "@/components/base/disclosure";
 import { useAppForm } from "@/components/base/form";
-import { Information } from "@/components/base/information";
 import { title } from "@/components/base/primitives";
 import { divisionsQueryOptions } from "@/data/divisions";
 import { tournamentQueryOptions } from "@/data/tournaments";
@@ -23,7 +20,6 @@ import {
 	upsertTournamentDivisionSchema,
 } from "@/data/tournaments/divisions";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
-import { dbg } from "@/utils/dbg";
 import { isNotNullOrUndefined } from "@/utils/types";
 
 export type DivisionFormProps = {
