@@ -200,7 +200,7 @@ export function ProfileForm({
 				<form.AppField
 					name="imageSource"
 					children={(field) => (
-						<field.Image
+						<field.ImageUpload
 							className="col-span-full"
 							label="Profile Photo"
 							field={field}

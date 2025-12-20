@@ -24,7 +24,7 @@ export const getSignedUploadTokenFn = createServerFn()
 	])
 	.inputValidator(
 		z.object({
-			bucket: z.enum(["venues"]),
+			bucket: z.enum(["venues", "users"]),
 			prefix: z.string(),
 			filename: z.string(),
 		}),

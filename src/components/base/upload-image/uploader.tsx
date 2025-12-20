@@ -22,6 +22,7 @@ export type UploaderProps = {
 	prefix: string;
 	onUploadSuccess: (source: string) => void;
 	circular?: boolean;
+	initialFiles?: File[];
 };
 
 export function Uploader({
@@ -29,8 +30,13 @@ export function Uploader({
 	prefix,
 	onUploadSuccess,
 	circular,
+	initialFiles,
 }: UploaderProps) {
 	const getSignedUploadToken = useServerFn(getSignedUploadTokenFn);
+
+	const [mounted, setMounted] = useState(false);
+
+	const [filesToLoad] = useState(initialFiles);
 
 	const [uppy] = useState(() => {
 		const uppyInstance = new Uppy({
@@ -148,6 +154,13 @@ export function Uploader({
 		uppy.on("upload-error", errorHandler);
 		uppy.on("complete", completeHandler);
 
+		uppy.on("file-editor:cancel", (file) => {
+			// TODO: add setting to use for profile photos to completely reset and close modal
+			uppy.removeFile(file.id);
+		});
+
+		setMounted(true);
+
 		// Cleanup function to remove specific event listeners
 		return () => {
 			uppy.off("file-added", fileAddedHandler);
@@ -165,16 +178,30 @@ export function Uploader({
 		storagePath,
 	]);
 
+	useEffect(() => {
+		if (mounted && filesToLoad?.length) {
+			uppy.addFiles(
+				filesToLoad.map((file) => ({
+					name: file.name,
+					type: file.type,
+					data: file,
+				})),
+			);
+		}
+	}, [uppy, filesToLoad, mounted]);
+
 	return (
 		<Dashboard
 			className={circular ? "circle" : undefined}
 			uppy={uppy}
 			autoOpen="imageEditor"
 			height={450}
-			note="Accepted file types: jpg, png."
-			proudlyDisplayPoweredByUppy={false}
+			note="Supported formats: jpg, png."
 			showLinkToFileUploadResult={false}
 			showRemoveButtonAfterComplete={false}
+			hideCancelButton={true}
+			hidePauseResumeButton={true}
+			proudlyDisplayPoweredByUppy={false}
 		/>
 	);
 }
