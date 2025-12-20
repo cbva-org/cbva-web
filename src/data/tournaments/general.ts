@@ -1,7 +1,7 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import z from "zod";
 import { authMiddleware, requirePermissions } from "@/auth/shared";
 import { tournamentListFilterSchema } from "@/components/tournaments/filters";
@@ -14,6 +14,7 @@ import {
 	tournamentDivisions,
 	tournaments,
 	venueDirectors,
+	venues,
 } from "@/db/schema";
 import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
@@ -36,7 +37,9 @@ export const getTournaments = createServerFn({
 			data: { page, pageSize, divisions, venues, genders, past },
 			context: { viewer },
 		}) => {
-			return await findPaged("tournaments", {
+			console.log({ page, pageSize, divisions, venues, genders, past });
+
+			const data = await findPaged("tournaments", {
 				paging: { page, size: pageSize },
 				config: {
 					with: {
@@ -65,7 +68,7 @@ export const getTournaments = createServerFn({
 									filters.push(inArray(tournamentDivisions.gender, genders));
 								}
 
-								if (filters.length) {
+								if (!filters.length) {
 									return undefined;
 								}
 
@@ -125,10 +128,44 @@ export const getTournaments = createServerFn({
 
 						return and(...filters);
 					},
-					orderBy: (table, { desc, asc }) =>
-						past ? desc(table.date) : asc(table.date),
+					orderBy: (table, { desc, asc }) => {
+						const venueCity = sql`(SELECT city FROM venues WHERE id = ${table.venueId})`;
+						const venueName = sql`(SELECT name FROM venues WHERE id = ${table.venueId})`;
+
+						return past
+							? [
+									desc(table.date),
+									asc(venueCity),
+									asc(venueName),
+									desc(table.id),
+								]
+							: [
+									asc(table.date),
+									asc(venueCity),
+									asc(venueName),
+									asc(table.id),
+								];
+					},
+					// orderBy: (table, { desc, asc }) =>
+					// 	past
+					// 		? [desc(table.date), desc(table.id)]
+					// 		: [asc(table.date), asc(table.id)],
 				},
 			});
+
+			console.log(data.pageInfo, data.data.length);
+			console.log(
+				"Tournament IDs:",
+				data.data.map((t) => t.id),
+			);
+			console.log("First tournament:", data.data[0]?.id, data.data[0]?.name);
+			console.log(
+				"Last tournament:",
+				data.data[data.data.length - 1]?.id,
+				data.data[data.data.length - 1]?.name,
+			);
+
+			return data;
 		},
 	);
 

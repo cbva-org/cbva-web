@@ -6,11 +6,12 @@ import { count, sql } from "drizzle-orm";
 import type { DBQueryConfig } from "drizzle-orm/relations";
 import type { KnownKeysOnly } from "drizzle-orm/utils";
 import z from "zod";
+import { dbg } from "@/utils/dbg";
 import { db } from "./connection";
 
 export const pagingOptionsSchema = z.object({
-	page: z.number().min(0).default(1),
-	size: z.number().min(0).default(25),
+	page: z.number().min(1).default(1),
+	size: z.number().min(1).default(25),
 });
 
 export type PagingOptions = z.infer<typeof pagingOptionsSchema>;
@@ -69,7 +70,7 @@ export async function findPaged<
 	const [result, countResult] = await Promise.all([
 		txOrDb.query[table].findMany({
 			...config,
-			...getLimitAndOffset(paging),
+			...dbg(getLimitAndOffset(paging)),
 		} as KnownKeysOnly<
 			TConfig,
 			DBQueryConfig<"many", true, Schema, Schema[TTableName]>
