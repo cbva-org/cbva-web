@@ -1,15 +1,16 @@
-import tailwindcss from "@tailwindcss/vite"
-import { tanstackStart } from "@tanstack/react-start/plugin/vite"
-import viteReact from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
-import viteTsConfigPaths from "vite-tsconfig-paths"
-import { nitro } from "nitro/vite"
 // import { nitroV2Plugin } from "@tanstack/nitro-v2-vite-plugin"
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import viteTsConfigPaths from "vite-tsconfig-paths";
 
 // import { visualizer } from "rollup-plugin-visualizer"
 
 const config = defineConfig({
+<<<<<<< HEAD
   build: {
     sourcemap: true, // Source map generation must be turned on
   },
@@ -36,5 +37,35 @@ const config = defineConfig({
     compatibilityDate: 'latest', preset: "vercel"
   }
 })
+=======
+	build: {
+		sourcemap: true, // Source map generation must be turned on
+	},
+	plugins: [
+		viteTsConfigPaths({
+			projects: ["./tsconfig.json"],
+		}),
+		tailwindcss(),
+		tanstackStart(),
+		viteReact(),
+		// visualizer({
+		//   emitFile: true,
+		//   filename: "stats.html",
+		//   template: "network",
+		// }),
+		nitro(), // { compatibilityDate: '2025-11-11', preset: "vercel" }),
+		// nitroV2Plugin({ compatibilityDate: '2025-11-11', preset: "vercel" }),
+		sentryVitePlugin({
+			authToken: process.env.SENTRY_AUTH_TOKEN,
+			org: "isaac-snow",
+			project: "cbva-vercel",
+		}),
+	],
+	nitro: {
+		compatibilityDate: "latest",
+		preset: "vercel",
+	},
+});
+>>>>>>> 5659394 (alright)
 
-export default config
+export default config;

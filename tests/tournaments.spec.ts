@@ -47,7 +47,9 @@ test("locations ComboBox is navigable by keyboard", async ({ page }) => {
 		const classes = await option.getAttribute("class");
 		const ariaDisabled = await option.getAttribute("aria-disabled");
 		const tabIndex = await option.getAttribute("tabindex");
-		console.log(`  Option ${i}: key=${key}, focused=${focused}, aria-disabled=${ariaDisabled}, tabindex=${tabIndex}, text=${text}`);
+		console.log(
+			`  Option ${i}: key=${key}, focused=${focused}, aria-disabled=${ariaDisabled}, tabindex=${tabIndex}, text=${text}`,
+		);
 	}
 
 	// First, let's debug what happens after first ArrowDown
@@ -63,7 +65,9 @@ test("locations ComboBox is navigable by keyboard", async ({ page }) => {
 		const key = await option.getAttribute("data-key");
 		const classes = await option.getAttribute("class");
 		const ariaDisabled = await option.getAttribute("aria-disabled");
-		console.log(`  Option ${i}: key=${key}, focused=${focused}, aria-disabled=${ariaDisabled}, text=${text}, classes=${classes}`);
+		console.log(
+			`  Option ${i}: key=${key}, focused=${focused}, aria-disabled=${ariaDisabled}, text=${text}, classes=${classes}`,
+		);
 	}
 
 	// Temporarily comment out this check to see what happens after second ArrowDown
@@ -82,7 +86,9 @@ test("locations ComboBox is navigable by keyboard", async ({ page }) => {
 		const key = await option.getAttribute("data-key");
 		const classes = await option.getAttribute("class");
 		const ariaDisabled = await option.getAttribute("aria-disabled");
-		console.log(`  Option ${i}: key=${key}, focused=${focused}, aria-disabled=${ariaDisabled}, text=${text}, classes=${classes}`);
+		console.log(
+			`  Option ${i}: key=${key}, focused=${focused}, aria-disabled=${ariaDisabled}, text=${text}, classes=${classes}`,
+		);
 	}
 
 	// Should be on second item, not third

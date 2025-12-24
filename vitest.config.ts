@@ -24,7 +24,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
 	plugins: [tsconfigPaths()],
 	test: {
-	  include: ['./src/**/*.test.ts?(x)'],
+		include: ["./src/**/*.test.ts?(x)"],
+		exclude: ["./src/**/*.browser.test.ts?(x)"],
 
 		// coverage: { provider: "istanbul" },
 		setupFiles: ["src/tests/setup.integration.ts"],
