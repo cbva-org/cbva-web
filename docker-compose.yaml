@@ -1,15 +1,6 @@
 name: "cbva-web"
 
 services:
-  app:
-    build: .
-    ports:
-      - "5174:5174"
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@localhost:54321/cbva
-    depends_on:
-      - postgres
-
   postgres:
     image: postgres:17-alpine
     environment:
