@@ -29,21 +29,23 @@ test("can sign up", async ({ page }) => {
 });
 
 test.describe.skip(() => {
-  test.use({ storageState: 'playwright/.auth/unverifieduser.json' });
+	test.use({ storageState: "playwright/.auth/unverifieduser.json" });
 
-  test("is shown account verification page if either email or phone aren't verified", async ({ page }) => {
-    // Authenticate
-    page.goto('/')
+	test("is shown account verification page if either email or phone aren't verified", async ({
+		page,
+	}) => {
+		// Authenticate
+		page.goto("/");
 
-    await page.waitForURL("**/account/verify**");
-    // verify email
-    // page.goto('/')
-    // await page.waitForURL("**/account/verify**");
-    // verify phone
-    // page.goto('/')
-    // expect some text in home page
-  });
-})
+		await page.waitForURL("**/account/verify**");
+		// verify email
+		// page.goto('/')
+		// await page.waitForURL("**/account/verify**");
+		// verify phone
+		// page.goto('/')
+		// expect some text in home page
+	});
+});
 
 test("can log in", async ({ page }) => {
 	await page.goto("/log-in");

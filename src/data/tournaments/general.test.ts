@@ -15,12 +15,12 @@ describe("Edit general info", () => {
 			date: "2025-01-01",
 			startTime: "09:00:00",
 			divisions: [
-  			{
-  				division: "b",
-  				gender: "male",
-  				teams: 30,
-  				pools: 6,
-  			},
+				{
+					division: "b",
+					gender: "male",
+					teams: 30,
+					pools: 6,
+				},
 				{
 					division: "a",
 					gender: "female",

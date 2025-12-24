@@ -3,7 +3,7 @@ import { db } from "@/db/connection";
 import { test as setup } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
-const authDir = 'playwright/.auth';
+const authDir = "playwright/.auth";
 
 setup("create verified test user", async ({ page, request }) => {
 	await request.post("/api/auth/sign-up/email", {
@@ -24,11 +24,11 @@ setup("create verified test user", async ({ page, request }) => {
 		.where(eq(users.email, "verifieduser@example.com"));
 
 	// const res = await request.post('/api/auth/sign-in/email', {
- //    data: {
- //      'email': 'verifieduser@example.com',
- //      'password': 'Password1!'
- //    }
- //  });
+	//    data: {
+	//      'email': 'verifieduser@example.com',
+	//      'password': 'Password1!'
+	//    }
+	//  });
 
 	// console.log(res)
 
