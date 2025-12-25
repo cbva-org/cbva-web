@@ -206,8 +206,8 @@ export function ProfileForm({
 							className="col-span-full"
 							label="Profile Photo"
 							field={field}
-							bucket="users"
-							prefix={`${viewer?.id}/profile-photos`}
+							bucket="profiles"
+							prefix="profile-photos"
 							circular={true}
 						/>
 					)}

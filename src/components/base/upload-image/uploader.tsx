@@ -6,6 +6,7 @@ import Uppy, {
 } from "@uppy/core";
 import ImageEditor from "@uppy/image-editor";
 import Dashboard from "@uppy/react/dashboard";
+import type { LocalUppyFile } from "@uppy/utils";
 import { useEffect, useState } from "react";
 
 import "./uploader.css";
@@ -16,6 +17,7 @@ import "@uppy/image-editor/css/style.min.css";
 import { useServerFn } from "@tanstack/react-start";
 import Tus from "@uppy/tus";
 import { type BucketName, getSignedUploadTokenFn } from "@/data/storage";
+import { dbg } from "@/utils/dbg";
 import { Button } from "../button";
 
 export type UploaderProps = {
@@ -40,6 +42,8 @@ export function Uploader({
 	const getSignedUploadToken = useServerFn(getSignedUploadTokenFn);
 
 	const [mounted, setMounted] = useState(false);
+	const [hasEdited, setHasEdited] = useState(false);
+	const [isUploading, setUploading] = useState(false);
 
 	const [filesToLoad] = useState(initialFiles);
 
@@ -75,7 +79,7 @@ export function Uploader({
 		});
 
 		uppyInstance.use(Tus, {
-			endpoint: `${import.meta.env.VITE_SUPABASE_STORAGE_URL}/storage/v1/upload/resumable/sign`,
+			endpoint: `${dbg(import.meta.env.VITE_SUPABASE_STORAGE_URL)}/storage/v1/upload/resumable/sign`,
 			headers: {
 				apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
 			},
@@ -146,13 +150,20 @@ export function Uploader({
 					},
 				},
 				meta: file.meta,
+				type: file.type,
 			});
 		};
 
 		const startHandler = <M extends Meta, B extends Body>(
 			files: UppyFile<M, B>[],
 		) => {
-			// console.log("Starting upload:", files);
+			setUploading(true);
+		};
+
+		const editCompleteHandler = <M extends Meta, B extends Body>(
+			_: UppyFile<M, B>,
+		) => {
+			setHasEdited(true);
 		};
 
 		// Add event listeners
@@ -161,6 +172,8 @@ export function Uploader({
 		uppy.on("upload-success", successHandler);
 		uppy.on("upload-error", errorHandler);
 		uppy.on("complete", completeHandler);
+
+		uppy.on("file-editor:complete", editCompleteHandler);
 
 		if (onCancelEdit) {
 			uppy.on("file-editor:cancel", onCancelEdit);
@@ -175,6 +188,7 @@ export function Uploader({
 			uppy.off("upload-success", successHandler);
 			uppy.off("upload-error", errorHandler);
 			uppy.off("complete", completeHandler);
+			uppy.off("file-editor:complete", editCompleteHandler);
 
 			if (onCancelEdit) {
 				uppy.off("file-editor:cancel", onCancelEdit);
@@ -219,7 +233,15 @@ export function Uploader({
 			/>
 			<div className="flex flex-row gap-2 justify-end">
 				<Button onPress={onCancel}>Cancel</Button>
-				<Button color="primary">Upload</Button>
+				<Button
+					color="primary"
+					isDisabled={!hasEdited || isUploading}
+					onPress={() => {
+						uppy.upload();
+					}}
+				>
+					Upload
+				</Button>
 			</div>
 		</div>
 	);

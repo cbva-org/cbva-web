@@ -10,7 +10,7 @@ import { rateLimitMiddleware } from "@/lib/rate-limits";
 import { forbidden, internalServerError } from "@/lib/responses";
 import { getSupabaseServerClient } from "@/supabase/server";
 
-export const bucketSchema = z.enum(["users", "venues"]);
+export const bucketSchema = z.enum(["profiles", "venues"]);
 export type BucketName = z.infer<typeof bucketSchema>;
 
 export const getSignedUploadTokenFn = createServerFn()
@@ -43,6 +43,8 @@ export const getSignedUploadTokenFn = createServerFn()
 				: false;
 
 			if (!hasPermission) {
+				console.log(viewer, bucket, hasPermission);
+
 				throw forbidden();
 			}
 
