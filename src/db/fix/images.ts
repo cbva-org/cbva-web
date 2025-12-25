@@ -2,26 +2,41 @@ import "dotenv/config";
 
 import { readFileSync, readSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../connection";
 import { venues } from "../schema";
 
 const STORAGE_URL = `${process.env.VITE_SUPABASE_STORAGE_URL}/storage/v1/object/public`;
 
 async function main() {
-	await db.update(venues).set({
-		headerImageSource: sql`${STORAGE_URL} || '/venues/' || ${venues.headerImageSource}`,
-		thumbnailImageSource: sql`${STORAGE_URL} || '/venues/' || ${venues.thumbnailImageSource}`,
-	});
+	console.log(process.env.DATABASE_URL);
+	const res = await db
+		.select({
+			id: venues.id,
+			headerImageSource: venues.headerImageSource,
+			thumbnailImageSource: venues.thumbnailImageSource,
+		})
+		.from(venues);
 
-	// const prodEnvBuf = readFileSync("./.env.prod");
-	// const prodEnv = dotenv.parse(prodEnvBuf);
+	const fixed = res
+		.map(({ id, headerImageSource, thumbnailImageSource }) => ({
+			id,
+			headerImageSource: headerImageSource?.split("https")[2],
+			thumbnailImageSource: thumbnailImageSource?.split("https")[2],
+		}))
+		.map(({ id, headerImageSource, thumbnailImageSource }) => ({
+			id,
+			headerImageSource: headerImageSource ? `https${headerImageSource}` : null,
+			thumbnailImageSource: thumbnailImageSource
+				? `https${thumbnailImageSource}`
+				: null,
+		}));
 
-	// const supabase = createClient(
-	// 	prodEnv.VITE_SUPABASE_URL!,
-	// 	prodEnv.SUPABASE_SERVICE_ROLE_KEY!,
-	// );
+	await Promise.all(
+		fixed.map(({ id, ...values }) =>
+			db.update(venues).set(values).where(eq(venues.id, id)),
+		),
+	);
 
 	process.exit(0);
 }
