@@ -1,5 +1,7 @@
 # Up next
 
+- Director's notes/directors should be changable for each tournament, not all tournaments at a venue
+
 - Bracket for in progress tournament
   - Display for when teams aren't set
   - Ability to create bracket when pools aren't done
@@ -9,8 +11,6 @@
 - tournaments that award bids
 - complete tournament
 - pg_cron
-- Migrate to Uppy for photo uploads
-- Director's notes/directors should be changable for each tournament, not all tournaments at a venue
 - Modify permissions so that directors can't edit tournaments
 
 # Considerations
