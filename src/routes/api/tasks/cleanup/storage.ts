@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requirePermissions, requireRole } from "@/auth/shared";
 import { db } from "@/db/connection";
 import { internalServerError } from "@/lib/responses";
 import { getSupabaseServerClient } from "@/supabase/server";
@@ -92,6 +93,7 @@ async function cleanupBucket<TTableName extends ConfiguredBuckets>(
 
 export const Route = createFileRoute("/api/tasks/cleanup/storage")({
 	server: {
+		middleware: [requireRole(["admin"])],
 		handlers: {
 			POST: async () => {
 				console.log("START /api/tasks/cleanup/storage");

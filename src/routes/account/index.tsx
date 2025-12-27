@@ -27,6 +27,7 @@ import { updateUserFnSchema, updateUserMutationOptions } from "@/data/users";
 import { useNotLoggedInRedirect } from "@/hooks/auth";
 import { DefaultLayout } from "@/layouts/default";
 import { isUnauthorized } from "@/lib/errors";
+import { isTruthy } from "@/utils/types";
 
 export const Route = createFileRoute("/account/")({
 	loader: async ({ context: { queryClient } }) => {
@@ -117,13 +118,17 @@ function RouteComponent() {
 			classNames={{
 				content: "py-12 w-full max-w-lg mx-auto flex flex-col space-y-12",
 			}}
+			sideNavItems={[
+				viewer?.role === "admin" && {
+					title: "Admin Dashboard",
+					to: "/admin" as const,
+				},
+				{
+					title: "Log Out",
+					to: "/log-out" as const,
+				},
+			].filter(isTruthy)}
 		>
-			<Link to="/log-out" preload={false}>
-				Log Out
-			</Link>
-
-			{viewer?.role === "admin" && <Link to="/admin">Admin Dashboard</Link>}
-
 			<Suspense>
 				<h1
 					className={title({

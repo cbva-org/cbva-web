@@ -231,23 +231,27 @@ export const button = tv({
 		{
 			variant: "icon",
 			size: "xs",
-			class: "w-4 px-0",
+			class: "w-4 p-2",
 		},
 		{
 			variant: "icon",
 			size: "sm",
-			class: "w-6 px-0",
+			class: "w-6 p-2",
 		},
+		// md: "h-8 px-4 text-sm",
 		{
 			variant: "icon",
 			size: "md",
-			class: "w-8 px-0",
+			class: "w-8 p-2",
 		},
+		// lg: "h-10 px-6 text-md",
 		{
 			variant: "icon",
 			size: "lg",
-			class: "w-10 px-0",
+			class: "w-10 p-2",
 		},
+		// xl: "h-10 px-6 text-md",
+		// "4xl": "h-12 px-5 text-4xl ",
 	],
 	defaultVariants: {
 		disabled: false,
