@@ -116,7 +116,7 @@ function RouteComponent() {
 	return (
 		<DefaultLayout
 			classNames={{
-				content: "py-12 w-full max-w-lg mx-auto flex flex-col space-y-12",
+				content: "py-12 w-full max-w-3xl mx-auto px-3 flex flex-col space-y-12",
 			}}
 			sideNavItems={[
 				viewer?.role === "admin" && {

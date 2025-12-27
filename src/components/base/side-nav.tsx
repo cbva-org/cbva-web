@@ -3,11 +3,10 @@ import { useEventListener } from "ahooks";
 import { SidebarCloseIcon, SidebarOpenIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import {
-	Tree as AriaTree,
-	TreeItem as AriaTreeItem,
-	TreeItemContent as AriaTreeItemContent,
-	type TreeItemProps as AriaTreeItemProps,
-	type TreeProps,
+	Menu,
+	MenuItem,
+	type MenuItemProps,
+	type MenuProps,
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
@@ -48,7 +47,7 @@ const toggleButtonStyles = tv({
 export function SideNav<T extends object>({
 	children,
 	...props
-}: TreeProps<T>) {
+}: MenuProps<T>) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const toggleRef = useRef<HTMLButtonElement>(null);
 
@@ -77,15 +76,16 @@ export function SideNav<T extends object>({
 			>
 				{expanded ? <SidebarCloseIcon /> : <SidebarOpenIcon />}
 			</Button>
-			<AriaTree
+			<Menu
 				{...props}
+				aria-label="Side Navigation"
 				className={composeTailwindRenderProps(
 					props.className,
 					treeStyles({ expanded }),
 				)}
 			>
 				{children}
-			</AriaTree>
+			</Menu>
 		</div>
 	);
 }
@@ -111,7 +111,7 @@ const itemStyles = tv({
 });
 
 export interface SideNavItemProps
-	extends Partial<AriaTreeItemProps>,
+	extends Partial<MenuItemProps>,
 		Partial<Pick<LinkOptions, "to">> {
 	title: string;
 }
@@ -120,17 +120,6 @@ export function SideNavItem(props: SideNavItemProps) {
 	const content = (
 		<div className={"flex items-center"}>
 			<div className="shrink-0 w-[calc(calc(var(--SideNav-item-level)-1)*calc(var(--spacing)*3))]" />
-
-			{/*{hasChildItems ? (
-				<Button slot="chevron" className={expandButton({ isDisabled })}>
-					<ChevronRight
-						aria-hidden
-						className={chevron({ isExpanded, isDisabled })}
-					/>
-				</Button>
-			) : (
-				<div className="shrink-0 w-8 h-8" />
-			)}*/}
 			{props.title}
 		</div>
 	);
@@ -147,16 +136,13 @@ export function SideNavItem(props: SideNavItemProps) {
 	);
 
 	return (
-		<AriaTreeItem
+		<MenuItem
 			className={itemStyles({ link: Boolean(props.to) })}
 			textValue={props.title}
 			{...props}
 		>
-			<AriaTreeItemContent {...props}>
-				{(/*{ hasChildItems, isExpanded, isDisabled }*/) => children}
-			</AriaTreeItemContent>
-			{props.children}
-		</AriaTreeItem>
+			{children}
+		</MenuItem>
 	);
 }
 
