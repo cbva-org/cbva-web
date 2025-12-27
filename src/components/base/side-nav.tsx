@@ -1,6 +1,7 @@
 import { createLink, type LinkOptions } from "@tanstack/react-router";
+import { useEventListener } from "ahooks";
 import { SidebarCloseIcon, SidebarOpenIcon } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
 	Tree as AriaTree,
 	TreeItem as AriaTreeItem,
@@ -8,8 +9,10 @@ import {
 	type TreeItemProps as AriaTreeItemProps,
 	type TreeProps,
 } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
 import { Button } from "./button";
+import { Link } from "./link";
 import { composeTailwindRenderProps, focusRing } from "./utils";
 
 const containerStyles = tv({
@@ -46,11 +49,24 @@ export function SideNav<T extends object>({
 	children,
 	...props
 }: TreeProps<T>) {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const toggleRef = useRef<HTMLButtonElement>(null);
+
 	const [expanded, setExpanded] = useState(false);
 
+	useEventListener("click", (event) => {
+		if (
+			!toggleRef.current?.contains(event.target as Node) &&
+			!containerRef.current?.contains(event.target as Node)
+		) {
+			setExpanded(false);
+		}
+	});
+
 	return (
-		<div className={containerStyles({ expanded })}>
+		<div className={containerStyles({ expanded })} ref={containerRef}>
 			<Button
+				ref={toggleRef}
 				className={toggleButtonStyles({ expanded })}
 				variant="icon"
 				radius="full"
@@ -74,10 +90,16 @@ export function SideNav<T extends object>({
 	);
 }
 
+const itemPadding = "py-2 px-3";
+
 const itemStyles = tv({
 	extend: focusRing,
-	base: "relative w-48 flex group gap-3 cursor-default select-none py-2 px-3 text-sm text-gray-900 bg-white border-y border-transparent first:border-t-0 last:border-b-0 -mb-px last:mb-0 -outline-offset-2",
+	base: "relative w-48 flex group gap-3 cursor-default select-none text-sm text-gray-900 bg-white border-y border-transparent first:border-t-0 last:border-b-0 -mb-px last:mb-0 -outline-offset-2",
 	variants: {
+		link: {
+			true: "",
+			false: itemPadding,
+		},
 		isSelected: {
 			false: "hover:bg-gray-100",
 			true: "bg-blue-100 hover:bg-blue-200 border-y-blue-200 z-20",
@@ -95,29 +117,43 @@ export interface SideNavItemProps
 }
 
 export function SideNavItem(props: SideNavItemProps) {
-	if (props.to) {
-		return <SideNavItemLink {...props} />;
-	}
+	const content = (
+		<div className={"flex items-center"}>
+			<div className="shrink-0 w-[calc(calc(var(--SideNav-item-level)-1)*calc(var(--spacing)*3))]" />
+
+			{/*{hasChildItems ? (
+				<Button slot="chevron" className={expandButton({ isDisabled })}>
+					<ChevronRight
+						aria-hidden
+						className={chevron({ isExpanded, isDisabled })}
+					/>
+				</Button>
+			) : (
+				<div className="shrink-0 w-8 h-8" />
+			)}*/}
+			{props.title}
+		</div>
+	);
+
+	const children = props.to ? (
+		<Link
+			to={props.to}
+			className={twMerge(itemPadding, "no-underline w-full h-full")}
+		>
+			{content}
+		</Link>
+	) : (
+		content
+	);
 
 	return (
-		<AriaTreeItem className={itemStyles} textValue={props.title} {...props}>
+		<AriaTreeItem
+			className={itemStyles({ link: Boolean(props.to) })}
+			textValue={props.title}
+			{...props}
+		>
 			<AriaTreeItemContent {...props}>
-				{(/*{ hasChildItems, isExpanded, isDisabled }*/) => (
-					<div className={"flex items-center"}>
-						<div className="shrink-0 w-[calc(calc(var(--SideNav-item-level)-1)*calc(var(--spacing)*3))]" />
-						{/*{hasChildItems ? (
-							<Button slot="chevron" className={expandButton({ isDisabled })}>
-								<ChevronRight
-									aria-hidden
-									className={chevron({ isExpanded, isDisabled })}
-								/>
-							</Button>
-						) : (
-							<div className="shrink-0 w-8 h-8" />
-						)}*/}
-						{props.title}
-					</div>
-				)}
+				{(/*{ hasChildItems, isExpanded, isDisabled }*/) => children}
 			</AriaTreeItemContent>
 			{props.children}
 		</AriaTreeItem>

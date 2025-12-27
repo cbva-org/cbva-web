@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useMount } from "ahooks";
+import { useState } from "react";
 
 // Use this hook to disable interactive elements by until they are properly mounted.
 //
@@ -8,9 +9,9 @@ import { useEffect, useState } from "react";
 export function useIsMounted() {
 	const [isMounted, setIsMounted] = useState(false);
 
-	useEffect(() => {
+	useMount(() => {
 		setIsMounted(true);
-	}, []);
+	});
 
 	return isMounted;
 }

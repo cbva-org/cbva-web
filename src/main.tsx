@@ -1,6 +1,6 @@
 import { RouterProvider } from "@tanstack/react-router";
 import React from "react";
-import ReactDOM, { hydrateRoot } from "react-dom/client";
+import { hydrateRoot } from "react-dom/client";
 import { getRouter } from "./router";
 
 // Set up a Router instance
