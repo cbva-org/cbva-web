@@ -1,6 +1,25 @@
 import { range } from "lodash-es";
 import { describe, expect, test } from "vitest";
-import { draftPlayoffs, recursiveSnakeDraft, seedPlayoffs } from "./playoffs";
+import {
+	draftPlayoffs,
+	getFinishForRound,
+	recursiveSnakeDraft,
+	seedPlayoffs,
+} from "./playoffs";
+
+describe("getFinishForRound", () => {
+	const cases = [
+		[1, 3],
+		[2, 5],
+		[3, 9],
+	];
+
+	for (const [round, finish] of cases) {
+		test(`round ${round} finishes ${finish}`, () => {
+			expect(getFinishForRound(round)).toBe(finish);
+		});
+	}
+});
 
 describe("seedPlayoffs", () => {
 	const cases = [

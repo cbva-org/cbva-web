@@ -14,11 +14,13 @@ import {
 	selectMatchSetSchema,
 	selectTournamentDivisionSchema,
 	type Transaction,
+	tournamentDivisionTeams,
 	type UpdateMatchSet,
 	type UpdatePlayoffMatch,
 	type UpdatePoolMatch,
 } from "@/db/schema";
 import { isSetDone } from "@/lib/matches";
+import { getFinishForRound } from "@/lib/playoffs";
 import { internalServerError, notFound } from "@/lib/responses";
 
 const findMatchSetSchema = selectMatchSetSchema.pick({
@@ -357,8 +359,7 @@ const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 			),
 		);
 
-		const refTeamId =
-			winnerId === match.teamAId ? match.teamBId : match.teamAId;
+		const loserId = winnerId === match.teamAId ? match.teamBId : match.teamAId;
 
 		if (match.nextMatchId) {
 			await db
@@ -366,9 +367,34 @@ const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 				.where(eq(matchRefTeams.playoffMatchId, match.nextMatchId));
 
 			await txn.insert(matchRefTeams).values({
-				teamId: refTeamId,
+				teamId: loserId,
 				playoffMatchId: match.nextMatchId,
 			});
+
+			// Set finish for losing team based on the round they were eliminated
+			// In single-elimination brackets:
+			// - Round 0 (first round): finish depends on total number of teams
+			// - Higher rounds: finish = 2^(round+1)
+			// For example: Round 1 (semifinals) losers get 3rd-4th place
+			//              Round 2 (finals) loser gets 2nd place
+			const finish = getFinishForRound(match.round);
+
+			await txn
+				.update(tournamentDivisionTeams)
+				.set({ finish })
+				.where(eq(tournamentDivisionTeams.id, loserId));
+		} else {
+			// This is the finals match - set finish for both teams
+			// Winner gets 1st place, loser gets 2nd place
+			await txn
+				.update(tournamentDivisionTeams)
+				.set({ finish: 1 })
+				.where(eq(tournamentDivisionTeams.id, winnerId));
+
+			await txn
+				.update(tournamentDivisionTeams)
+				.set({ finish: 2 })
+				.where(eq(tournamentDivisionTeams.id, loserId));
 		}
 
 		return {
@@ -409,16 +435,26 @@ export const simulateMatchesFn = createServerFn()
 						},
 					},
 				},
-				// TODO: playoffs
+				// playoffMatches: {
+				// 	with: {
+				// 		sets: {
+				// 			where: (t, { not, eq }) => not(eq(t.status, "completed")),
+				// 		},
+				// 	},
+				// },
 			},
 			where: (t, { eq }) => eq(t.tournamentId, tournamentId),
 		});
 
 		const poolMatchUpdates: (Omit<UpdatePoolMatch, "id"> & { id: number })[] =
 			[];
+		// const playoffMatchUpdates: (Omit<UpdatePlayoffMatch, "id"> & {
+		// 	id: number;
+		// })[] = [];
 		const setUpdates: (Omit<UpdateMatchSet, "id"> & { id: number })[] = [];
 
 		for (const division of divisions) {
+			// Simulate pool matches
 			for (const pool of division.pools) {
 				for (const match of pool.matches) {
 					let aWins = 0;
@@ -458,6 +494,50 @@ export const simulateMatchesFn = createServerFn()
 					});
 				}
 			}
+
+			// // Simulate playoff matches
+			// for (const match of division.playoffMatches) {
+			// 	// Skip if either team is not assigned yet
+			// 	if (!match.teamAId || !match.teamBId) {
+			// 		continue;
+			// 	}
+
+			// 	let aWins = 0;
+			// 	let bWins = 0;
+
+			// 	for (const set of match.sets) {
+			// 		const teamAWins = random(0, 1) === 0;
+
+			// 		if (teamAWins) {
+			// 			aWins += 1;
+			// 		} else {
+			// 			bWins += 1;
+			// 		}
+
+			// 		const teamAScore = teamAWins
+			// 			? set.winScore
+			// 			: random(0, set.winScore - 2);
+			// 		const teamBScore = !teamAWins
+			// 			? set.winScore
+			// 			: random(0, set.winScore - 2);
+
+			// 		setUpdates.push({
+			// 			id: set.id,
+			// 			teamAScore,
+			// 			teamBScore,
+			// 			winnerId: teamAWins ? match.teamAId : match.teamBId,
+			// 			status: "completed",
+			// 			startedAt: new Date(),
+			// 			endedAt: new Date(),
+			// 		});
+			// 	}
+
+			// 	playoffMatchUpdates.push({
+			// 		id: match.id,
+			// 		winnerId: aWins > bWins ? match.teamAId : match.teamBId,
+			// 		status: "completed",
+			// 	});
+			// }
 		}
 
 		await db.transaction(async (txn) => {
@@ -472,6 +552,15 @@ export const simulateMatchesFn = createServerFn()
 					txn.update(poolMatches).set(values).where(eq(poolMatches.id, id)),
 				),
 			);
+
+			// await Promise.all(
+			// 	playoffMatchUpdates.map(({ id, ...values }) =>
+			// 		txn
+			// 			.update(playoffMatches)
+			// 			.set(values)
+			// 			.where(eq(playoffMatches.id, id)),
+			// 	),
+			// );
 		});
 	});
 
