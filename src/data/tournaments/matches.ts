@@ -22,7 +22,7 @@ import {
 import { isSetDone } from "@/lib/matches";
 import { getFinishForRound } from "@/lib/playoffs";
 import { internalServerError, notFound } from "@/lib/responses";
-import { dbg } from "@/utils/dbg";
+import { isNotNullOrUndefined } from "@/utils/types";
 
 const findMatchSetSchema = selectMatchSetSchema.pick({
 	id: true,
@@ -177,6 +177,74 @@ const overrideScoreSchema = selectMatchSetSchema.pick({
 	teamBScore: true,
 });
 
+async function overrideScoreHandler({
+	id,
+	teamAScore,
+	teamBScore,
+}: z.infer<typeof overrideScoreSchema>) {
+	const matchSet = await db.query.matchSets.findFirst({
+		with: {
+			poolMatch: {
+				columns: {
+					teamAId: true,
+					teamBId: true,
+				},
+			},
+			playoffMatch: {
+				columns: {
+					teamAId: true,
+					teamBId: true,
+				},
+			},
+		},
+		where: (t, { eq }) => eq(t.id, id),
+	});
+
+	if (!matchSet) {
+		throw notFound();
+	}
+
+	const isDone = isSetDone(teamAScore, teamBScore, matchSet.winScore);
+
+	const teamAId = matchSet.poolMatch?.teamAId ?? matchSet.playoffMatch?.teamAId;
+	const teamBId = matchSet.poolMatch?.teamBId ?? matchSet.playoffMatch?.teamBId;
+
+	return await db.transaction(async (txn) => {
+		const [{ playoffMatchId, poolMatchId, status }] = await db
+			.update(matchSets)
+			.set({
+				status: isDone ? "completed" : "in_progress",
+				endedAt: isDone ? new Date() : sql`null`,
+				teamAScore,
+				teamBScore,
+				winnerId: isDone ? (teamAScore > teamBScore ? teamAId : teamBId) : null,
+			})
+			.where(eq(matchSets.id, id))
+			.returning({
+				playoffMatchId: matchSets.playoffMatchId,
+				poolMatchId: matchSets.poolMatchId,
+				status: matchSets.status,
+			});
+
+		if (status === "completed") {
+			if (poolMatchId) {
+				return await handleCompletedPoolMatchSet(txn, poolMatchId);
+			}
+
+			if (playoffMatchId) {
+				return await handleCompletedPlayoffMatchSet(txn, playoffMatchId);
+			}
+		}
+
+		return {
+			success: true,
+			data: {
+				winnerId: undefined,
+			},
+		};
+	});
+}
+
 export const overrideScoreFn = createServerFn()
 	.middleware([
 		requirePermissions({
@@ -184,72 +252,7 @@ export const overrideScoreFn = createServerFn()
 		}),
 	])
 	.inputValidator(overrideScoreSchema)
-	.handler(async ({ data: { id, teamAScore, teamBScore } }) => {
-		const matchSet = await db.query.matchSets.findFirst({
-			with: {
-				poolMatch: {
-					columns: {
-						teamAId: true,
-						teamBId: true,
-					},
-				},
-				playoffMatch: {
-					columns: {
-						teamAId: true,
-						teamBId: true,
-					},
-				},
-			},
-			where: (t, { eq }) => eq(t.id, id),
-		});
-
-		if (!matchSet) {
-			throw notFound();
-		}
-
-		const isDone = isSetDone(teamAScore, teamBScore, matchSet.winScore);
-
-		const teamAId =
-			matchSet.poolMatch?.teamAId ?? matchSet.playoffMatch?.teamAId;
-		const teamBId =
-			matchSet.poolMatch?.teamBId ?? matchSet.playoffMatch?.teamBId;
-
-		await db.transaction(async (txn) => {
-			const [{ playoffMatchId, poolMatchId, status }] = await db
-				.update(matchSets)
-				.set({
-					status: isDone ? "completed" : "in_progress",
-					endedAt: isDone ? new Date() : sql`null`,
-					teamAScore,
-					teamBScore,
-					winnerId: isDone
-						? teamAScore > teamBScore
-							? teamAId
-							: teamBId
-						: null,
-				})
-				.where(eq(matchSets.id, id))
-				.returning({
-					playoffMatchId: matchSets.playoffMatchId,
-					poolMatchId: matchSets.poolMatchId,
-					status: matchSets.status,
-				});
-
-			if (status === "completed") {
-				if (poolMatchId) {
-					return await handleCompletedPoolMatchSet(txn, poolMatchId);
-				}
-
-				if (playoffMatchId) {
-					return await handleCompletedPlayoffMatchSet(txn, playoffMatchId);
-				}
-			}
-
-			return {
-				success: true,
-			};
-		});
-	});
+	.handler(async ({ data }) => overrideScoreHandler(data));
 
 function getWinnerId(
 	{ teamAId, teamBId }: { teamAId: number; teamBId: number },
@@ -305,6 +308,9 @@ const handleCompletedPoolMatchSet = createServerOnlyFn(
 		if (!winnerId) {
 			return {
 				success: true,
+				data: {
+					winnerId: undefined,
+				},
 			};
 		}
 
@@ -318,6 +324,9 @@ const handleCompletedPoolMatchSet = createServerOnlyFn(
 
 		return {
 			success: true,
+			data: {
+				winnerId,
+			},
 		};
 	},
 );
@@ -349,6 +358,9 @@ const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 		if (!winnerId) {
 			return {
 				success: true,
+				data: {
+					winnerId: undefined,
+				},
 			};
 		}
 
@@ -430,6 +442,9 @@ const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 
 		return {
 			success: true,
+			data: {
+				winnerId,
+			},
 		};
 	},
 );
@@ -599,5 +614,70 @@ export const simulateMatchesMutationOptions = () =>
 	mutationOptions({
 		mutationFn: async (data: z.infer<typeof simulateMatchesSchema>) => {
 			return await simulateMatchesFn({ data });
+		},
+	});
+
+export const simulateMatchSchema = z
+	.object({
+		playoffMatchId: z.number().optional(),
+		poolMatchId: z.number().optional(),
+	})
+	.refine(
+		(v) => {
+			const values = [v.playoffMatchId, v.poolMatchId].filter(
+				isNotNullOrUndefined,
+			);
+
+			return values.length > 0;
+		},
+		{
+			message: "Must set either `playoffMatchId` or `poolMatchId`.",
+			path: ["playoffMatchId", "poolMatchId"],
+		},
+	);
+
+export const simulateMatchFn = createServerFn()
+	.middleware([
+		requirePermissions({
+			tournament: ["update"],
+		}),
+	])
+	.inputValidator(simulateMatchSchema)
+	.handler(async ({ data: { playoffMatchId, poolMatchId } }) => {
+		const sets = await db.query.matchSets.findMany({
+			where: (t, { eq }) =>
+				isNotNullOrUndefined(playoffMatchId)
+					? eq(t.playoffMatchId, playoffMatchId)
+					: eq(t.poolMatchId, poolMatchId!),
+		});
+
+		for (const set of sets) {
+			const teamAWins = random(0, 1) === 0;
+
+			const teamAScore = teamAWins ? set.winScore : random(0, set.winScore - 2);
+			const teamBScore = !teamAWins
+				? set.winScore
+				: random(0, set.winScore - 2);
+
+			const result = await overrideScoreHandler({
+				id: set.id,
+				teamAScore,
+				teamBScore,
+			});
+
+			if (result.data?.winnerId) {
+				break;
+			}
+		}
+
+		return {
+			success: true,
+		};
+	});
+
+export const simulateMatchMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof simulateMatchSchema>) => {
+			return await simulateMatchFn({ data });
 		},
 	});

@@ -139,6 +139,7 @@ function RouteComponent() {
 			{data && activeTabKey && (
 				<TournamentDirectorMatchControls
 					matchId={data.id}
+					matchKind="playoff"
 					setId={activeTabKey}
 				/>
 			)}

@@ -4,6 +4,7 @@ import { type ReactNode, useState } from "react";
 import { Heading } from "react-aria-components";
 import { type AlertProps, Alert as BaseAlert } from "@/components/base/alert";
 import { Button, type ButtonProps } from "@/components/base/button";
+import { dbg } from "@/utils/dbg";
 import { Modal } from "../modal";
 import { title } from "../primitives";
 import { CheckboxField } from "./fields/checkbox";
@@ -70,11 +71,9 @@ function SubmitButton({
 
 	return (
 		<form.Subscribe
-			selector={(state) => [
-				state.canSubmit,
-				state.isDefaultValue,
-				state.isSubmitting,
-			]}
+			selector={(state) =>
+				dbg([state.canSubmit, state.isDefaultValue, state.isSubmitting])
+			}
 			children={([canSubmit, isDefaultValue, isSubmitting]) => (
 				<Button
 					type="submit"

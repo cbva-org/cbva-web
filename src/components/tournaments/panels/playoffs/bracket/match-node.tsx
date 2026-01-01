@@ -8,6 +8,7 @@ import { Button } from "@/components/base/button";
 import { Link } from "@/components/base/link";
 import { TeamNames } from "@/components/teams/names";
 import { EditPlayoffMatchRefsForm } from "@/components/tournaments/controls/edit-playoff-match-refs";
+import { SimulateMatchModal } from "@/components/tournaments/controls/simulate-match";
 import { playoffsQueryOptions } from "@/data/playoffs";
 import type {
 	MatchRefTeam,
@@ -130,10 +131,18 @@ export function MatchNode({
 					<div>Self Ref</div>
 				)}
 
-				{canUpdate && (
+				{canUpdate && data.status !== "completed" && (
 					<EditPlayoffMatchRefsForm
 						tournamentDivisionId={tournamentDivisionId}
 						matchId={data.id}
+					/>
+				)}
+
+				{canUpdate && teamA && teamB && data.status !== "completed" && (
+					<SimulateMatchModal
+						tournamentDivisionId={tournamentDivisionId}
+						matchId={data.id}
+						matchKind="playoff"
 					/>
 				)}
 			</div>
@@ -258,7 +267,7 @@ export function MatchNode({
 									)}
 									title={`Seed ${team.playoffsSeed ?? "?"} in playoffs`}
 								>
-									{dbg(team).playoffsSeed ?? (team.wildcard ? "WC" : null)}
+									{team.playoffsSeed ?? (team.wildcard ? "WC" : null)}
 								</span>
 							)}
 
@@ -322,10 +331,10 @@ export function MatchNode({
 										last: i === sets.length - 1,
 									})}
 								>
-									{s.startedAt
+									{s.status !== "not_started"
 										? teamA?.id === team.id
-											? s.teamAScore
-											: s.teamBScore
+											? (s.teamAScore ?? 0)
+											: (s.teamBScore ?? 0)
 										: "-"}
 								</div>
 							))}
