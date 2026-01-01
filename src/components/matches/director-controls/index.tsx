@@ -11,6 +11,7 @@ import { OverrideScoreForm } from "./override-score";
 
 export type TournamentDirectorMatchControlsProps = {
 	matchId: number;
+	matchKind: "pool" | "playoff";
 	setId: number;
 };
 
@@ -22,6 +23,7 @@ enum ModalKind {
 
 export function TournamentDirectorMatchControls({
 	matchId,
+	matchKind,
 	setId,
 }: TournamentDirectorMatchControlsProps) {
 	const canCreate = useViewerHasPermission({
@@ -64,6 +66,7 @@ export function TournamentDirectorMatchControls({
 
 			<OverrideScoreForm
 				matchId={matchId}
+				matchKind={matchKind}
 				setId={setId}
 				{...makeModalOpenProps(ModalKind.OverrideScore)}
 			/>

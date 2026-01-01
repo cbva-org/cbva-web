@@ -1,6 +1,6 @@
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
-import { eq, sql } from "drizzle-orm";
+import { eq, max, sql } from "drizzle-orm";
 import random from "lodash-es/random";
 import z from "zod";
 import { requireAuthenticated, requirePermissions } from "@/auth/shared";
@@ -14,12 +14,15 @@ import {
 	selectMatchSetSchema,
 	selectTournamentDivisionSchema,
 	type Transaction,
+	tournamentDivisionTeams,
 	type UpdateMatchSet,
 	type UpdatePlayoffMatch,
 	type UpdatePoolMatch,
 } from "@/db/schema";
 import { isSetDone } from "@/lib/matches";
+import { getFinishForRound } from "@/lib/playoffs";
 import { internalServerError, notFound } from "@/lib/responses";
+import { isNotNullOrUndefined } from "@/utils/types";
 
 const findMatchSetSchema = selectMatchSetSchema.pick({
 	id: true,
@@ -73,7 +76,23 @@ const updateScoreFn = createServerFn()
 
 		const next = applyMatchSetAction({ id, teamA, action }, matchSet);
 
-		await db.update(matchSets).set(next).where(eq(matchSets.id, id));
+		const { playoffMatchId, poolMatchId } = matchSet;
+
+		await db.transaction(async (txn) => {
+			await txn.update(matchSets).set(next).where(eq(matchSets.id, id));
+
+			console.log("-->", next, poolMatchId, playoffMatchId);
+
+			if (next.status === "completed") {
+				if (poolMatchId) {
+					return await handleCompletedPoolMatchSet(txn, poolMatchId);
+				}
+
+				if (playoffMatchId) {
+					return await handleCompletedPlayoffMatchSet(txn, playoffMatchId);
+				}
+			}
+		});
 	});
 
 export const updateScoreMutationOptions = () =>
@@ -158,6 +177,74 @@ const overrideScoreSchema = selectMatchSetSchema.pick({
 	teamBScore: true,
 });
 
+async function overrideScoreHandler({
+	id,
+	teamAScore,
+	teamBScore,
+}: z.infer<typeof overrideScoreSchema>) {
+	const matchSet = await db.query.matchSets.findFirst({
+		with: {
+			poolMatch: {
+				columns: {
+					teamAId: true,
+					teamBId: true,
+				},
+			},
+			playoffMatch: {
+				columns: {
+					teamAId: true,
+					teamBId: true,
+				},
+			},
+		},
+		where: (t, { eq }) => eq(t.id, id),
+	});
+
+	if (!matchSet) {
+		throw notFound();
+	}
+
+	const isDone = isSetDone(teamAScore, teamBScore, matchSet.winScore);
+
+	const teamAId = matchSet.poolMatch?.teamAId ?? matchSet.playoffMatch?.teamAId;
+	const teamBId = matchSet.poolMatch?.teamBId ?? matchSet.playoffMatch?.teamBId;
+
+	return await db.transaction(async (txn) => {
+		const [{ playoffMatchId, poolMatchId, status }] = await db
+			.update(matchSets)
+			.set({
+				status: isDone ? "completed" : "in_progress",
+				endedAt: isDone ? new Date() : sql`null`,
+				teamAScore,
+				teamBScore,
+				winnerId: isDone ? (teamAScore > teamBScore ? teamAId : teamBId) : null,
+			})
+			.where(eq(matchSets.id, id))
+			.returning({
+				playoffMatchId: matchSets.playoffMatchId,
+				poolMatchId: matchSets.poolMatchId,
+				status: matchSets.status,
+			});
+
+		if (status === "completed") {
+			if (poolMatchId) {
+				return await handleCompletedPoolMatchSet(txn, poolMatchId);
+			}
+
+			if (playoffMatchId) {
+				return await handleCompletedPlayoffMatchSet(txn, playoffMatchId);
+			}
+		}
+
+		return {
+			success: true,
+			data: {
+				winnerId: undefined,
+			},
+		};
+	});
+}
+
 export const overrideScoreFn = createServerFn()
 	.middleware([
 		requirePermissions({
@@ -165,72 +252,7 @@ export const overrideScoreFn = createServerFn()
 		}),
 	])
 	.inputValidator(overrideScoreSchema)
-	.handler(async ({ data: { id, teamAScore, teamBScore } }) => {
-		const matchSet = await db.query.matchSets.findFirst({
-			with: {
-				poolMatch: {
-					columns: {
-						teamAId: true,
-						teamBId: true,
-					},
-				},
-				playoffMatch: {
-					columns: {
-						teamAId: true,
-						teamBId: true,
-					},
-				},
-			},
-			where: (t, { eq }) => eq(t.id, id),
-		});
-
-		if (!matchSet) {
-			throw notFound();
-		}
-
-		const isDone = isSetDone(teamAScore, teamBScore, matchSet.winScore);
-
-		const teamAId =
-			matchSet.poolMatch?.teamAId ?? matchSet.playoffMatch?.teamAId;
-		const teamBId =
-			matchSet.poolMatch?.teamBId ?? matchSet.playoffMatch?.teamBId;
-
-		await db.transaction(async (txn) => {
-			const [{ playoffMatchId, poolMatchId, status }] = await db
-				.update(matchSets)
-				.set({
-					status: isDone ? "completed" : "in_progress",
-					endedAt: isDone ? new Date() : sql`null`,
-					teamAScore,
-					teamBScore,
-					winnerId: isDone
-						? teamAScore > teamBScore
-							? teamAId
-							: teamBId
-						: null,
-				})
-				.where(eq(matchSets.id, id))
-				.returning({
-					playoffMatchId: matchSets.playoffMatchId,
-					poolMatchId: matchSets.poolMatchId,
-					status: matchSets.status,
-				});
-
-			if (status === "completed") {
-				if (poolMatchId) {
-					return await handleCompletedPoolMatchSet(txn, poolMatchId);
-				}
-
-				if (playoffMatchId) {
-					return await handleCompletedPlayoffMatchSet(txn, playoffMatchId);
-				}
-			}
-
-			return {
-				success: true,
-			};
-		});
-	});
+	.handler(async ({ data }) => overrideScoreHandler(data));
 
 function getWinnerId(
 	{ teamAId, teamBId }: { teamAId: number; teamBId: number },
@@ -238,13 +260,13 @@ function getWinnerId(
 ) {
 	const { winnerId } = sets.reduce(
 		(memo, set) => {
-			if (set.winnerId === teamAId) {
+			if (set.teamAScore > set.teamBScore) {
 				memo.aWins += 1;
 
 				if (memo.aWins > Math.floor(sets.length / 2)) {
 					memo.winnerId = teamAId;
 				}
-			} else if (set.winnerId === teamBId) {
+			} else if (set.teamAScore < set.teamBScore) {
 				memo.bWins += 1;
 
 				if (memo.bWins > Math.floor(sets.length / 2)) {
@@ -286,6 +308,9 @@ const handleCompletedPoolMatchSet = createServerOnlyFn(
 		if (!winnerId) {
 			return {
 				success: true,
+				data: {
+					winnerId: undefined,
+				},
 			};
 		}
 
@@ -299,6 +324,9 @@ const handleCompletedPoolMatchSet = createServerOnlyFn(
 
 		return {
 			success: true,
+			data: {
+				winnerId,
+			},
 		};
 	},
 );
@@ -330,6 +358,9 @@ const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 		if (!winnerId) {
 			return {
 				success: true,
+				data: {
+					winnerId: undefined,
+				},
 			};
 		}
 
@@ -345,9 +376,13 @@ const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 			matchUpdates.push({
 				id: match.nextMatch.id,
 				teamAId:
-					match.teamAPreviousMatchId === playoffMatchId ? winnerId : null,
+					match.nextMatch.teamAPreviousMatchId === playoffMatchId
+						? winnerId
+						: undefined,
 				teamBId:
-					match.teamBPreviousMatchId === playoffMatchId ? winnerId : null,
+					match.nextMatch.teamBPreviousMatchId === playoffMatchId
+						? winnerId
+						: undefined,
 			});
 		}
 
@@ -357,8 +392,13 @@ const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 			),
 		);
 
-		const refTeamId =
-			winnerId === match.teamAId ? match.teamBId : match.teamAId;
+		const loserId = winnerId === match.teamAId ? match.teamBId : match.teamAId;
+
+		const [{ totalRounds }] = await txn
+			.select({
+				totalRounds: max(playoffMatches.round),
+			})
+			.from(playoffMatches);
 
 		if (match.nextMatchId) {
 			await db
@@ -366,13 +406,45 @@ const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 				.where(eq(matchRefTeams.playoffMatchId, match.nextMatchId));
 
 			await txn.insert(matchRefTeams).values({
-				teamId: refTeamId,
+				teamId: loserId,
 				playoffMatchId: match.nextMatchId,
 			});
+
+			// Set finish for losing team based on the round they were eliminated
+			// In single-elimination brackets:
+			// - Round 0 (first round): finish depends on total number of teams
+			// - Higher rounds: finish = 2^(round+1)
+			// For example: Round 1 (semifinals) losers get 3rd-4th place
+			//              Round 2 (finals) loser gets 2nd place
+			const finish = getFinishForRound(totalRounds! - match.round);
+
+			console.log(
+				`${finish} = getFinishForRound(${totalRounds} - ${match.round})`,
+			);
+
+			await txn
+				.update(tournamentDivisionTeams)
+				.set({ finish })
+				.where(eq(tournamentDivisionTeams.id, loserId));
+		} else {
+			// This is the finals match - set finish for both teams
+			// Winner gets 1st place, loser gets 2nd place
+			await txn
+				.update(tournamentDivisionTeams)
+				.set({ finish: 1 })
+				.where(eq(tournamentDivisionTeams.id, winnerId));
+
+			await txn
+				.update(tournamentDivisionTeams)
+				.set({ finish: 2 })
+				.where(eq(tournamentDivisionTeams.id, loserId));
 		}
 
 		return {
 			success: true,
+			data: {
+				winnerId,
+			},
 		};
 	},
 );
@@ -409,16 +481,26 @@ export const simulateMatchesFn = createServerFn()
 						},
 					},
 				},
-				// TODO: playoffs
+				// playoffMatches: {
+				// 	with: {
+				// 		sets: {
+				// 			where: (t, { not, eq }) => not(eq(t.status, "completed")),
+				// 		},
+				// 	},
+				// },
 			},
 			where: (t, { eq }) => eq(t.tournamentId, tournamentId),
 		});
 
 		const poolMatchUpdates: (Omit<UpdatePoolMatch, "id"> & { id: number })[] =
 			[];
+		// const playoffMatchUpdates: (Omit<UpdatePlayoffMatch, "id"> & {
+		// 	id: number;
+		// })[] = [];
 		const setUpdates: (Omit<UpdateMatchSet, "id"> & { id: number })[] = [];
 
 		for (const division of divisions) {
+			// Simulate pool matches
 			for (const pool of division.pools) {
 				for (const match of pool.matches) {
 					let aWins = 0;
@@ -458,6 +540,50 @@ export const simulateMatchesFn = createServerFn()
 					});
 				}
 			}
+
+			// // Simulate playoff matches
+			// for (const match of division.playoffMatches) {
+			// 	// Skip if either team is not assigned yet
+			// 	if (!match.teamAId || !match.teamBId) {
+			// 		continue;
+			// 	}
+
+			// 	let aWins = 0;
+			// 	let bWins = 0;
+
+			// 	for (const set of match.sets) {
+			// 		const teamAWins = random(0, 1) === 0;
+
+			// 		if (teamAWins) {
+			// 			aWins += 1;
+			// 		} else {
+			// 			bWins += 1;
+			// 		}
+
+			// 		const teamAScore = teamAWins
+			// 			? set.winScore
+			// 			: random(0, set.winScore - 2);
+			// 		const teamBScore = !teamAWins
+			// 			? set.winScore
+			// 			: random(0, set.winScore - 2);
+
+			// 		setUpdates.push({
+			// 			id: set.id,
+			// 			teamAScore,
+			// 			teamBScore,
+			// 			winnerId: teamAWins ? match.teamAId : match.teamBId,
+			// 			status: "completed",
+			// 			startedAt: new Date(),
+			// 			endedAt: new Date(),
+			// 		});
+			// 	}
+
+			// 	playoffMatchUpdates.push({
+			// 		id: match.id,
+			// 		winnerId: aWins > bWins ? match.teamAId : match.teamBId,
+			// 		status: "completed",
+			// 	});
+			// }
 		}
 
 		await db.transaction(async (txn) => {
@@ -472,6 +598,15 @@ export const simulateMatchesFn = createServerFn()
 					txn.update(poolMatches).set(values).where(eq(poolMatches.id, id)),
 				),
 			);
+
+			// await Promise.all(
+			// 	playoffMatchUpdates.map(({ id, ...values }) =>
+			// 		txn
+			// 			.update(playoffMatches)
+			// 			.set(values)
+			// 			.where(eq(playoffMatches.id, id)),
+			// 	),
+			// );
 		});
 	});
 
@@ -479,5 +614,70 @@ export const simulateMatchesMutationOptions = () =>
 	mutationOptions({
 		mutationFn: async (data: z.infer<typeof simulateMatchesSchema>) => {
 			return await simulateMatchesFn({ data });
+		},
+	});
+
+export const simulateMatchSchema = z
+	.object({
+		playoffMatchId: z.number().optional(),
+		poolMatchId: z.number().optional(),
+	})
+	.refine(
+		(v) => {
+			const values = [v.playoffMatchId, v.poolMatchId].filter(
+				isNotNullOrUndefined,
+			);
+
+			return values.length > 0;
+		},
+		{
+			message: "Must set either `playoffMatchId` or `poolMatchId`.",
+			path: ["playoffMatchId", "poolMatchId"],
+		},
+	);
+
+export const simulateMatchFn = createServerFn()
+	.middleware([
+		requirePermissions({
+			tournament: ["update"],
+		}),
+	])
+	.inputValidator(simulateMatchSchema)
+	.handler(async ({ data: { playoffMatchId, poolMatchId } }) => {
+		const sets = await db.query.matchSets.findMany({
+			where: (t, { eq }) =>
+				isNotNullOrUndefined(playoffMatchId)
+					? eq(t.playoffMatchId, playoffMatchId)
+					: eq(t.poolMatchId, poolMatchId!),
+		});
+
+		for (const set of sets) {
+			const teamAWins = random(0, 1) === 0;
+
+			const teamAScore = teamAWins ? set.winScore : random(0, set.winScore - 2);
+			const teamBScore = !teamAWins
+				? set.winScore
+				: random(0, set.winScore - 2);
+
+			const result = await overrideScoreHandler({
+				id: set.id,
+				teamAScore,
+				teamBScore,
+			});
+
+			if (result.data?.winnerId) {
+				break;
+			}
+		}
+
+		return {
+			success: true,
+		};
+	});
+
+export const simulateMatchMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof simulateMatchSchema>) => {
+			return await simulateMatchFn({ data });
 		},
 	});

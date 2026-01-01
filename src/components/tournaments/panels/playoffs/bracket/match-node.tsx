@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { Handle, Position } from "@xyflow/react";
 import clsx from "clsx";
-import { CircleDot, EditIcon } from "lucide-react";
-import { useState } from "react";
+import { CircleDot } from "lucide-react";
 import { tv } from "tailwind-variants";
 import { useViewerHasPermission } from "@/auth/shared";
 import { Button } from "@/components/base/button";
+import { Link } from "@/components/base/link";
 import { TeamNames } from "@/components/teams/names";
 import { EditPlayoffMatchRefsForm } from "@/components/tournaments/controls/edit-playoff-match-refs";
+import { SimulateMatchModal } from "@/components/tournaments/controls/simulate-match";
 import { playoffsQueryOptions } from "@/data/playoffs";
 import type {
 	MatchRefTeam,
@@ -19,6 +20,7 @@ import type {
 	TournamentDivisionTeam,
 } from "@/db/schema";
 import { formatOrdinals } from "@/lib/numbers";
+import { dbg } from "@/utils/dbg";
 import { isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../../games/pool-match-grid";
 import { useActiveTeam, useSetActiveTeam, useSetNodeIdToCenter } from ".";
@@ -129,10 +131,18 @@ export function MatchNode({
 					<div>Self Ref</div>
 				)}
 
-				{canUpdate && (
+				{canUpdate && data.status !== "completed" && (
 					<EditPlayoffMatchRefsForm
 						tournamentDivisionId={tournamentDivisionId}
 						matchId={data.id}
+					/>
+				)}
+
+				{canUpdate && teamA && teamB && data.status !== "completed" && (
+					<SimulateMatchModal
+						tournamentDivisionId={tournamentDivisionId}
+						matchId={data.id}
+						matchKind="playoff"
 					/>
 				)}
 			</div>
@@ -147,15 +157,23 @@ export function MatchNode({
 							sets.length > 1 ? "col-span-3" : "col-span-5",
 						)}
 					>
-						{court ? (
-							<span className="whitespace-nowrap text-ellipsis">
-								Court {court}
-							</span>
-						) : (
-							<span className="whitespace-nowrap text-ellipsis">
-								{sets.length > 1 ? "Match" : "Game"} {matchNumber}
-							</span>
-						)}
+						<Link
+							to="/matches/playoff/$matchId"
+							params={{
+								matchId: data.id.toString(),
+							}}
+							variant="alt"
+						>
+							{court ? (
+								<span className="whitespace-nowrap text-ellipsis">
+									Court {court}
+								</span>
+							) : (
+								<span className="whitespace-nowrap text-ellipsis">
+									{sets.length > 1 ? "Match" : "Game"} {matchNumber}
+								</span>
+							)}
+						</Link>
 
 						{sets.some(({ status }) => status === "in_progress") ? (
 							<Button
@@ -313,10 +331,10 @@ export function MatchNode({
 										last: i === sets.length - 1,
 									})}
 								>
-									{s.startedAt
+									{s.status !== "not_started"
 										? teamA?.id === team.id
-											? s.teamAScore
-											: s.teamBScore
+											? (s.teamAScore ?? 0)
+											: (s.teamBScore ?? 0)
 										: "-"}
 								</div>
 							))}

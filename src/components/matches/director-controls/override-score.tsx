@@ -1,9 +1,4 @@
-import {
-	useMutation,
-	useQuery,
-	useQueryClient,
-	useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Heading } from "react-aria-components";
 import z from "zod";
 import { Button } from "@/components/base/button";
@@ -11,49 +6,48 @@ import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
 import { TeamNames } from "@/components/teams/names";
-import { poolMatchQueryOptions } from "@/data/matches";
-import { overrideScoreMutationOptions } from "@/data/tournaments/matches";
-// import {
-// 	overrideScoreMutationOptions,
-// 	overrideScoreSchema,
-// } from "@/data/tournaments/teams";
 import {
-	type Division,
-	selectMatchSetSchema,
-	type TournamentDivision,
-} from "@/db/schema";
+	playoffMatchQueryOptions,
+	poolMatchQueryOptions,
+} from "@/data/matches";
+import { overrideScoreMutationOptions } from "@/data/tournaments/matches";
+import { useMatchSets, useMatchTeams } from "@/lib/matches";
 
 export type OverrideScoreFormProps = {
-	matchId: number;
 	setId: number;
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
-};
+} & (
+	| { matchKind: "pool"; matchId: number }
+	| { matchKind: "playoff"; matchId: number }
+);
 
 export function OverrideScoreForm({
 	matchId,
+	matchKind,
 	setId,
 	onOpenChange,
 	...props
 }: OverrideScoreFormProps) {
-	const { data: match } = useSuspenseQuery({
-		...poolMatchQueryOptions(matchId),
-	});
+	const teams = useMatchTeams(matchId, matchKind);
+	const sets = useMatchSets(matchId, matchKind);
 
 	const queryClient = useQueryClient();
 
 	const { mutate, failureReason } = useMutation({
 		...overrideScoreMutationOptions(),
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: poolMatchQueryOptions(matchId).queryKey,
-			});
+			if (matchKind === "pool") {
+				queryClient.invalidateQueries(poolMatchQueryOptions(matchId));
+			} else if (matchKind === "playoff") {
+				queryClient.invalidateQueries(playoffMatchQueryOptions(matchId));
+			}
 
 			onOpenChange(false);
 		},
 	});
 
-	const set = match?.sets.find((s) => s.id === setId);
+	const set = sets?.find((s) => s.id === setId);
 
 	const schema = z
 		.object({
@@ -128,7 +122,7 @@ export function OverrideScoreForm({
 						name="teamAScore"
 						children={(field) => (
 							<field.Number
-								label={<TeamNames players={match?.teamA?.team.players || []} />}
+								label={<TeamNames players={teams?.teamA?.team.players || []} />}
 								field={field}
 							/>
 						)}
@@ -138,7 +132,7 @@ export function OverrideScoreForm({
 						name="teamBScore"
 						children={(field) => (
 							<field.Number
-								label={<TeamNames players={match?.teamB?.team.players || []} />}
+								label={<TeamNames players={teams?.teamB?.team.players || []} />}
 								field={field}
 							/>
 						)}

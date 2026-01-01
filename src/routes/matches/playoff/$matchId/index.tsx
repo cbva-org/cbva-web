@@ -14,7 +14,7 @@ import { Tab, TabList, TabPanel, Tabs } from "@/components/base/tabs";
 import { TournamentDirectorMatchControls } from "@/components/matches/director-controls";
 import { RefereeControls } from "@/components/matches/referee-controls";
 import { TeamNames } from "@/components/teams/names";
-import { poolMatchQueryOptions } from "@/data/matches";
+import { playoffMatchQueryOptions } from "@/data/matches";
 import {
 	applyMatchSetAction,
 	updateScoreMutationOptions,
@@ -23,10 +23,10 @@ import { DefaultLayout } from "@/layouts/default";
 import { playerNames } from "@/utils/profiles";
 import { isNotNull } from "@/utils/types";
 
-export const Route = createFileRoute("/matches/pool/$matchId/")({
+export const Route = createFileRoute("/matches/playoff/$matchId/")({
 	loader: async ({ params: { matchId }, context: { queryClient } }) => {
 		const match = await queryClient.ensureQueryData(
-			poolMatchQueryOptions(Number.parseInt(matchId, 10)),
+			playoffMatchQueryOptions(Number.parseInt(matchId, 10)),
 		);
 
 		if (!match) {
@@ -82,7 +82,7 @@ function RouteComponent() {
 
 	const queryClient = useQueryClient();
 
-	const poolMatchQuery = poolMatchQueryOptions(Number.parseInt(matchId, 10));
+	const poolMatchQuery = playoffMatchQueryOptions(Number.parseInt(matchId, 10));
 
 	const { mutate, isPending } = useMutation({
 		// TODO: optimistically update score
@@ -126,6 +126,8 @@ function RouteComponent() {
 
 	const { data, isLoading } = useSuspenseQuery(poolMatchQuery);
 
+	console.log(data);
+
 	const [activeTabKey, setActiveTabKey] = useState<number | undefined>(
 		data?.sets[0]?.id,
 	);
@@ -144,16 +146,18 @@ function RouteComponent() {
 				/>
 			)}
 
-			<Link
-				className="absolute top-6 left-6 flex flex-row space-x-2 items-center"
-				to="/tournaments/$tournamentId/$divisionId/{-$tab}"
-				params={{
-					tournamentId: data?.pool.tournamentDivision.tournamentId.toString(),
-					divisionId: data?.pool.tournamentDivisionId.toString(),
-				}}
-			>
-				<ChevronLeftIcon size={16} /> <span>Back to tournament</span>
-			</Link>
+			{data && (
+				<Link
+					className="absolute top-6 left-6 flex flex-row space-x-2 items-center"
+					to="/tournaments/$tournamentId/$divisionId/{-$tab}"
+					params={{
+						tournamentId: data?.tournamentDivision.tournamentId.toString(),
+						divisionId: data?.tournamentDivision.id.toString(),
+					}}
+				>
+					<ChevronLeftIcon size={16} /> <span>Back to tournament</span>
+				</Link>
+			)}
 
 			<div className="w-full max-w-3xl mx-auto flex flex-col space-y-8">
 				<div className="flex flex-row items-center">
@@ -164,7 +168,7 @@ function RouteComponent() {
 								className: clsx(
 									"text-center max-w-lg leading-tight",
 									isDone &&
-										data?.winnerId === data?.teamAId &&
+										data?.winnerId === data?.teamBId &&
 										"font-normal text-gray-500",
 								),
 							})}
@@ -185,7 +189,7 @@ function RouteComponent() {
 								className: clsx(
 									"text-center max-w-lg leading-tight",
 									isDone &&
-										data?.winnerId === data?.teamBId &&
+										data?.winnerId === data?.teamAId &&
 										"font-normal text-gray-500",
 								),
 							})}
