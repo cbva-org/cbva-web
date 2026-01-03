@@ -7,6 +7,7 @@ import { db } from "@/db/connection";
 import { playerProfiles } from "@/db/schema/player-profiles";
 import { tournamentDirectors } from "@/db/schema/tournament-directors";
 import { tournaments } from "@/db/schema/tournaments";
+import { venues } from "@/db/schema/venues";
 
 export const getTournamentsByDirectorsSchema = z.object({
 	directorIds: z.array(z.number()).optional(),
@@ -57,6 +58,8 @@ export const getTournamentsByDirectors = createServerFn()
 			? lt(tournaments.date, today)
 			: gte(tournaments.date, today);
 
+		console.log({ past });
+
 		// Query tournaments by director IDs
 		const results = await db
 			.selectDistinct({
@@ -67,12 +70,18 @@ export const getTournamentsByDirectors = createServerFn()
 				visible: tournaments.visible,
 				venueId: tournaments.venueId,
 				externalRef: tournaments.externalRef,
+				venue: {
+					id: venues.id,
+					name: venues.name,
+					city: venues.city,
+				},
 			})
 			.from(tournaments)
 			.innerJoin(
 				tournamentDirectors,
 				eq(tournaments.id, tournamentDirectors.tournamentId),
 			)
+			.innerJoin(venues, eq(tournaments.venueId, venues.id))
 			.where(
 				and(
 					inArray(tournamentDirectors.directorId, targetDirectorIds),
@@ -88,6 +97,6 @@ export const getTournamentsByDirectorsOptions = (
 	data: z.infer<typeof getTournamentsByDirectorsSchema> = {},
 ) =>
 	queryOptions({
-		queryKey: ["getTournamentsByDirectors", ...(data.directorIds ?? [])],
+		queryKey: ["getTournamentsByDirectors", JSON.stringify(data)],
 		queryFn: () => getTournamentsByDirectors({ data }),
 	});

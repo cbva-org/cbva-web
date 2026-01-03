@@ -20,11 +20,11 @@ import type {
 	TournamentDivisionTeam,
 } from "@/db/schema";
 import { formatOrdinals } from "@/lib/numbers";
-import { dbg } from "@/utils/dbg";
 import { isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../../games/pool-match-grid";
 import { useActiveTeam, useSetActiveTeam, useSetNodeIdToCenter } from ".";
 import { Wildcard } from "./wildcard";
+import { useIsDemoTournament } from "@/components/tournaments/context";
 
 export const scoreTextStyles = tv({
 	base: "p-3 text-center flex flex-col justify-center col-span-1 text-xl font-light border-gray-300",
@@ -69,6 +69,8 @@ export function MatchNode({
 	};
 	type: string;
 }) {
+	const isDemo = useIsDemoTournament();
+
 	const {
 		teamA,
 		teamB,
@@ -138,13 +140,17 @@ export function MatchNode({
 					/>
 				)}
 
-				{canUpdate && teamA && teamB && data.status !== "completed" && (
-					<SimulateMatchModal
-						tournamentDivisionId={tournamentDivisionId}
-						matchId={data.id}
-						matchKind="playoff"
-					/>
-				)}
+				{canUpdate &&
+					isDemo &&
+					teamA &&
+					teamB &&
+					data.status !== "completed" && (
+						<SimulateMatchModal
+							tournamentDivisionId={tournamentDivisionId}
+							matchId={data.id}
+							matchKind="playoff"
+						/>
+					)}
 			</div>
 			<div
 				className="relative rounded-md overflow-hidden w-md border bg-white border-gray-300"

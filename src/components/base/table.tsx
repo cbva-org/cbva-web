@@ -19,7 +19,7 @@ import {
 	composeRenderProps,
 	useTableOptions,
 } from "react-aria-components";
-import { tv } from "tailwind-variants";
+import { tv, VariantProps } from "tailwind-variants";
 
 import { composeTailwindRenderProps, focusRing } from "./utils";
 
@@ -40,7 +40,16 @@ export function Table(props: TableProps) {
 
 const columnStyles = tv({
 	extend: focusRing,
-	base: "px-2 h-5 flex-1 flex gap-1 items-center overflow-hidden",
+	base: "px-2 h-5 flex-1 flex gap-1 items-center",
+	variants: {
+		overflow: {
+			hidden: "overflow-hidden",
+			visible: "overflow-visible",
+		},
+	},
+	defaultVariants: {
+		overflow: "hidden",
+	},
 });
 
 const resizerStyles = tv({
@@ -48,7 +57,9 @@ const resizerStyles = tv({
 	base: "w-px px-[8px] box-content py-1 h-5 bg-clip-content bg-gray-400 forced-colors:bg-[ButtonBorder] cursor-col-resize rounded-xs resizing:bg-blue-600 forced-colors:resizing:bg-[Highlight] resizing:w-[2px] resizing:pl-[7px] -outline-offset-2",
 });
 
-export function TableColumn(props: ColumnProps) {
+export function TableColumn(
+	props: ColumnProps & VariantProps<typeof columnStyles>,
+) {
 	return (
 		<AriaColumn
 			{...props}
@@ -61,7 +72,11 @@ export function TableColumn(props: ColumnProps) {
 				props.children,
 				(children, { allowsSorting, sortDirection }) => (
 					<div className="flex items-center">
-						<Group role="presentation" tabIndex={-1} className={columnStyles}>
+						<Group
+							role="presentation"
+							tabIndex={-1}
+							className={columnStyles({ overflow: props.overflow })}
+						>
 							<span className="truncate">{children}</span>
 							{allowsSorting && (
 								<span

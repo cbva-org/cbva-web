@@ -23,6 +23,7 @@ export const tournaments = pgTable("tournaments", {
 	date: date().notNull(),
 	startTime: time().notNull(),
 	visible: boolean().notNull().default(false),
+	demo: boolean().notNull().default(false),
 	venueId: integer()
 		.notNull()
 		.references(() => venues.id),

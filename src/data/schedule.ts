@@ -42,6 +42,7 @@ async function duplicateTournaments(
 					date: true,
 					startTime: true,
 					venueId: true,
+					demo: true,
 				})
 				.parse(template),
 		)
@@ -152,10 +153,14 @@ async function duplicateTournaments(
 	});
 }
 
-const duplicateTournamentSchema = selectTournamentSchema.pick({
-	id: true,
-	date: true,
-});
+const duplicateTournamentSchema = selectTournamentSchema
+	.pick({
+		id: true,
+		date: true,
+	})
+	.extend({
+		demo: z.boolean().optional(),
+	});
 
 type DuplicateTournamentParams = z.infer<typeof duplicateTournamentSchema>;
 
@@ -166,7 +171,7 @@ export const duplicateTournamentFn = createServerFn({ method: "POST" })
 		}),
 	])
 	.inputValidator(duplicateTournamentSchema)
-	.handler(async ({ data: { id, date } }) => {
+	.handler(async ({ data: { id, date, demo = false } }) => {
 		const template = await db.query.tournaments.findFirst({
 			where: (table, { eq }) => eq(table.id, id),
 			with: {
@@ -184,7 +189,16 @@ export const duplicateTournamentFn = createServerFn({ method: "POST" })
 			throw notFound();
 		}
 
-		const [tournament] = await duplicateTournaments([template], () => date);
+		const [tournament] = await duplicateTournaments(
+			[
+				{
+					...template,
+					name: demo ? ["DEMO", template.name ?? ""].join(" ") : template.name,
+					demo,
+				},
+			],
+			() => date,
+		);
 
 		return { data: tournament };
 	});

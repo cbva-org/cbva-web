@@ -32,7 +32,7 @@ export const admin = ac.newRole({
 });
 
 export const td = ac.newRole({
-	tournament: ["create", "update"],
+	tournament: ["update"],
 	venues: ["update"],
 	files: ["create", "delete"],
 	profiles: ["create", "update"],

@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { CheckIcon } from "lucide-react";
 import { Suspense } from "react";
 import { match, P } from "ts-pattern";
+import { useViewerHasPermission } from "@/auth/shared";
 import {
 	DropdownMenu,
 	DropdownMenuItemLink,
@@ -90,6 +91,10 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
 	const { tournamentId, divisionId, tab: tabParam } = Route.useParams();
+
+	const canUpdate = useViewerHasPermission({
+		tournament: ["update"],
+	});
 
 	const { data } = useSuspenseQuery(
 		tournamentQueryOptions(Number.parseInt(tournamentId, 10)),
@@ -243,7 +248,7 @@ function RouteComponent() {
 								<TabLink
 									id="teams"
 									{...tabLinkProps("teams")}
-									isDisabled={!hasTeams}
+									isDisabled={!hasTeams && !canUpdate}
 								>
 									Teams
 								</TabLink>

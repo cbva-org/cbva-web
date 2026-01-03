@@ -20,6 +20,7 @@ import { EditDivisionsForm } from "./edit-divisions";
 import { EditGeneralInfoForm } from "./edit-general-info";
 import { FillTournamentForm } from "./fill-tournament";
 import { SimulateMatchesForm } from "./simulate-matches";
+import { useIsDemoTournament } from "../context";
 
 export type TournamentAdminControlsProps = {
 	tournamentId: number;
@@ -55,6 +56,8 @@ export function TournamentControls({
 
 	const [activeModal, setActiveModal] = useState<ModalKind>();
 
+	const isDemo = useIsDemoTournament();
+
 	if (![canCreate, canUpdate].some(Boolean)) {
 		return null;
 	}
@@ -86,62 +89,70 @@ export function TournamentControls({
 						>
 							Edit General Info
 						</DropdownMenuItem>
-					</MenuSection>
-				)}
-
-				{canUpdate && (
-					<MenuSection title="Tournament Controls">
 						<DropdownMenuItem
 							onPress={() => setActiveModal(ModalKind.EditDivisions)}
 						>
 							Edit Divisions
 						</DropdownMenuItem>
-						<DropdownMenuItem onPress={() => setActiveModal(ModalKind.AddTeam)}>
-							Add Team
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onPress={() => setActiveModal(ModalKind.FillTournament)}
-						>
-							Fill Tournament
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onPress={() => setActiveModal(ModalKind.CalculateSeeds)}
-						>
-							Calculate Seeds
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onPress={() => setActiveModal(ModalKind.CreatePools)}
-						>
-							Create Pools
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onPress={() => setActiveModal(ModalKind.CreatePoolMatches)}
-						>
-							Create Pool Matches
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onPress={() => setActiveModal(ModalKind.SimulateMatches)}
-						>
-							Simulate Matches
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onPress={() => setActiveModal(ModalKind.CompletePools)}
-						>
-							Complete Pools
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onPress={() => setActiveModal(ModalKind.CreatePlayoffs)}
-						>
-							Create Playoffs
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onPress={() =>
-								setActiveModal(ModalKind.CompleteTournamentDivision)
-							}
-						>
-							Complete Division
-						</DropdownMenuItem>
 					</MenuSection>
+				)}
+
+				{canUpdate && (
+					<>
+						{isDemo && (
+							<MenuSection title="Demo Controls">
+								<DropdownMenuItem
+									onPress={() => setActiveModal(ModalKind.FillTournament)}
+								>
+									Fill With Teams
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onPress={() => setActiveModal(ModalKind.SimulateMatches)}
+								>
+									Simulate Matches
+								</DropdownMenuItem>
+							</MenuSection>
+						)}
+						<MenuSection title="Tournament Controls">
+							<DropdownMenuItem
+								onPress={() => setActiveModal(ModalKind.AddTeam)}
+							>
+								Add Team
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onPress={() => setActiveModal(ModalKind.CalculateSeeds)}
+							>
+								Calculate Seeds
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onPress={() => setActiveModal(ModalKind.CreatePools)}
+							>
+								Create Pools
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onPress={() => setActiveModal(ModalKind.CreatePoolMatches)}
+							>
+								Create Pool Matches
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onPress={() => setActiveModal(ModalKind.CompletePools)}
+							>
+								Complete Pools
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onPress={() => setActiveModal(ModalKind.CreatePlayoffs)}
+							>
+								Create Playoffs
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onPress={() =>
+									setActiveModal(ModalKind.CompleteTournamentDivision)
+								}
+							>
+								Complete Division
+							</DropdownMenuItem>
+						</MenuSection>
+					</>
 				)}
 			</DropdownMenu>
 
