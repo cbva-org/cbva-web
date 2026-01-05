@@ -12,11 +12,11 @@ import {
 	TableRow,
 } from "@/components/base/table";
 import { Toolbar } from "@/components/base/toolbar";
-import { createDemoTournamentMuationOptions } from "@/functions/create-demo-tournament";
+import { createDemoTournamentMuationOptions } from "@/functions/tournaments/create-demo-tournament";
 import {
 	getTournamentsByDirectorsOptions,
 	getTournamentsByDirectorsSchema,
-} from "@/functions/get-tournaments-by-directors";
+} from "@/functions/tournaments/get-tournaments-by-directors";
 import { DefaultLayout } from "@/layouts/default";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { parseDate } from "@internationalized/date";

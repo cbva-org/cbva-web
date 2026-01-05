@@ -20,7 +20,7 @@ import { EditDivisionsForm } from "./edit-divisions";
 import { EditGeneralInfoForm } from "./edit-general-info";
 import { FillTournamentForm } from "./fill-tournament";
 import { SimulateMatchesForm } from "./simulate-matches";
-import { useIsDemoTournament } from "../context";
+import { useIsDemoTournament, useTeamsAtCapacity } from "../context";
 
 export type TournamentAdminControlsProps = {
 	tournamentId: number;
@@ -53,6 +53,8 @@ export function TournamentControls({
 	const canUpdate = useViewerHasPermission({
 		tournament: ["update"],
 	});
+
+	const atCapacity = useTeamsAtCapacity();
 
 	const [activeModal, setActiveModal] = useState<ModalKind>();
 
@@ -102,6 +104,7 @@ export function TournamentControls({
 						{isDemo && (
 							<MenuSection title="Demo Controls">
 								<DropdownMenuItem
+									isDisabled={atCapacity}
 									onPress={() => setActiveModal(ModalKind.FillTournament)}
 								>
 									Fill With Teams

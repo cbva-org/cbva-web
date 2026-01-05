@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
 	Table,
 	TableBody,
@@ -15,6 +15,7 @@ import { teamsQueryOptions } from "@/data/teams";
 import type { TournamentDivision } from "@/db/schema";
 import { getLevelDisplay } from "@/hooks/tournament";
 import { playerName } from "@/utils/profiles";
+import { EditSeedForm } from "@/components/teams/controls/edit-seed";
 
 export function TeamsPanel({
 	tournamentDivisionId,
@@ -27,10 +28,20 @@ export function TeamsPanel({
 		teamsQueryOptions({ tournamentDivisionId }),
 	);
 
+	const lastSeed = Math.max(
+		...(data?.map(({ seed }) => seed ?? Number.POSITIVE_INFINITY) ?? []),
+	);
+
+	const [edit, setEdit] = useState(false);
+
 	return (
 		<TabPanel id="teams">
 			<div className="max-w-4xl mx-auto py-12 px-3 flex flex-col gap-3">
-				<TeamsControls className="self-end" />
+				<TeamsControls
+					className="self-end"
+					onEditPress={edit ? undefined : () => setEdit(true)}
+					onDonePress={edit ? () => setEdit(false) : undefined}
+				/>
 
 				<div className="md:hidden border border-gray-300 rounded-lg">
 					{data?.map(({ id, team: { players }, finish, seed, poolTeam }, i) => {
@@ -85,13 +96,26 @@ export function TeamsPanel({
 								</TableColumn>
 							))}
 						</TableHeader>
-						<TableBody items={data || []}>
+						<TableBody key={edit ? "edit" : "not-edit"} items={data || []}>
 							{({ id, team: { players }, finish, seed, poolTeam }) => (
 								<TableRow key={id}>
 									<TableCell>{finish ?? "-"}</TableCell>
-									<TableCell>{seed ?? "-"}</TableCell>
+									<TableCell>
+										<div className="flex flex-row items-center gap-4">
+											{edit && seed && (
+												<EditSeedForm
+													tournamentDivisionTeamId={id}
+													seed={seed}
+													isUpDisabled={seed === 1}
+													isDownDisabled={seed === lastSeed}
+												/>
+											)}
+											<span>{seed ?? "-"}</span>
+										</div>
+									</TableCell>
 									<TableCell className="uppercase">
 										{poolTeam?.pool.name ?? "-"}
+										{edit && " Show dropdown"}
 									</TableCell>
 									{players.map(
 										({

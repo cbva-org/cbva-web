@@ -32,7 +32,7 @@ export function AddTeamForm({ tournamentId, division }: AddTeamFormProps) {
 	const { mutate } = useMutation({
 		...addTeamOptions(),
 		onSuccess: () => {
-			onOpenChange(false);
+			setOpen(false);
 
 			queryClient.invalidateQueries({
 				queryKey: teamsQueryOptions({ tournamentDivisionId: division.id })

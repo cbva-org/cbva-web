@@ -7,10 +7,12 @@ import {
 	MenuItem,
 	type MenuItemProps,
 	MenuTrigger,
+	TooltipTrigger,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { Button } from "./button";
 import { Popover } from "./popover";
+import { Tooltip } from "./tooltip";
 
 export const itemStyles = tv({
 	base: "group flex text-popover-foreground items-center gap-4 cursor-default select-none py-2 pl-3 pr-1 rounded-lg outline outline-0 text-sm forced-color-adjust-none",
