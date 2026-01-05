@@ -133,6 +133,7 @@ export function Select<
 								focusRing(render),
 								fieldGroupStyles(render),
 								inputStyles(render),
+								// "items-center!",
 							)
 						}
 						onBlur={(e) => {
@@ -164,7 +165,7 @@ export function Select<
 						</SelectValue>
 						<ChevronDown
 							aria-hidden
-							className="mx-2 w-4 h-4 text-gray-600 forced-colors:text-[ButtonText] group-disabled:text-gray-200 forced-colors:group-disabled:text-[GrayText]"
+							className="mx-2 w-4 h-4 text-gray-600 self-center forced-colors:text-[ButtonText] group-disabled:text-gray-200 forced-colors:group-disabled:text-[GrayText]"
 						/>
 					</Button>
 					{description && <Description>{description}</Description>}

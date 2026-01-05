@@ -5,19 +5,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import clsx from "clsx";
 import { ConstructionIcon } from "lucide-react";
-import { twMerge } from "tailwind-merge";
 import { Pagination } from "@/components/base/pagination";
 import {
 	TournamentListFilters,
 	tournamentListFilterSchema,
 } from "@/components/tournaments/filters";
-import { tournamentsQueryOptions } from "@/data/tournaments";
 import type {
 	Division,
 	Tournament,
 	TournamentDivision,
 	Venue,
 } from "@/db/schema";
+import { tournamentsQueryOptions } from "@/functions/tournaments/get-tournaments";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { DefaultLayout } from "@/layouts/default";
 import { getDefaultTimeZone } from "@/lib/dates";

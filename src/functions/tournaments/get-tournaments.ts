@@ -5,7 +5,7 @@ import { findPaged } from "@/db/pagination";
 import { type TournamentDivision, tournamentDivisions } from "@/db/schema";
 import { isNotNull } from "@/utils/types";
 import { queryOptions } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { sql } from "drizzle-orm";
 import type z from "zod";
 
@@ -18,117 +18,121 @@ const getTournamentsSchema = tournamentListFilterSchema.pick({
 	genders: true,
 });
 
-export async function getTournamentsHandler(
-	{
-		page,
-		pageSize,
-		divisions,
-		venues,
-		genders,
-		past,
-	}: z.infer<typeof getTournamentsSchema>,
-	viewer: SessionViewer | undefined,
-) {
-	const data = await findPaged("tournaments", {
-		paging: { page, size: pageSize },
-		config: {
-			with: {
-				venue: {
-					columns: {
-						id: true,
-						name: true,
-						city: true,
+export const getTournamentsHandler = createServerOnlyFn(
+	async (
+		{
+			page,
+			pageSize,
+			divisions,
+			venues,
+			genders,
+			past,
+		}: z.infer<typeof getTournamentsSchema>,
+		viewer: SessionViewer | undefined,
+	) => {
+		const data = await findPaged("tournaments", {
+			paging: { page, size: pageSize },
+			config: {
+				with: {
+					venue: {
+						columns: {
+							id: true,
+							name: true,
+							city: true,
+						},
+					},
+					tournamentDivisions: {
+						with: {
+							division: true,
+							requirements: true,
+						},
+						where: (tournamentDivisions, { inArray, and }) => {
+							const filters = [];
+
+							if (divisions.length) {
+								filters.push(
+									inArray(tournamentDivisions.divisionId, divisions),
+								);
+							}
+
+							if (genders.length) {
+								filters.push(inArray(tournamentDivisions.gender, genders));
+							}
+
+							if (!filters.length) {
+								return undefined;
+							}
+
+							return and(...filters);
+						},
 					},
 				},
-				tournamentDivisions: {
-					with: {
-						division: true,
-						requirements: true,
-					},
-					where: (tournamentDivisions, { inArray, and }) => {
-						const filters = [];
+				where: (tournaments, { sql, gt, lt, and, eq, inArray, exists }) => {
+					const filters = [
+						eq(tournaments.demo, false),
+						viewer?.role === "admin" ? null : eq(tournaments.visible, true),
+						past
+							? lt(
+									tournaments.date,
+									sql`current_date at time zone 'america/los_angeles'`,
+								)
+							: gt(
+									tournaments.date,
+									sql`current_date at time zone 'america/los_angeles'`,
+								),
+					].filter(isNotNull);
 
-						if (divisions.length) {
-							filters.push(inArray(tournamentDivisions.divisionId, divisions));
-						}
-
-						if (genders.length) {
-							filters.push(inArray(tournamentDivisions.gender, genders));
-						}
-
-						if (!filters.length) {
-							return undefined;
-						}
-
-						return and(...filters);
-					},
-				},
-			},
-			where: (tournaments, { sql, gt, lt, and, eq, inArray, exists }) => {
-				const filters = [
-					eq(tournaments.demo, false),
-					viewer?.role === "admin" ? null : eq(tournaments.visible, true),
-					past
-						? lt(
-								tournaments.date,
-								sql`current_date at time zone 'america/los_angeles'`,
-							)
-						: gt(
-								tournaments.date,
-								sql`current_date at time zone 'america/los_angeles'`,
+					if (divisions.length) {
+						filters.push(
+							exists(
+								db
+									.select()
+									.from(tournamentDivisions)
+									.where(
+										and(
+											eq(tournaments.id, tournamentDivisions.tournamentId),
+											inArray(tournamentDivisions.divisionId, divisions),
+										),
+									),
 							),
-				].filter(isNotNull);
+						);
+					}
 
-				if (divisions.length) {
-					filters.push(
-						exists(
-							db
-								.select()
-								.from(tournamentDivisions)
-								.where(
-									and(
-										eq(tournaments.id, tournamentDivisions.tournamentId),
-										inArray(tournamentDivisions.divisionId, divisions),
+					if (genders.length) {
+						filters.push(
+							exists(
+								db
+									.select()
+									.from(tournamentDivisions)
+									.where(
+										and(
+											eq(tournaments.id, tournamentDivisions.tournamentId),
+											inArray(tournamentDivisions.gender, genders),
+										),
 									),
-								),
-						),
-					);
-				}
+							),
+						);
+					}
 
-				if (genders.length) {
-					filters.push(
-						exists(
-							db
-								.select()
-								.from(tournamentDivisions)
-								.where(
-									and(
-										eq(tournaments.id, tournamentDivisions.tournamentId),
-										inArray(tournamentDivisions.gender, genders),
-									),
-								),
-						),
-					);
-				}
+					if (venues.length) {
+						filters.push(inArray(tournaments.venueId, venues));
+					}
 
-				if (venues.length) {
-					filters.push(inArray(tournaments.venueId, venues));
-				}
+					return and(...filters);
+				},
+				orderBy: (table, { desc, asc }) => {
+					const venueLocation = sql`(SELECT city || ' ' || name FROM venues WHERE id = ${table.venueId})`;
 
-				return and(...filters);
+					return past
+						? [desc(table.date), asc(venueLocation), desc(table.id)]
+						: [asc(table.date), asc(venueLocation), asc(table.id)];
+				},
 			},
-			orderBy: (table, { desc, asc }) => {
-				const venueLocation = sql`(SELECT city || ' ' || name FROM venues WHERE id = ${table.venueId})`;
+		});
 
-				return past
-					? [desc(table.date), asc(venueLocation), desc(table.id)]
-					: [asc(table.date), asc(venueLocation), asc(table.id)];
-			},
-		},
-	});
-
-	return data;
-}
+		return data;
+	},
+);
 
 export const getTournaments = createServerFn({
 	method: "GET",

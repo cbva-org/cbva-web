@@ -1,7 +1,8 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { tournamentQueryOptions } from "@/data/tournaments";
 import { teamsQueryOptions } from "@/data/teams";
+import { poolsQueryOptions } from "@/data/pools";
 
 export function useTournament() {
 	const { tournamentId } = useParams({
@@ -52,13 +53,20 @@ export function useTeamsAtCapacity() {
 	return atCapacity;
 }
 
-// const { data: hasPools } = useQuery({
-// 	...poolsQueryOptions({
-// 		tournamentDivisionId: activeDivision.id,
-// 	}),
-// 	select: (data) => data.length > 0,
-// });
-//
+export function usePools() {
+	const { divisionId } = useParams({
+		from: "/tournaments/$tournamentId/$divisionId/{-$tab}",
+	});
+
+	const { data } = useSuspenseQuery({
+		...poolsQueryOptions({
+			tournamentDivisionId: Number.parseInt(divisionId, 10),
+		}),
+	});
+
+	return data;
+}
+
 // const { data: hasGames } = useQuery({
 // 	...poolsQueryOptions({
 // 		tournamentDivisionId: activeDivision.id,

@@ -5,7 +5,7 @@ import {
 	BulkEditSchedule,
 	bulkEditScheduleSearchSchema,
 } from "@/components/admin/schedule/bulk-edit";
-import { tournamentsQueryOptions } from "@/data/tournaments";
+import { tournamentsQueryOptions } from "@/functions/tournaments/get-tournaments";
 import { DefaultLayout } from "@/layouts/default";
 
 export const Route = createFileRoute("/admin/schedule")({

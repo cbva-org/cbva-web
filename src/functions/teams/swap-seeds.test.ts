@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { db } from "@/db/connection";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
-import { editSeed } from "./edit-seed";
+import { swapSeeds } from "./swap-seeds";
 
 describe("editSeed", () => {
 	test("swaps seeds between two teams", async () => {
@@ -39,7 +39,7 @@ describe("editSeed", () => {
 		expect(teamASeed).not.toBe(teamBSeed);
 
 		// Swap: give teamA the seed that teamB currently has
-		await editSeed({
+		await swapSeeds({
 			data: {
 				id: teamA.id,
 				seed: teamBSeed!,
@@ -89,7 +89,7 @@ describe("editSeed", () => {
 		const nonExistentSeed = 100;
 
 		await expect(
-			editSeed({
+			swapSeeds({
 				data: {
 					id: team!.id,
 					seed: nonExistentSeed,
@@ -100,7 +100,7 @@ describe("editSeed", () => {
 
 	test("throws error when team not found", async () => {
 		await expect(
-			editSeed({
+			swapSeeds({
 				data: {
 					id: 999999,
 					seed: 1,
@@ -133,7 +133,7 @@ describe("editSeed", () => {
 
 		// Test negative number
 		await expect(
-			editSeed({
+			swapSeeds({
 				data: {
 					id: team!.id,
 					seed: -1,
@@ -143,7 +143,7 @@ describe("editSeed", () => {
 
 		// Test zero
 		await expect(
-			editSeed({
+			swapSeeds({
 				data: {
 					id: team!.id,
 					seed: 0,
@@ -153,7 +153,7 @@ describe("editSeed", () => {
 
 		// Test decimal
 		await expect(
-			editSeed({
+			swapSeeds({
 				data: {
 					id: team!.id,
 					seed: 1.5,
@@ -210,7 +210,7 @@ describe("editSeed", () => {
 		const teamBOriginalSeed = teamB!.seed;
 
 		// Swap seeds in division A
-		await editSeed({
+		await swapSeeds({
 			data: {
 				id: teamA!.id,
 				seed: teamA2!.seed!,

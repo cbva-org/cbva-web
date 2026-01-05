@@ -6,10 +6,10 @@ import {
 import { badRequest, notFound } from "@/lib/responses";
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import z from "zod";
 
-export const editSeedSchema = selectTournamentDivisionTeamSchema
+export const swapSeedsSchema = selectTournamentDivisionTeamSchema
 	.pick({
 		id: true,
 	})
@@ -17,8 +17,8 @@ export const editSeedSchema = selectTournamentDivisionTeamSchema
 		seed: z.number().int().positive(),
 	});
 
-export const editSeed = createServerFn()
-	.inputValidator(editSeedSchema)
+export const swapSeeds = createServerFn()
+	.inputValidator(swapSeedsSchema)
 	.handler(async ({ data: { id: tournamentDivisionTeamId, seed } }) => {
 		const targetTeam = await db.query.tournamentDivisionTeams.findFirst({
 			where: (table, { eq }) => eq(table.id, tournamentDivisionTeamId),
@@ -68,7 +68,7 @@ export const editSeed = createServerFn()
 		};
 	});
 
-export const editSeedMutationOptions = () =>
+export const swapSeedsMutationOptions = () =>
 	mutationOptions({
-		mutationFn: (data: z.infer<typeof editSeedSchema>) => editSeed({ data }),
+		mutationFn: (data: z.infer<typeof swapSeedsSchema>) => swapSeeds({ data }),
 	});

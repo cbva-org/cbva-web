@@ -1,7 +1,7 @@
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import { Button } from "@/components/base/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { editSeedMutationOptions } from "@/functions/teams/edit-seed";
+import { swapSeedsMutationOptions } from "@/functions/teams/swap-seeds";
 import { teamsQueryOptions } from "@/data/teams";
 import { useParams } from "@tanstack/react-router";
 
@@ -25,7 +25,7 @@ export function EditSeedForm({
 	const queryClient = useQueryClient();
 
 	const { mutate } = useMutation({
-		...editSeedMutationOptions(),
+		...swapSeedsMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries(
 				teamsQueryOptions({

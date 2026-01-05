@@ -17,10 +17,8 @@ import {
 	tournamentListFilterSchema,
 } from "@/components/tournaments/filters";
 import { DivisionsForm } from "@/components/tournaments/forms/divisions";
-import {
-	tournamentQueryOptions,
-	tournamentsQueryOptions,
-} from "@/data/tournaments";
+import { tournamentQueryOptions } from "@/data/tournaments";
+import { tournamentsQueryOptions } from "@/functions/tournaments/get-tournaments";
 import { getDefaultTimeZone } from "@/lib/dates";
 
 export const bulkEditScheduleSearchSchema = tournamentListFilterSchema
