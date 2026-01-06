@@ -35,6 +35,21 @@ export function useIsDemoTournament() {
 
 	return tournament?.demo;
 }
+export function useActiveDivisionId() {
+	const { divisionId } = useParams({
+		from: "/tournaments/$tournamentId/$divisionId/{-$tab}",
+	});
+
+	return Number.parseInt(divisionId, 10);
+}
+
+export function useTeamsQueryOptions() {
+	const tournamentDivisionId = useActiveDivisionId();
+
+	return teamsQueryOptions({
+		tournamentDivisionId,
+	});
+}
 
 export function useTeamsAtCapacity() {
 	const { divisionId } = useParams({

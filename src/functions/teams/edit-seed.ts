@@ -16,6 +16,8 @@ export const editSeed = createServerFn()
 	.handler(({ data: { id, seed } }) => {
 		console.log({ id, seed });
 
+		// TODO: place the team at the desired seed and shift the teams currently with that seed or greater than by one
+
 		return {
 			success: true,
 		};

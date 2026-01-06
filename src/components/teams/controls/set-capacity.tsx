@@ -5,7 +5,6 @@ import { Dialog } from "react-aria-components";
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
 import { Popover } from "@/components/base/popover";
-import { playoffsQueryOptions } from "@/data/playoffs";
 import { tournamentQueryOptions } from "@/data/tournaments";
 import {
 	setCapacityMutationOptions,

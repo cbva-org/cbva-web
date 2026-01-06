@@ -69,7 +69,7 @@ function StepperButton({ className, ...props }: ButtonProps) {
 		<Button
 			{...props}
 			className={clsx(
-				"px-2 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-200 pressed:bg-gray-100 group-disabled:text-gray-200 forced-colors:group-disabled:text-[GrayText]",
+				"px-2 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-200 pressed:bg-gray-100 group-disabled:text-gray-200 forced-colors:group-disabled:text-[GrayText] disabled:cursor-not-allowed disabled:bg-transparent",
 				className,
 			)}
 		/>
