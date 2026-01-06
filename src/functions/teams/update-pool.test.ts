@@ -4,7 +4,7 @@ import { bootstrapTournament } from "@/tests/utils/tournaments";
 import { updatePool } from "./update-pool";
 import { poolTeams } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { range } from "lodash-es";
+import { orderBy, range } from "lodash-es";
 
 describe("updatePool", () => {
 	test("adds a team to a pool when it wasn't in any pool before", async () => {
@@ -344,5 +344,74 @@ describe("updatePool", () => {
 		expect(pool1Teams.map(({ seed }) => seed)).toStrictEqual(
 			range(1, pool1Teams.length + 1),
 		);
+	});
+
+	test("manually set pool seed for moved team", async () => {
+		const tournamentInfo = await bootstrapTournament(db, {
+			date: "2025-01-01",
+			startTime: "09:00:00",
+			divisions: [
+				{
+					division: "b",
+					gender: "male",
+					teams: 10,
+					pools: 2,
+				},
+			],
+		});
+
+		const tournamentDivisionId = tournamentInfo.divisions[0];
+
+		const [pool, otherPool] = await db.query.pools.findMany({
+			with: {
+				teams: true,
+			},
+			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		});
+
+		const teams = orderBy(pool.teams, ["seed"], ["asc"]);
+
+		const first = teams[0];
+		const second = teams[1];
+		const third = teams[2];
+		const fourth = teams[3];
+		const fifth = teams[4];
+
+		expect(teams.map(({ id, seed }) => [id, seed])).toStrictEqual([
+			[first.id, 1],
+			[second.id, 2],
+			[third.id, 3],
+			[fourth.id, 4],
+			[fifth.id, 5],
+		]);
+
+		const teamToMove = otherPool.teams[0];
+
+		assert(teamToMove, "no team to move");
+
+		await updatePool({
+			data: {
+				id: teamToMove.teamId,
+				poolId: pool.id,
+				seed: 2,
+			},
+		});
+
+		const updatedTeams = await db.query.poolTeams.findMany({
+			with: {
+				team: true,
+			},
+			where: (t, { eq }) => eq(t.poolId, pool.id),
+			orderBy: (t, { asc }) => [asc(t.seed)],
+		});
+
+		expect(updatedTeams.map(({ id, seed }) => [id, seed])).toStrictEqual([
+			[first.id, 1],
+			[teamToMove.id, 2],
+			[second.id, 3],
+			[third.id, 4],
+			[fourth.id, 5],
+			[fifth.id, 6],
+		]);
 	});
 });
