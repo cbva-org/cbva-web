@@ -5,22 +5,22 @@ import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
 import {
-	abandonRefMutationOptions,
-	abandonRefSchema,
-} from "@/functions/teams/abandon-ref";
+	removeRefMutationOptions,
+	removeRefSchema,
+} from "@/functions/refs/remove-ref";
 import {
 	usePlayoffsQueryOptions,
 	usePoolsQueryOptions,
 	useTeamsQueryOptions,
 } from "@/components/tournaments/context";
-import { FlagIcon } from "lucide-react";
+import { DeleteIcon } from "lucide-react";
 import { useState } from "react";
 
-export type AbandonRefFormProps = {
+export type RemoveRefFormProps = {
 	refTeamId: number;
 };
 
-export function AbandonRefForm({ refTeamId, ...props }: AbandonRefFormProps) {
+export function RemoveRefForm({ refTeamId, ...props }: RemoveRefFormProps) {
 	const [open, setOpen] = useState(false);
 
 	const queryClient = useQueryClient();
@@ -30,7 +30,7 @@ export function AbandonRefForm({ refTeamId, ...props }: AbandonRefFormProps) {
 	const playoffsQueryOptions = usePlayoffsQueryOptions();
 
 	const { mutate, failureReason } = useMutation({
-		...abandonRefMutationOptions(),
+		...removeRefMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries(teamsQueryOptions);
 			queryClient.invalidateQueries(poolsQueryOptions);
@@ -40,7 +40,7 @@ export function AbandonRefForm({ refTeamId, ...props }: AbandonRefFormProps) {
 		},
 	});
 
-	const schema = abandonRefSchema.omit({ id: true });
+	const schema = removeRefSchema.omit({ id: true });
 
 	const form = useAppForm({
 		defaultValues: {},
@@ -62,26 +62,17 @@ export function AbandonRefForm({ refTeamId, ...props }: AbandonRefFormProps) {
 				size="xs"
 				color="primary"
 				onPress={() => setOpen(true)}
-				tooltip="Abandoned Ref"
+				tooltip={"Remove Ref Team"}
 			>
-				<FlagIcon size={12} />
+				<DeleteIcon size={12} />
 			</Button>
 			<Modal {...props} isOpen={open} onOpenChange={setOpen}>
 				<div className="p-3 flex flex-col space-y-4 relative">
 					<Heading className={title({ size: "sm" })} slot="title">
-						Abandon Ref
+						Remove Ref Team?
 					</Heading>
 
-					<div>
-						<p className="text-sm text-gray-700 mb-2">
-							Are you sure you want to mark this team as having abandoned ref
-							duties?
-						</p>
-
-						<p className="text-sm text-gray-700">
-							You can undo this action from the team's table.
-						</p>
-					</div>
+					<p>Are you sure you want to remove this reffing team?</p>
 
 					<form
 						className="flex flex-col space-y-6"

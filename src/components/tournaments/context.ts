@@ -3,6 +3,8 @@ import { useParams } from "@tanstack/react-router";
 import { tournamentQueryOptions } from "@/data/tournaments";
 import { teamsQueryOptions } from "@/data/teams";
 import { poolsQueryOptions } from "@/data/pools";
+import { playoffMatchQueryOptions } from "@/data/matches";
+import { playoffsQueryOptions } from "@/data/playoffs";
 
 export function useTournament() {
 	const { tournamentId } = useParams({
@@ -47,6 +49,14 @@ export function usePoolsQueryOptions() {
 	const tournamentDivisionId = useActiveDivisionId();
 
 	return poolsQueryOptions({
+		tournamentDivisionId,
+	});
+}
+
+export function usePlayoffsQueryOptions() {
+	const tournamentDivisionId = useActiveDivisionId();
+
+	return playoffsQueryOptions({
 		tournamentDivisionId,
 	});
 }

@@ -1,18 +1,19 @@
-import {
+import { useViewerHasPermission } from "@/auth/shared";
+import type {
 	MatchRefTeam,
 	PlayerProfile,
 	Team,
 	TeamPlayer,
 	TournamentDivisionTeam,
 } from "@/db/schema";
-import { TeamNames } from "../teams/names";
-import { useViewerHasPermission } from "@/auth/shared";
 import { AbandonRefForm } from "../teams/controls/abandon-ref";
+import { RemoveRefForm } from "../teams/controls/remove-ref";
+import { TeamNames } from "../teams/names";
 import { EditMatchRefsForm } from "../tournaments/controls/edit-playoff-match-refs";
 
 export type RefTeamsListProps = {
 	tournamentDivisionId: number;
-	matchStatus: string | "completed";
+	matchStatus: string | "completed" | "tbd";
 	refTeams: (MatchRefTeam & {
 		team: Pick<TournamentDivisionTeam, "id"> & {
 			team: Pick<Team, "id"> & {
@@ -53,15 +54,20 @@ export function RefTeamsList({
 						<span key={team.id} className="flex flex-row items-center gap-2">
 							<TeamNames {...team.team.team} />
 
-							{canEdit && <AbandonRefForm refTeamId={team.id} />}
+							{canEdit && matchStatus !== "completed" && (
+								<>
+									<RemoveRefForm refTeamId={team.id} />
+									<AbandonRefForm refTeamId={team.id} />
+								</>
+							)}
 						</span>
 					))}
 				</div>
-			) : (
+			) : matchStatus === "tbd" ? null : (
 				<div>Self Ref</div>
 			)}
 
-			{canEdit && matchStatus !== "completed" && (
+			{canEdit && !["completed", "tbd"].includes(matchStatus) && (
 				<EditMatchRefsForm
 					tournamentDivisionId={tournamentDivisionId}
 					playoffMatchId={playoffMatchId}

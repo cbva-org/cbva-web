@@ -4,27 +4,41 @@ import {
 	DropdownMenuItem,
 } from "@/components/base/dropdown-menu";
 import { MenuSection } from "@/components/base/menu";
-import { useTeamsAtCapacity } from "@/components/tournaments/context";
 import { SettingsIcon } from "lucide-react";
 import { useState } from "react";
+import { UndoAbandonRefForm } from "./undo-abandon-ref";
+import { useQuery } from "@tanstack/react-query";
+import { checkAbandonedRefQueryOptions } from "@/functions/refs/check-abandoned-ref";
+import { isDefined } from "@/utils/types";
 
 enum ModalKind {
 	Remove = 0,
-	Abandoned = 1,
+	UndoAbandonedRef = 1,
 }
 
-export function TeamControlsDropdown() {
+export type TeamControlsDropdownProps = {
+	tournamentDivisionTeamId: number;
+};
+
+export function TeamControlsDropdown({
+	tournamentDivisionTeamId,
+}: TeamControlsDropdownProps) {
 	const canUpdate = useViewerHasPermission({
 		tournament: ["update"],
 	});
 
 	const [activeModal, setActiveModal] = useState<ModalKind>();
 
+	const { data: abandonedRefTeamId } = useQuery(
+		checkAbandonedRefQueryOptions(tournamentDivisionTeamId),
+	);
+
 	if (!canUpdate) {
 		return null;
 	}
 
 	const makeModalOpenProps = (kind: ModalKind) => ({
+		tournamentDivisionTeamId,
 		isOpen: activeModal === kind,
 		onOpenChange: (open: boolean) => {
 			const next = open ? kind : undefined;
@@ -34,15 +48,27 @@ export function TeamControlsDropdown() {
 	});
 
 	return (
-		<DropdownMenu buttonIcon={<SettingsIcon />}>
-			<MenuSection title="Team Controls">
-				<DropdownMenuItem onPress={() => setActiveModal(ModalKind.Remove)}>
-					Remove Team
-				</DropdownMenuItem>
-				<DropdownMenuItem onPress={() => setActiveModal(ModalKind.Abandoned)}>
-					Abandoned Ref
-				</DropdownMenuItem>
-			</MenuSection>
-		</DropdownMenu>
+		<>
+			<DropdownMenu buttonIcon={<SettingsIcon />}>
+				<MenuSection title="Team Controls">
+					<DropdownMenuItem onPress={() => setActiveModal(ModalKind.Remove)}>
+						Remove Team
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						isDisabled={!isDefined(abandonedRefTeamId)}
+						onPress={() => setActiveModal(ModalKind.UndoAbandonedRef)}
+					>
+						Undo Abandoned Ref
+					</DropdownMenuItem>
+				</MenuSection>
+			</DropdownMenu>
+
+			{abandonedRefTeamId && (
+				<UndoAbandonRefForm
+					{...makeModalOpenProps(ModalKind.UndoAbandonedRef)}
+					refTeamId={abandonedRefTeamId}
+				/>
+			)}
+		</>
 	);
 }

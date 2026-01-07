@@ -15,7 +15,7 @@ import type {
 	TeamPlayer,
 	TournamentDivisionTeam,
 } from "@/db/schema";
-import { isNotNull } from "@/utils/types";
+import { isDefined, isNotNull } from "@/utils/types";
 import { RefTeamsList } from "@/components/refs/ref-teams-list";
 import { useActiveDivisionId } from "../../context";
 
@@ -60,13 +60,14 @@ export type MatchTeam = Pick<
 
 export function PoolMatchGrid({
 	id,
+	status,
 	sets,
 	matchNumber,
 	teamA,
 	teamB,
 	refTeams,
 	refetch,
-}: Pick<PoolMatch, "id" | "winnerId" | "matchNumber"> & {
+}: Pick<PoolMatch, "id" | "winnerId" | "matchNumber" | "status"> & {
 	sets: Pick<
 		MatchSet,
 		| "id"
@@ -131,7 +132,7 @@ export function PoolMatchGrid({
 					<RefTeamsList
 						tournamentDivisionId={tournamentDivisionId}
 						poolMatchId={id}
-						matchStatus={status}
+						matchStatus={isDefined(teamA) && isDefined(teamB) ? status : "tbd"}
 						refTeams={refTeams}
 					/>
 				</div>

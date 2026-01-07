@@ -137,6 +137,7 @@ export function TeamsPanel({
 											)}
 										</div>
 									</TableCell>
+
 									{players.map(
 										({
 											id: playerId,
@@ -152,7 +153,7 @@ export function TeamsPanel({
 									{canEdit && (
 										<TableCell>
 											<div className="flex flex-row flex-wrap">
-												<TeamControlsDropdown />
+												<TeamControlsDropdown tournamentDivisionTeamId={id} />
 											</div>
 										</TableCell>
 									)}

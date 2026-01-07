@@ -1,5 +1,4 @@
 import {
-	Controls,
 	type Node,
 	ReactFlow,
 	ReactFlowProvider,

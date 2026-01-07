@@ -8,14 +8,20 @@ import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
 import { TeamNames } from "@/components/teams/names";
-import { playoffsQueryOptions } from "@/data/playoffs";
-import { poolsQueryOptions } from "@/data/pools";
-import { teamsQueryOptions } from "@/data/teams";
 import { editPlayoffMatchRefTeamSchema } from "@/data/tournaments/referee";
 import { getPoolStats, type PoolTeamStats } from "@/hooks/matches";
-import { isNotNullOrUndefined } from "@/utils/types";
+import { isDefined, isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../panels/games/pool-match-grid";
 import { editMatchRefTeamMutationOptions } from "@/functions/refs/edit-match-ref-teams";
+import {
+	playoffMatchQueryOptions,
+	poolMatchQueryOptions,
+} from "@/data/matches";
+import {
+	usePlayoffsQueryOptions,
+	usePoolsQueryOptions,
+	useTeamsQueryOptions,
+} from "../context";
 
 export type EditPlayoffMatchRefsFormProps = {
 	tournamentDivisionId: number;
@@ -23,10 +29,6 @@ export type EditPlayoffMatchRefsFormProps = {
 	playoffMatchId?: number;
 	poolMatchId?: number;
 };
-
-// TODO: for pool, only show teams in pool
-// TODO: Also show remove ref button
-// TODO: undo abandon ref
 
 export function EditMatchRefsForm({
 	tournamentDivisionId,
@@ -39,16 +41,36 @@ export function EditMatchRefsForm({
 
 	const [isOpen, setOpen] = useState(false);
 
+	const { data: poolMatch } = useQuery({
+		...poolMatchQueryOptions(poolMatchId as number),
+		// this makes the case above safe
+		enabled: isDefined(poolMatchId),
+	});
+
+	const { data: playoffMatch } = useQuery({
+		...playoffMatchQueryOptions(playoffMatchId as number),
+		// this makes the case above safe
+		enabled: isDefined(playoffMatchId),
+	});
+
+	const matchTeams = (
+		poolMatch
+			? [poolMatch.teamAId, poolMatch.teamBId]
+			: playoffMatch
+				? [playoffMatch.teamAId, playoffMatch.teamBId]
+				: []
+	).filter(isDefined);
+
+	const teamsQueryOptions = useTeamsQueryOptions();
+	const poolsQueryOptions = usePoolsQueryOptions();
+	const playoffsQueryOptions = usePlayoffsQueryOptions();
+
 	const { mutate, failureReason } = useMutation({
 		...editMatchRefTeamMutationOptions(),
 		onSuccess: () => {
-			queryClient.invalidateQueries(
-				teamsQueryOptions({ tournamentDivisionId }),
-			);
-
-			queryClient.invalidateQueries(
-				playoffsQueryOptions({ tournamentDivisionId }),
-			);
+			queryClient.invalidateQueries(teamsQueryOptions);
+			queryClient.invalidateQueries(poolsQueryOptions);
+			queryClient.invalidateQueries(playoffsQueryOptions);
 
 			setOpen(false);
 		},
@@ -76,18 +98,11 @@ export function EditMatchRefsForm({
 	});
 
 	const { data: teams } = useQuery({
-		...teamsQueryOptions({ tournamentDivisionId }),
-		// select: (data) =>
-		// 	data.filter(
-		// 		(team) =>
-		// 			!playoffTeams?.has(team.id) &&
-		// 			team.status === "confirmed" &&
-		// 			team.poolTeam?.finish,
-		// 	),
+		...teamsQueryOptions,
 	});
 
 	const { data: stats } = useQuery({
-		...poolsQueryOptions({ tournamentDivisionId }),
+		...poolsQueryOptions,
 		select: (data) => {
 			const stats = new Map(
 				data
@@ -113,7 +128,14 @@ export function EditMatchRefsForm({
 	});
 
 	const orderedTeams = orderBy(
-		teams,
+		teams?.filter((team) => {
+			const inMatch = matchTeams.includes(team.id);
+			const inGroup = poolMatch
+				? team.poolTeam.poolId === poolMatch.poolId
+				: true;
+
+			return !inMatch && inGroup;
+		}),
 		[
 			(team) => team.poolTeam?.finish,
 			(team) => {
@@ -142,6 +164,7 @@ export function EditMatchRefsForm({
 				onPress={() => {
 					setOpen(true);
 				}}
+				tooltip="Change or set ref team"
 			>
 				<EditIcon size={12} />
 			</Button>

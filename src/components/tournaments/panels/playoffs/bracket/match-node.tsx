@@ -20,7 +20,7 @@ import type {
 	TournamentDivisionTeam,
 } from "@/db/schema";
 import { formatOrdinals } from "@/lib/numbers";
-import { isNotNullOrUndefined } from "@/utils/types";
+import { isDefined, isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../../games/pool-match-grid";
 import { useActiveTeam, useSetActiveTeam, useSetNodeIdToCenter } from ".";
 import { Wildcard } from "./wildcard";
@@ -131,7 +131,11 @@ export function MatchNode({
 				<RefTeamsList
 					tournamentDivisionId={tournamentDivisionId}
 					playoffMatchId={data.id}
-					matchStatus={data.status}
+					matchStatus={
+						isDefined(data.teamAId) && isDefined(data.teamBId)
+							? data.status
+							: "tbd"
+					}
 					refTeams={refTeams}
 				/>
 
