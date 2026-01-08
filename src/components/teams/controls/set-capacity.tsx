@@ -11,6 +11,7 @@ import {
 	setCapacitySchema,
 } from "@/functions/tournament-divisions/set-capacity";
 import type { Division, TournamentDivision } from "@/db/schema";
+import { useTeamsQueryOptions } from "@/components/tournaments/context";
 
 export type SetCapacityFormProps = {
 	tournamentId: number;
@@ -26,10 +27,13 @@ export function SetCapacityForm({
 
 	const queryClient = useQueryClient();
 
+	const teamsQueryOptions = useTeamsQueryOptions();
+
 	const { mutate, failureReason } = useMutation({
 		...setCapacityMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries(tournamentQueryOptions(tournamentId));
+			queryClient.invalidateQueries(teamsQueryOptions);
 		},
 	});
 

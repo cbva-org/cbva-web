@@ -55,7 +55,7 @@ export const setCapacityFn = createServerFn({ method: "POST" })
 			);
 
 			if (capacity && capacity > current.capacity) {
-				const promoteTeams = waitlist.slice(capacity - current.capacity);
+				const promoteTeams = waitlist.slice(0, capacity - current.capacity);
 
 				await promoteFromWaitlistTransaction(
 					txn,

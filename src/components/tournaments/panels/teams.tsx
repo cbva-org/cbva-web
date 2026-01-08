@@ -39,7 +39,12 @@ export function TeamsPanel({
 
 	const [edit, setEdit] = useState(false);
 
-	const activeTeams = data.filter(({ status }) => status !== "waitlisted");
+	const activeTeams = orderBy(
+		data.filter(({ status }) => status !== "waitlisted"),
+		["finish", "seed", "order", "createdAt"],
+		["asc", "asc", "asc", "asc"],
+	);
+
 	const waitlist = orderBy(
 		data.filter(({ status }) => status === "waitlisted"),
 		["order", "createdAt"],
@@ -121,8 +126,16 @@ export function TeamsPanel({
 							key={edit ? "edit" : "not-edit"}
 							items={activeTeams || []}
 						>
-							{({ id, team: { players }, finish, seed, poolTeam, status }) => (
-								<TableRow key={id}>
+							{({
+								id,
+								team: { players },
+								order,
+								finish,
+								seed,
+								poolTeam,
+								status,
+							}) => (
+								<TableRow key={id} data-order={order}>
 									<TableCell>{finish ?? "-"}</TableCell>
 									<TableCell>
 										<div className="flex flex-row items-center gap-4">
