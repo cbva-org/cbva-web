@@ -107,6 +107,14 @@ export const addTeamFn = createServerFn({ method: "POST" })
 			throw new Error("INTERNAL_SERVER_ERROR");
 		}
 
+		// Get the highest order for this tournament division
+		const maxOrderResult = await db
+			.select({ maxOrder: sql<number | null>`MAX(${tournamentDivisionTeams.order})` })
+			.from(tournamentDivisionTeams)
+			.where(eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId));
+
+		const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
+
 		const newTournamentDivisionTeam = await db
 			.insert(tournamentDivisionTeams)
 			.values({
@@ -116,6 +124,7 @@ export const addTeamFn = createServerFn({ method: "POST" })
 					nonWaitlistedTeamsCount >= division.capacity
 						? "waitlisted"
 						: "confirmed",
+				order: nextOrder,
 			})
 			.returning({
 				id: tournamentDivisionTeams.id,
@@ -321,11 +330,20 @@ export const fillTournamentFn = createServerFn()
 				}),
 			);
 
+			// Get the highest order for this tournament division
+			const maxOrderResult = await db
+				.select({ maxOrder: sql<number | null>`MAX(${tournamentDivisionTeams.order})` })
+				.from(tournamentDivisionTeams)
+				.where(eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId));
+
+			const startOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
+
 			await db.insert(tournamentDivisionTeams).values(
-				createdTeams.map(({ id }) => ({
+				createdTeams.map(({ id }, index) => ({
 					tournamentDivisionId,
 					teamId: id,
 					status: "confirmed" as const,
+					order: startOrder + index,
 				})),
 			);
 		}

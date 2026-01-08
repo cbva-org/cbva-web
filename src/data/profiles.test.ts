@@ -56,6 +56,7 @@ describe("getProfileResults", () => {
 			tournamentDivisionId: aTournament.divisions[0],
 			teamId: teamAId,
 			status: "confirmed",
+			order: 0,
 		});
 
 		const bTournament = await bootstrapTournament(db, {
@@ -78,6 +79,7 @@ describe("getProfileResults", () => {
 			tournamentDivisionId: bTournament.divisions[0],
 			teamId: teamBId,
 			status: "confirmed",
+			order: 0,
 		});
 
 		const cTournament = await bootstrapTournament(db, {
@@ -100,6 +102,7 @@ describe("getProfileResults", () => {
 			tournamentDivisionId: cTournament.divisions[0],
 			teamId: teamCId,
 			status: "confirmed",
+			order: 0,
 		});
 
 		// Test without filters - should return all 3 results

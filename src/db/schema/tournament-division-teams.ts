@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
 	boolean,
 	doublePrecision,
@@ -11,7 +11,7 @@ import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 import { levels } from "./levels";
 import { poolTeams } from "./pool-teams";
-import { teamStatusEnum } from "./shared";
+import { teamStatusEnum, timestamps } from "./shared";
 import { teams } from "./teams";
 import { tournamentDivisions } from "./tournament-divisions";
 
@@ -34,6 +34,8 @@ export const tournamentDivisionTeams = pgTable("tournament_division_teams", {
 	levelEarnedId: integer().references(() => levels.id),
 	status: teamStatusEnum().notNull().default("registered"),
 	externalRef: uuid().unique(),
+	order: integer(),
+	...timestamps,
 });
 
 export const selectTournamentDivisionTeamSchema = createSelectSchema(

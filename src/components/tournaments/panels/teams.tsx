@@ -19,6 +19,7 @@ import { getLevelDisplay } from "@/hooks/tournament";
 import { playerName } from "@/utils/profiles";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
+import { orderBy } from "lodash-es";
 import { useState, type ReactNode } from "react";
 
 export function TeamsPanel({
@@ -39,7 +40,11 @@ export function TeamsPanel({
 	const [edit, setEdit] = useState(false);
 
 	const activeTeams = data.filter(({ status }) => status !== "waitlisted");
-	const waitlist = data.filter(({ status }) => status === "waitlisted");
+	const waitlist = orderBy(
+		data.filter(({ status }) => status === "waitlisted"),
+		["order", "createdAt"],
+		["asc", "asc"],
+	);
 
 	return (
 		<TabPanel id="teams">

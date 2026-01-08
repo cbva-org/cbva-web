@@ -1,6 +1,13 @@
-import { jsonb, pgEnum } from "drizzle-orm/pg-core";
+import { jsonb, pgEnum, timestamp } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 import type z from "zod";
+
+export const timestamps = {
+	createdAt: timestamp().$defaultFn(() => /* @__PURE__ */ new Date()),
+	updatedAt: timestamp()
+		.$defaultFn(() => /* @__PURE__ */ new Date())
+		.$onUpdateFn(() => new Date()),
+};
 
 export type LexicalState = {
 	root: {

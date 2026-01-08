@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { simulateMatchesFn } from "@/data/tournaments/matches";
 import {
 	type CreatePlayoffsParams,
@@ -146,11 +146,20 @@ export async function bootstrapTournament(
 			gender,
 		});
 
+		// Get the highest order for this tournament division
+		const maxOrderResult = await db
+			.select({ maxOrder: sql<number | null>`MAX(${tournamentDivisionTeams.order})` })
+			.from(tournamentDivisionTeams)
+			.where(eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId));
+
+		const startOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
+
 		await db.insert(tournamentDivisionTeams).values(
-			teamIds.map(({ id: teamId }) => ({
+			teamIds.map(({ id: teamId }, index) => ({
 				tournamentDivisionId,
 				teamId,
 				status: "confirmed" as const,
+				order: startOrder + index,
 			})),
 		);
 	}

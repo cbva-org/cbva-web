@@ -33,16 +33,24 @@ export function AddTeamForm({ division }: AddTeamFormProps) {
 		...addTeamOptions(),
 	});
 
+	const profiles = useRef<PlayerProfile[]>([]);
+
+	const [selectedProfiles, setSelectedProfiles] = useState<
+		(PlayerProfile | null)[]
+	>([]);
+
 	const schema = z.object({
 		players: z.array(z.number()).length(division.teamSize),
 	});
 
+	const defaultValues = {
+		players: Array.from({ length: division.teamSize }).map(
+			() => null as null | number,
+		),
+	};
+
 	const form = useAppForm({
-		defaultValues: {
-			players: Array.from({ length: division.teamSize }).map(
-				() => null as null | number,
-			),
-		},
+		defaultValues,
 		validators: {
 			onMount: schema,
 			onChange: schema,
@@ -55,24 +63,20 @@ export function AddTeamForm({ division }: AddTeamFormProps) {
 				},
 				{
 					onSuccess: () => {
-						formApi.reset();
-
 						setOpen(false);
 
 						queryClient.invalidateQueries(
 							teamsQueryOptions({ tournamentDivisionId: division.id }),
 						);
+
+						formApi.reset(defaultValues);
+
+						setSelectedProfiles([]);
 					},
 				},
 			);
 		},
 	});
-
-	const profiles = useRef<PlayerProfile[]>([]);
-
-	const [selectedProfiles, setSelectedProfiles] = useState<
-		(PlayerProfile | null)[]
-	>([]);
 
 	const { data: levelsForDivision } = useQuery(
 		levelsQueryOptions({ division: division.division.order }),
