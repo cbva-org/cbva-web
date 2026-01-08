@@ -8,8 +8,12 @@ import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
-import { duplicateTournamentOptions } from "@/data/schedule";
+import {
+	duplicateTournamentOptions,
+	duplicateTournamentSchema,
+} from "@/data/schedule";
 import { getDefaultTimeZone } from "@/lib/dates";
+import { calendarDateSchema } from "@/lib/schemas";
 
 export type DuplicateFormProps = {
 	tournamentId: number;
@@ -17,28 +21,6 @@ export type DuplicateFormProps = {
 	onOpenChange: (open: boolean) => void;
 	onSuccess?: () => void;
 };
-
-const schema = z.object({
-	date: z
-		.any()
-		.refine((value) => Boolean(value), {
-			message: "This field is required",
-		})
-		.refine(
-			(value: CalendarDate) => {
-				if (!value) {
-					return true;
-				}
-
-				const todayDate = today(getDefaultTimeZone());
-
-				return value > todayDate;
-			},
-			{
-				message: "Date must be in the future",
-			},
-		),
-});
 
 export function DuplicateForm({
 	tournamentId,
@@ -66,18 +48,28 @@ export function DuplicateForm({
 		},
 	});
 
+	const schema = duplicateTournamentSchema
+		.pick({
+			demo: true,
+		})
+		.extend({
+			date: calendarDateSchema(),
+		});
+
 	const form = useAppForm({
 		defaultValues: {
 			date: today(getDefaultTimeZone()).add({ days: 1 }),
+			demo: false,
 		},
 		validators: {
 			onMount: schema,
 			onChange: schema,
 		},
-		onSubmit: ({ value: { date } }) => {
+		onSubmit: ({ value: { date, demo } }) => {
 			mutate({
 				id: tournamentId,
 				date: date.toString(),
+				demo,
 			});
 		},
 	});
@@ -90,6 +82,7 @@ export function DuplicateForm({
 				</Heading>
 
 				<form
+					className="flex flex-col space-y-2"
 					onSubmit={(e) => {
 						e.preventDefault();
 
@@ -101,7 +94,6 @@ export function DuplicateForm({
 						children={(field) => (
 							<field.DatePicker
 								isRequired
-								className="col-span-3"
 								label="Date"
 								field={field}
 								minValue={today(getDefaultTimeZone())}
@@ -109,8 +101,13 @@ export function DuplicateForm({
 						)}
 					/>
 
+					<form.AppField
+						name="demo"
+						children={(field) => <field.Checkbox label="Demo" field={field} />}
+					/>
+
 					<form.AppForm>
-						<form.Footer className="col-span-full">
+						<form.Footer>
 							<Button onPress={() => onOpenChange(false)}>Cancel</Button>
 
 							<form.SubmitButton requireChange={false}>

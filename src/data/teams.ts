@@ -4,7 +4,12 @@ import z from "zod";
 import { db } from "@/db/connection";
 import { selectTournamentDivisionTeamSchema } from "@/db/schema";
 import { teamStatusSchema } from "@/db/schema/shared";
-import { isNotNullOrUndefined } from "@/utils/types";
+import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
+import {
+	authMiddleware,
+	roleHasPermission,
+	type SessionViewer,
+} from "@/auth/shared";
 
 const getTeamsSchema = selectTournamentDivisionTeamSchema
 	.pick({ tournamentDivisionId: true })
@@ -12,10 +17,16 @@ const getTeamsSchema = selectTournamentDivisionTeamSchema
 		statusIn: z.array(teamStatusSchema).optional(),
 	});
 
-async function readTeams({
-	tournamentDivisionId,
-	statusIn,
-}: z.infer<typeof getTeamsSchema>) {
+async function readTeams(
+	{ tournamentDivisionId, statusIn }: z.infer<typeof getTeamsSchema>,
+	viewer: SessionViewer | undefined,
+) {
+	const canUpdate = viewer
+		? roleHasPermission(viewer.role, {
+				tournament: ["update"],
+			})
+		: false;
+
 	return await db.query.tournamentDivisionTeams.findMany({
 		with: {
 			team: {
@@ -40,9 +51,18 @@ async function readTeams({
 		where: (t, { eq, and, or, inArray }) =>
 			and(
 				eq(t.tournamentDivisionId, tournamentDivisionId),
-				statusIn
-					? inArray(t.status, statusIn)
-					: or(eq(t.status, "confirmed"), eq(t.status, "registered")),
+				inArray(
+					t.status,
+					statusIn ??
+						[
+							"confirmed" as const,
+							"registered" as const,
+							canUpdate ? ("waitlisted" as const) : null,
+						].filter(isNotNull),
+				),
+				// statusIn
+				// 	? inArray(t.status, statusIn)
+				// 	: or(eq(t.status, "confirmed"), eq(t.status, "registered")),
 			),
 		orderBy: (t, { asc }) => [asc(t.finish), asc(t.seed)],
 	});
@@ -51,8 +71,11 @@ async function readTeams({
 export const getTeams = createServerFn({
 	method: "GET",
 })
+	.middleware([authMiddleware])
 	.inputValidator(getTeamsSchema)
-	.handler(async ({ data }) => await readTeams(data));
+	.handler(
+		async ({ data, context: { viewer } }) => await readTeams(data, viewer),
+	);
 
 export const teamsQueryOptions = ({
 	tournamentDivisionId,

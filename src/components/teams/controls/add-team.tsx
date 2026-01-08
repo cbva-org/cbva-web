@@ -24,21 +24,13 @@ export type AddTeamFormProps = {
 	division: TournamentDivision & { division: Division };
 };
 
-export function AddTeamForm({ tournamentId, division }: AddTeamFormProps) {
+export function AddTeamForm({ division }: AddTeamFormProps) {
 	const [isOpen, setOpen] = useState(false);
 
 	const queryClient = useQueryClient();
 
 	const { mutate } = useMutation({
 		...addTeamOptions(),
-		onSuccess: () => {
-			setOpen(false);
-
-			queryClient.invalidateQueries({
-				queryKey: teamsQueryOptions({ tournamentDivisionId: division.id })
-					.queryKey,
-			});
-		},
 	});
 
 	const schema = z.object({
@@ -55,11 +47,24 @@ export function AddTeamForm({ tournamentId, division }: AddTeamFormProps) {
 			onMount: schema,
 			onChange: schema,
 		},
-		onSubmit: ({ value: { players } }) => {
-			mutate({
-				tournamentDivisionId: division.id,
-				players: players as number[],
-			});
+		onSubmit: ({ value: { players }, formApi }) => {
+			mutate(
+				{
+					tournamentDivisionId: division.id,
+					players: players as number[],
+				},
+				{
+					onSuccess: () => {
+						formApi.reset();
+
+						setOpen(false);
+
+						queryClient.invalidateQueries(
+							teamsQueryOptions({ tournamentDivisionId: division.id }),
+						);
+					},
+				},
+			);
 		},
 	});
 

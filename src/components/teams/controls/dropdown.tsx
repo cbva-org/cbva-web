@@ -10,18 +10,23 @@ import { UndoAbandonRefForm } from "./undo-abandon-ref";
 import { useQuery } from "@tanstack/react-query";
 import { checkAbandonedRefQueryOptions } from "@/functions/refs/check-abandoned-ref";
 import { isDefined } from "@/utils/types";
+import type { TournamentDivisionTeam } from "@/db/schema";
+import { PromoteFromWaitlistForm } from "./promote-from-waitlist";
 
 enum ModalKind {
 	Remove = 0,
 	UndoAbandonedRef = 1,
+	PromoteFromWaitlist = 2,
 }
 
 export type TeamControlsDropdownProps = {
 	tournamentDivisionTeamId: number;
+	status: TournamentDivisionTeam["status"];
 };
 
 export function TeamControlsDropdown({
 	tournamentDivisionTeamId,
+	status,
 }: TeamControlsDropdownProps) {
 	const canUpdate = useViewerHasPermission({
 		tournament: ["update"],
@@ -51,17 +56,36 @@ export function TeamControlsDropdown({
 		<>
 			<DropdownMenu buttonIcon={<SettingsIcon />}>
 				<MenuSection title="Team Controls">
-					<DropdownMenuItem onPress={() => setActiveModal(ModalKind.Remove)}>
-						Remove Team
-					</DropdownMenuItem>
-					<DropdownMenuItem
-						isDisabled={!isDefined(abandonedRefTeamId)}
-						onPress={() => setActiveModal(ModalKind.UndoAbandonedRef)}
-					>
-						Undo Abandoned Ref
-					</DropdownMenuItem>
+					{status === "waitlisted" ? (
+						<DropdownMenuItem
+							onPress={() => setActiveModal(ModalKind.PromoteFromWaitlist)}
+						>
+							Promote
+						</DropdownMenuItem>
+					) : (
+						<>
+							<DropdownMenuItem
+								onPress={() => setActiveModal(ModalKind.Remove)}
+							>
+								Remove Team
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								isDisabled={!isDefined(abandonedRefTeamId)}
+								onPress={() => setActiveModal(ModalKind.UndoAbandonedRef)}
+							>
+								Undo Abandoned Ref
+							</DropdownMenuItem>
+						</>
+					)}
 				</MenuSection>
 			</DropdownMenu>
+
+			{status === "waitlisted" && (
+				<PromoteFromWaitlistForm
+					{...makeModalOpenProps(ModalKind.PromoteFromWaitlist)}
+					tournamentDivisionTeamId={tournamentDivisionTeamId}
+				/>
+			)}
 
 			{abandonedRefTeamId && (
 				<UndoAbandonRefForm

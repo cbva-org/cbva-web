@@ -7,7 +7,6 @@ import { useViewerHasPermission } from "@/auth/shared";
 import { Button } from "@/components/base/button";
 import { Link } from "@/components/base/link";
 import { TeamNames } from "@/components/teams/names";
-import { EditMatchRefsForm } from "@/components/tournaments/controls/edit-playoff-match-refs";
 import { SimulateMatchModal } from "@/components/tournaments/controls/simulate-match";
 import { playoffsQueryOptions } from "@/data/playoffs";
 import type {

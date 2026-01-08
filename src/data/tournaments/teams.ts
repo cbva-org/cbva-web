@@ -18,6 +18,7 @@ import {
 	tournamentDivisions,
 	tournamentDivisionTeams,
 } from "@/db/schema";
+import { badRequest } from "@/lib/responses";
 
 const addTeamSchema = z.object({
 	tournamentDivisionId: z.number(),
@@ -34,6 +35,37 @@ export const addTeamFn = createServerFn({ method: "POST" })
 	])
 	.inputValidator(addTeamSchema)
 	.handler(async ({ data: { tournamentDivisionId, players } }) => {
+		const division = await db.query.tournamentDivisions.findFirst({
+			where: (t, { eq }) => eq(t.id, tournamentDivisionId),
+		});
+
+		if (!division) {
+			throw notFound();
+		}
+
+		const nonWaitlistedTeamsCount = await db.$count(
+			tournamentDivisionTeams,
+			and(
+				eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId),
+				inArray(tournamentDivisionTeams.status, ["registered", "confirmed"]),
+			),
+		);
+
+		const waitlistedTeamsCount = await db.$count(
+			tournamentDivisionTeams,
+			and(
+				eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId),
+				inArray(tournamentDivisionTeams.status, ["waitlisted"]),
+			),
+		);
+
+		if (
+			nonWaitlistedTeamsCount + waitlistedTeamsCount + 1 >
+			division.capacity + division.waitlistCapacity
+		) {
+			throw badRequest("Division at capacity.");
+		}
+
 		// Find teams in the tournament division that have all the specified players
 		const existingTeam = await db
 			.select({
@@ -80,6 +112,10 @@ export const addTeamFn = createServerFn({ method: "POST" })
 			.values({
 				tournamentDivisionId,
 				teamId,
+				status:
+					nonWaitlistedTeamsCount >= division.capacity
+						? "waitlisted"
+						: "confirmed",
 			})
 			.returning({
 				id: tournamentDivisionTeams.id,

@@ -45,7 +45,6 @@ export const editSeedTransaction = createServerOnlyFn(
 		const targetId = target === "division" ? team.id : team.poolTeam.id;
 
 		if (currentSeed) {
-			console.log(currentSeed, "->", seed);
 			if (seed < currentSeed) {
 				// Moving up (to a lower seed number): shift teams down
 				// Teams with seeds >= new seed AND < current seed move down by 1

@@ -1,6 +1,5 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import clsx from "clsx";
-import { useState, type ReactNode } from "react";
+import { useViewerHasPermission } from "@/auth/shared";
+import { title } from "@/components/base/primitives";
 import {
 	Table,
 	TableBody,
@@ -11,16 +10,16 @@ import {
 } from "@/components/base/table";
 import { TabPanel } from "@/components/base/tabs";
 import { TeamsControls } from "@/components/teams/controls";
+import { TeamControlsDropdown } from "@/components/teams/controls/dropdown";
+import { EditPoolForm } from "@/components/teams/controls/edit-pool";
+import { EditSeedForm } from "@/components/teams/controls/edit-seed";
 import { teamsQueryOptions } from "@/data/teams";
 import type { TournamentDivision } from "@/db/schema";
 import { getLevelDisplay } from "@/hooks/tournament";
 import { playerName } from "@/utils/profiles";
-import { SwapSeedsForm } from "@/components/teams/controls/swap-seeds";
-import { EditPoolForm } from "@/components/teams/controls/edit-pool";
-import { EditSeedForm } from "@/components/teams/controls/edit-seed";
-import { useViewerHasPermission } from "@/auth/shared";
-import { Button } from "@/components/base/button";
-import { TeamControlsDropdown } from "@/components/teams/controls/dropdown";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import clsx from "clsx";
+import { useState, type ReactNode } from "react";
 
 export function TeamsPanel({
 	tournamentDivisionId,
@@ -37,11 +36,10 @@ export function TeamsPanel({
 		teamsQueryOptions({ tournamentDivisionId }),
 	);
 
-	const lastSeed = Math.max(
-		...(data?.map(({ seed }) => seed ?? Number.POSITIVE_INFINITY) ?? []),
-	);
-
 	const [edit, setEdit] = useState(false);
+
+	const activeTeams = data.filter(({ status }) => status !== "waitlisted");
+	const waitlist = data.filter(({ status }) => status === "waitlisted");
 
 	return (
 		<TabPanel id="teams">
@@ -53,39 +51,43 @@ export function TeamsPanel({
 				/>
 
 				<div className="md:hidden border border-gray-300 rounded-lg">
-					{data?.map(({ id, team: { players }, finish, seed, poolTeam }, i) => {
-						const columns: [string, ReactNode][] = [
-							["Finish", finish ?? "-"],
-							["Seed", seed ?? "-"],
-							["Pool", poolTeam?.pool.name.toUpperCase() ?? "-"],
-							...players.map(({ profile }, j): [string, ReactNode] => [
-								`Player ${j + 1}`,
-								playerName(profile),
-							]),
-						];
+					{activeTeams?.map(
+						({ id, team: { players }, finish, seed, poolTeam }, i) => {
+							const columns: [string, ReactNode][] = [
+								["Finish", finish ?? "-"],
+								["Seed", seed ?? "-"],
+								["Pool", poolTeam?.pool.name.toUpperCase() ?? "-"],
+								...players.map(({ profile }, j): [string, ReactNode] => [
+									`Player ${j + 1}`,
+									playerName(profile),
+								]),
+							];
 
-						return (
-							<div
-								key={id}
-								className={clsx(
-									"flex flex-col items-stretch border-b border-gray-300 last:border-b-0",
-									i % 2 === 0 ? "bg-transparent" : "bg-content-background-alt",
-								)}
-							>
-								{columns.map(([label, value]: [string, ReactNode], j) => (
-									<div
-										key={label}
-										className={clsx(
-											"p-2 flex flex-row justify-between items-center border-b border-gray-300 last:border-b-0",
-										)}
-									>
-										<span className="font-semibold uppercase">{label}</span>
-										<span>{value}</span>
-									</div>
-								))}
-							</div>
-						);
-					})}
+							return (
+								<div
+									key={id}
+									className={clsx(
+										"flex flex-col items-stretch border-b border-gray-300 last:border-b-0",
+										i % 2 === 0
+											? "bg-transparent"
+											: "bg-content-background-alt",
+									)}
+								>
+									{columns.map(([label, value]: [string, ReactNode]) => (
+										<div
+											key={label}
+											className={clsx(
+												"p-2 flex flex-row justify-between items-center border-b border-gray-300 last:border-b-0",
+											)}
+										>
+											<span className="font-semibold uppercase">{label}</span>
+											<span>{value}</span>
+										</div>
+									))}
+								</div>
+							);
+						},
+					)}
 				</div>
 				<div className="hidden md:block">
 					<Table aria-label="Teams">
@@ -110,8 +112,11 @@ export function TeamsPanel({
 								</TableColumn>
 							)}
 						</TableHeader>
-						<TableBody key={edit ? "edit" : "not-edit"} items={data || []}>
-							{({ id, team: { players }, finish, seed, poolTeam }) => (
+						<TableBody
+							key={edit ? "edit" : "not-edit"}
+							items={activeTeams || []}
+						>
+							{({ id, team: { players }, finish, seed, poolTeam, status }) => (
 								<TableRow key={id}>
 									<TableCell>{finish ?? "-"}</TableCell>
 									<TableCell>
@@ -153,7 +158,10 @@ export function TeamsPanel({
 									{canEdit && (
 										<TableCell>
 											<div className="flex flex-row flex-wrap">
-												<TeamControlsDropdown tournamentDivisionTeamId={id} />
+												<TeamControlsDropdown
+													tournamentDivisionTeamId={id}
+													status={status}
+												/>
 											</div>
 										</TableCell>
 									)}
@@ -162,6 +170,57 @@ export function TeamsPanel({
 						</TableBody>
 					</Table>
 				</div>
+				{canEdit && waitlist.length > 0 && (
+					<div className="hidden md:flex flex-col space-y-3 mt-6">
+						<h3 className={title({ size: "sm" })}>Waitlist</h3>
+
+						<Table aria-label="Waitlisted Teams">
+							<TableHeader>
+								{Array.from({ length: teamSize }).map((_, i) => (
+									<TableColumn key={i} id={`player-${i}`} isRowHeader>
+										Player {i + 1}
+									</TableColumn>
+								))}
+								{canEdit && (
+									<TableColumn id="actions" isRowHeader width={50}>
+										Actions
+									</TableColumn>
+								)}
+							</TableHeader>
+							<TableBody
+								key={edit ? "edit" : "not-edit"}
+								items={waitlist || []}
+							>
+								{({ id, team: { players } }) => (
+									<TableRow key={id}>
+										{players.map(
+											({
+												id: playerId,
+												profile: { firstName, preferredName, lastName, level },
+											}) => (
+												<TableCell key={playerId}>
+													{preferredName ?? firstName} {lastName} (
+													{getLevelDisplay(level)})
+												</TableCell>
+											),
+										)}
+
+										{canEdit && (
+											<TableCell>
+												<div className="flex flex-row flex-wrap">
+													<TeamControlsDropdown
+														tournamentDivisionTeamId={id}
+														status="waitlisted"
+													/>
+												</div>
+											</TableCell>
+										)}
+									</TableRow>
+								)}
+							</TableBody>
+						</Table>
+					</div>
+				)}
 			</div>
 		</TabPanel>
 	);

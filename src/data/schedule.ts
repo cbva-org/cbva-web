@@ -153,7 +153,7 @@ async function duplicateTournaments(
 	});
 }
 
-const duplicateTournamentSchema = selectTournamentSchema
+export const duplicateTournamentSchema = selectTournamentSchema
 	.pick({
 		id: true,
 		date: true,
