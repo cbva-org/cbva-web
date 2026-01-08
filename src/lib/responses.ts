@@ -4,6 +4,7 @@ import {
 	setResponseStatus,
 } from "@tanstack/react-start/server";
 import { ErrorKind, makeError } from "./errors";
+import { isDefined } from "@/utils/types";
 
 export function badRequest(message = "BAD_REQUEST") {
 	setResponseStatus(400);
@@ -37,6 +38,14 @@ export function notFound() {
 	setResponseStatus(404);
 
 	throw notFoundResult();
+}
+
+export function assertFound<T>(
+	value: T | undefined | null,
+): asserts value is T {
+	if (!isDefined(value)) {
+		throw notFound();
+	}
 }
 
 export function internalServerError(message: string) {

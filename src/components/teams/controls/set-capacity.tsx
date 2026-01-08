@@ -9,7 +9,7 @@ import { tournamentQueryOptions } from "@/data/tournaments";
 import {
 	setCapacityMutationOptions,
 	setCapacitySchema,
-} from "@/data/tournaments/teams";
+} from "@/functions/tournament-divisions/set-capacity";
 import type { Division, TournamentDivision } from "@/db/schema";
 
 export type SetCapacityFormProps = {

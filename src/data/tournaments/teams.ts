@@ -109,9 +109,13 @@ export const addTeamFn = createServerFn({ method: "POST" })
 
 		// Get the highest order for this tournament division
 		const maxOrderResult = await db
-			.select({ maxOrder: sql<number | null>`MAX(${tournamentDivisionTeams.order})` })
+			.select({
+				maxOrder: sql<number | null>`MAX(${tournamentDivisionTeams.order})`,
+			})
 			.from(tournamentDivisionTeams)
-			.where(eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId));
+			.where(
+				eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId),
+			);
 
 		const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
 
@@ -332,9 +336,16 @@ export const fillTournamentFn = createServerFn()
 
 			// Get the highest order for this tournament division
 			const maxOrderResult = await db
-				.select({ maxOrder: sql<number | null>`MAX(${tournamentDivisionTeams.order})` })
+				.select({
+					maxOrder: sql<number | null>`MAX(${tournamentDivisionTeams.order})`,
+				})
 				.from(tournamentDivisionTeams)
-				.where(eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId));
+				.where(
+					eq(
+						tournamentDivisionTeams.tournamentDivisionId,
+						tournamentDivisionId,
+					),
+				);
 
 			const startOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
 
@@ -353,43 +364,4 @@ export const fillTournamentMutationOptions = () =>
 	mutationOptions({
 		mutationFn: (data: z.infer<typeof fillTournamentSchema>) =>
 			fillTournamentFn({ data }),
-	});
-
-export const setCapacitySchema = selectTournamentDivisionSchema
-	.pick({
-		id: true,
-	})
-	.extend({
-		capacity: z.number().min(0),
-		waitlistCapacity: z.number().min(0),
-	});
-
-export type SetCapacityParams = z.infer<typeof setCapacitySchema>;
-
-export const setCapacityFn = createServerFn({ method: "POST" })
-	.middleware([
-		requirePermissions({
-			tournament: ["update"],
-		}),
-	])
-	.inputValidator(setCapacitySchema)
-	.handler(async ({ data: { id, capacity, waitlistCapacity } }) => {
-		await db
-			.update(tournamentDivisions)
-			.set({
-				capacity,
-				waitlistCapacity,
-			})
-			.where(eq(tournamentDivisions.id, id));
-
-		return {
-			success: true,
-		};
-	});
-
-export const setCapacityMutationOptions = () =>
-	mutationOptions({
-		mutationFn: async (data: SetCapacityParams) => {
-			return setCapacityFn({ data });
-		},
 	});

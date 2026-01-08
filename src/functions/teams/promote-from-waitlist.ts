@@ -3,10 +3,11 @@ import {
 	poolTeams,
 	selectTournamentDivisionTeamSchema,
 	tournamentDivisionTeams,
+	Transaction,
 } from "@/db/schema";
 import { mutationOptions } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
+import { eq, inArray } from "drizzle-orm";
 import z from "zod";
 import { editSeedTransaction } from "./edit-seed";
 import { notFound } from "@/lib/responses";
@@ -21,6 +22,17 @@ export const promoteFromWaitlistSchema = selectTournamentDivisionTeamSchema
 		poolId: z.number().optional().nullable(),
 		poolSeed: z.number().optional().nullable(),
 	});
+
+export const promoteFromWaitlistTransaction = createServerOnlyFn(
+	async (txn: Transaction, teamIds: number[]) => {
+		await txn
+			.update(tournamentDivisionTeams)
+			.set({
+				status: "confirmed",
+			})
+			.where(inArray(tournamentDivisionTeams.id, teamIds));
+	},
+);
 
 export const promoteFromWaitlist = createServerFn()
 	.inputValidator(promoteFromWaitlistSchema)
