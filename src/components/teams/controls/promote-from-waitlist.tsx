@@ -58,6 +58,8 @@ export function PromoteFromWaitlistForm({
 		afterDisplay: `${pool.teams.length} teams`,
 	}));
 
+	const defaultPoolId = poolOptions.length ? poolOptions[0].value : null;
+
 	const playoffsQueryOptions = usePlayoffsQueryOptions();
 
 	const { mutate, failureReason } = useMutation({
@@ -75,7 +77,7 @@ export function PromoteFromWaitlistForm({
 
 	const defaultValues = {
 		seed: hasSeeds ? lastSeed + 1 : null,
-		poolId: null,
+		poolId: defaultPoolId,
 		poolSeed: null,
 		automatic: false,
 	} as z.infer<typeof schema>;

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Heading } from "react-aria-components";
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
@@ -8,8 +8,16 @@ import {
 	removeTeamMutationOptions,
 	removeTeamSchema,
 } from "@/functions/teams/remove-team";
-import { isDefined } from "@/utils/types";
-import { useTeamsQueryOptions } from "@/components/tournaments/context";
+import {
+	useIsTournamentToday,
+	usePoolsQueryOptions,
+	useTeamsQueryOptions,
+	useWaitlist,
+} from "@/components/tournaments/context";
+import type z from "zod";
+import { useEffect } from "react";
+import { playerNames } from "@/utils/profiles";
+import { dbg } from "@/utils/dbg";
 
 export type RemoveTeamFormProps = {
 	tournamentDivisionTeamId: number;
@@ -24,45 +32,76 @@ export function RemoveTeamForm({
 	const queryClient = useQueryClient();
 
 	const teamQueryOptions = useTeamsQueryOptions();
+	const poolsQueryOptions = usePoolsQueryOptions();
 
 	const { mutate, failureReason } = useMutation({
 		...removeTeamMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries(teamQueryOptions);
+			queryClient.invalidateQueries(poolsQueryOptions);
 
 			props.onOpenChange(false);
 		},
 	});
 
+	const waitlist = useWaitlist();
+
+	const isTournamentToday = useIsTournamentToday();
+
 	const schema = removeTeamSchema.omit({ id: true });
 
 	const form = useAppForm({
-		defaultValues: {},
+		defaultValues: {
+			late: isTournamentToday,
+			replace: false,
+			replacementTeamId: null,
+		} as z.infer<typeof schema>,
 		validators: {
 			onMount: schema,
 			onChange: schema,
 		},
-		onSubmit: () => {
+		listeners: {
+			onChange: ({ formApi, fieldApi }) => {
+				if (fieldApi.name === "replace") {
+					console.log(waitlist, fieldApi.state.value);
+
+					if (fieldApi.state.value) {
+						if (waitlist && waitlist.length > 0) {
+							formApi.setFieldValue("replacementTeamId", waitlist[0].id);
+						}
+					} else {
+						formApi.setFieldValue("replacementTeamId", null);
+					}
+				}
+			},
+		},
+		onSubmit: ({ value: { late } }) => {
 			mutate({
 				id: tournamentDivisionTeamId,
+				late,
 			});
 		},
 	});
+
+	useEffect(() => {
+		if (!props.isOpen) {
+			form.reset();
+		}
+	}, [props.isOpen, form]);
 
 	return (
 		<Modal {...props}>
 			<div className="p-3 flex flex-col space-y-4 relative">
 				<Heading className={title({ size: "sm" })} slot="title">
-					Undo Abandon Ref?
+					Remove Team?
 				</Heading>
 
-				<p className="text-sm text-gray-700 mb-2">
-					Are you sure you want to undo marking this team as having abandoned
-					ref duties?
+				<p className="text-sm text-gray-700 mb-8">
+					Are you sure you want to remove this team from the division?
 				</p>
 
 				<form
-					className="flex flex-col space-y-6"
+					className="flex flex-col space-y-2"
 					onSubmit={(e) => {
 						e.preventDefault();
 
@@ -78,14 +117,62 @@ export function RemoveTeamForm({
 						</form.AppForm>
 					)}
 
+					<form.AppField name="late">
+						{(field) => (
+							<field.Checkbox field={field} label="Mark as late withdrawl" />
+						)}
+					</form.AppField>
+
+					<form.AppField name="replace">
+						{(field) => (
+							<field.Checkbox
+								field={field}
+								isDisabled={waitlist ? waitlist.length === 0 : true}
+								label="Replace from waitlist"
+								info={
+									<>
+										Replaces the team in their pool and matches with a team from
+										the waitlist and uses the same seed.
+									</>
+								}
+							/>
+						)}
+					</form.AppField>
+
+					<form.AppField name="replacementTeamId">
+						{(field) => (
+							<form.Subscribe
+								selector={({ values: { replace, replacementTeamId } }) => [
+									replace,
+									replacementTeamId,
+								]}
+							>
+								{([replace, replacementTeamId]) =>
+									replace && (
+										<field.Select
+											key={dbg(replacementTeamId)}
+											label="Replacement Team"
+											options={
+												waitlist?.map((team) => ({
+													value: team.id,
+													display: playerNames(
+														team.team.players.map(({ profile }) => profile),
+													).join(" & "),
+												})) ?? []
+											}
+											field={field}
+										/>
+									)
+								}
+							</form.Subscribe>
+						)}
+					</form.AppField>
+
 					<form.AppForm>
 						<form.Footer>
-							<Button onPress={() => setOpen(false)}>Cancel</Button>
+							<Button onPress={() => props.onOpenChange(false)}>Cancel</Button>
 
-							<form.SubmitButton
-								requireChange={false}
-								isDisabled={!isDefined(refTeamId)}
-							>
+							<form.SubmitButton requireChange={false}>
 								Confirm
 							</form.SubmitButton>
 						</form.Footer>

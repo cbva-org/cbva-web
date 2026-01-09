@@ -11,6 +11,7 @@ import {
 import { tv } from "tailwind-variants";
 import { Description, Label } from "./form/fields/shared";
 import { composeTailwindRenderProps, focusRing } from "./utils";
+import { Information } from "./information";
 
 export interface CheckboxGroupProps
 	extends Omit<AriaCheckboxGroupProps, "children"> {
@@ -67,9 +68,12 @@ export const boxStyles = tv({
 const iconStyles =
 	"w-4 h-4 text-white group-disabled:text-gray-400 forced-colors:text-[HighlightText]";
 
-export type CheckboxProps = AriaCheckboxProps & { label: ReactNode };
+export type CheckboxProps = AriaCheckboxProps & {
+	label: ReactNode;
+	info?: ReactNode;
+};
 
-export function Checkbox({ label, ...props }: CheckboxProps) {
+export function Checkbox({ label, info, ...props }: CheckboxProps) {
 	return (
 		<AriaCheckbox
 			{...props}
@@ -91,7 +95,10 @@ export function Checkbox({ label, ...props }: CheckboxProps) {
 							<Check aria-hidden className={iconStyles} />
 						) : null}
 					</div>
-					<span>{label}</span>
+					<span className="flex flex-row items-center space-x-2">
+						<span>{label}</span>
+						{info && <Information>{info}</Information>}
+					</span>
 				</>
 			)}
 		</AriaCheckbox>

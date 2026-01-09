@@ -14,6 +14,7 @@ import { poolTeams } from "./pool-teams";
 import { teamStatusEnum, timestamps } from "./shared";
 import { teams } from "./teams";
 import { tournamentDivisions } from "./tournament-divisions";
+import { poolMatches } from "./pool-matches";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({ zodInstance: z });

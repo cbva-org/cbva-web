@@ -9,7 +9,7 @@ import {
 	TableRow,
 } from "@/components/base/table";
 import { TabPanel } from "@/components/base/tabs";
-import { TeamsControls } from "@/components/teams/controls";
+import { TeamsControlsToolbar } from "@/components/teams/controls/toolbar";
 import { TeamControlsDropdown } from "@/components/teams/controls/dropdown";
 import { EditPoolForm } from "@/components/teams/controls/edit-pool";
 import { EditSeedForm } from "@/components/teams/controls/edit-seed";
@@ -54,7 +54,7 @@ export function TeamsPanel({
 	return (
 		<TabPanel id="teams">
 			<div className="max-w-4xl mx-auto py-12 px-3 flex flex-col gap-3">
-				<TeamsControls
+				<TeamsControlsToolbar
 					className="self-end"
 					onEditPress={edit ? undefined : () => setEdit(true)}
 					onDonePress={edit ? () => setEdit(false) : undefined}

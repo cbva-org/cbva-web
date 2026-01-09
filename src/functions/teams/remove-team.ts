@@ -1,14 +1,63 @@
 import { db } from "@/db/connection";
 import {
-	matchRefTeams,
+	type Transaction,
+	type PoolTeam,
+	poolTeams,
 	selectMatchRefTeamSchema,
+	type TournamentDivisionTeam,
 	tournamentDivisionTeams,
+	poolMatches,
 } from "@/db/schema";
-import { assertFound, notFound } from "@/lib/responses";
+import { assertFound } from "@/lib/responses";
 import { mutationOptions } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import z from "zod";
+import { promoteFromWaitlistTransaction } from "./promote-from-waitlist";
+import { requirePermissions } from "@/auth/shared";
+import { isDefined } from "@/utils/types";
+
+const replaceTeamTransaction = createServerOnlyFn(
+	async (
+		txn: Transaction,
+		originalTeam: TournamentDivisionTeam & { poolTeam: PoolTeam },
+		replacementTeamId: number,
+	) => {
+		const replacementTeam = await db.query.tournamentDivisionTeams.findFirst({
+			where: (t, { eq }) => eq(t.id, replacementTeamId),
+		});
+
+		assertFound(replacementTeam);
+
+		await txn
+			.update(tournamentDivisionTeams)
+			.set({
+				seed: originalTeam.seed,
+			})
+			.where(eq(poolTeams.id, replacementTeamId));
+
+		await txn
+			.update(poolTeams)
+			.set({
+				teamId: replacementTeamId,
+			})
+			.where(eq(poolTeams.id, originalTeam.poolTeam.id));
+
+		await txn
+			.update(poolMatches)
+			.set({
+				teamAId: replacementTeamId,
+			})
+			.where(eq(poolMatches.teamAId, originalTeam.poolTeam.id));
+
+		await txn
+			.update(poolMatches)
+			.set({
+				teamBId: replacementTeamId,
+			})
+			.where(eq(poolMatches.teamBId, originalTeam.poolTeam.id));
+	},
+);
 
 export const removeTeamSchema = selectMatchRefTeamSchema
 	.pick({
@@ -16,11 +65,18 @@ export const removeTeamSchema = selectMatchRefTeamSchema
 	})
 	.extend({
 		late: z.boolean().optional(),
+		replace: z.boolean().optional(),
+		replacementTeamId: z.number().nullable().optional(),
 	});
 
 export const removeTeam = createServerFn()
+	.middleware([
+		requirePermissions({
+			tournament: ["update"],
+		}),
+	])
 	.inputValidator(removeTeamSchema)
-	.handler(async ({ data: { id, late } }) => {
+	.handler(async ({ data: { id, late, replacementTeamId } }) => {
 		const team = await db.query.tournamentDivisionTeams.findFirst({
 			with: {
 				poolTeam: true,
@@ -28,22 +84,49 @@ export const removeTeam = createServerFn()
 					columns: {
 						tournamentId: true,
 						capacity: true,
+						autopromoteWaitlist: true,
 					},
 				},
 			},
 			where: (t, { eq }) => eq(t.id, id),
 		});
 
-		assertFound(!team);
+		assertFound(team);
 
-		await db
-			.update(tournamentDivisionTeams)
-			.set({
-				status: late ? "late-withdraw" : "withdraw",
-			})
-			.where(eq(matchRefTeams.id, id));
+		await db.transaction(async (txn) => {
+			await txn
+				.update(tournamentDivisionTeams)
+				.set({
+					status: late ? "late-withdraw" : "withdraw",
+				})
+				.where(eq(tournamentDivisionTeams.id, id));
 
-		// TODO: check if autopromoteWl is enabled, if so, promote a team
+			await txn.delete(poolTeams).where(eq(poolTeams.teamId, id));
+
+			if (isDefined(replacementTeamId)) {
+				await replaceTeamTransaction(txn, team, replacementTeamId);
+			}
+			// Check if autopromoteWaitlist is enabled, if so, promote a team
+			else if (
+				!late &&
+				["registered", "confirmed"].includes(team.status) &&
+				team.tournamentDivision.autopromoteWaitlist
+			) {
+				const nextWaitlistedTeam =
+					await txn.query.tournamentDivisionTeams.findFirst({
+						where: (t, { eq, and }) =>
+							and(
+								eq(t.tournamentDivisionId, team.tournamentDivisionId),
+								eq(t.status, "waitlisted"),
+							),
+						orderBy: (t, { asc }) => [asc(t.order), asc(t.createdAt)],
+					});
+
+				if (nextWaitlistedTeam) {
+					await promoteFromWaitlistTransaction(txn, [nextWaitlistedTeam.id]);
+				}
+			}
+		});
 
 		return {
 			success: true,

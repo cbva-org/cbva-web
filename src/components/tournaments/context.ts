@@ -5,6 +5,9 @@ import { teamsQueryOptions } from "@/data/teams";
 import { poolsQueryOptions } from "@/data/pools";
 import { playoffsQueryOptions } from "@/data/playoffs";
 import { isDefined } from "@/utils/types";
+import { parseDate, today } from "@internationalized/date";
+import { getDefaultTimeZone } from "@/lib/dates";
+import { orderBy } from "lodash-es";
 
 export function useTournament() {
 	const { tournamentId } = useParams({
@@ -32,11 +35,22 @@ export function useTournamentDivision() {
 	);
 }
 
+export function useIsTournamentToday() {
+	const tournament = useTournament();
+
+	if (!tournament) {
+		return;
+	}
+
+	return parseDate(tournament.date) === today(getDefaultTimeZone());
+}
+
 export function useIsDemoTournament() {
 	const tournament = useTournament();
 
 	return tournament?.demo;
 }
+
 export function useActiveDivisionId() {
 	const { divisionId } = useParams({
 		from: "/tournaments/$tournamentId/$divisionId/{-$tab}",
@@ -67,6 +81,19 @@ export function useTeamsQueryOptions() {
 	return teamsQueryOptions({
 		tournamentDivisionId,
 	});
+}
+
+export function useWaitlist() {
+	const query = useTeamsQueryOptions();
+
+	const { data: waitlist } = useQuery({
+		...query,
+		select: (data) => data.filter(({ status }) => status === "waitlisted"),
+	});
+
+	return waitlist
+		? orderBy(waitlist, ["order", "createdAt"], ["asc", "asc"])
+		: undefined;
 }
 
 export function useTeamsAtCapacity() {

@@ -11,7 +11,7 @@ import { SetCapacityForm } from "./set-capacity";
 import { Button } from "@/components/base/button";
 import { CheckIcon, EditIcon } from "lucide-react";
 
-export function TeamsControls({
+export function TeamsControlsToolbar({
 	className,
 	onEditPress,
 	onDonePress,

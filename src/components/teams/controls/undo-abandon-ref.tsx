@@ -83,7 +83,7 @@ export function UndoAbandonRefForm({
 
 					<form.AppForm>
 						<form.Footer>
-							<Button onPress={() => setOpen(false)}>Cancel</Button>
+							<Button onPress={() => props.onOpenChange(false)}>Cancel</Button>
 
 							<form.SubmitButton
 								requireChange={false}

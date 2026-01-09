@@ -71,7 +71,9 @@ export function CreatePoolsForm({
 
 	const { data: teamCount } = useQuery({
 		...teamsQueryOptions({ tournamentDivisionId: division.id }),
-		select: (data) => data.length,
+		select: (data) =>
+			data.filter(({ status }) => ["confirmed", "registered"].includes(status))
+				.length,
 	});
 
 	return (

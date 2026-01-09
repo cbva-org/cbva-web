@@ -7,7 +7,7 @@ export function Information({ children }: { children: ReactNode }) {
 	return (
 		<TooltipTrigger delay={100} closeDelay={50}>
 			<Focusable>
-				<span>
+				<span className="flex">
 					<InfoIcon className="inline" size={16} />
 				</span>
 			</Focusable>
