@@ -1,98 +1,173 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { and, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, count, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import z from "zod";
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
-import { playerProfiles } from "@/db/schema/player-profiles";
+import { getLimitAndOffset } from "@/db/pagination";
 import { tournamentDirectors } from "@/db/schema/tournament-directors";
 import { tournaments } from "@/db/schema/tournaments";
 import { venues } from "@/db/schema/venues";
+import { withDirector } from "@/middlewares/with-director";
 
 export const getTournamentsByDirectorsSchema = z.object({
 	directorIds: z.array(z.number()).optional(),
 	past: z.boolean().optional(),
+	page: z.number().min(1).default(1),
+	pageSize: z.number().min(1).default(25),
 });
 
 export const getTournamentsByDirectors = createServerFn()
 	.middleware([
+		withDirector,
 		requirePermissions({
 			tournament: ["update"],
 		}),
 	])
 	.inputValidator(getTournamentsByDirectorsSchema)
-	.handler(async ({ data: { directorIds, past }, context: { viewer } }) => {
-		// Get director IDs to filter by
-		let targetDirectorIds = directorIds;
+	.handler(
+		async ({
+			data: { directorIds, past, page, pageSize },
+			context: { viewer, director },
+		}) => {
+			// Build date filter
+			const today = sql`CURRENT_DATE`;
+			const dateFilter = past
+				? lt(tournaments.date, today)
+				: gte(tournaments.date, today);
 
-		// If no directorIds provided, get the current viewer's director ID
-		if (!targetDirectorIds && viewer) {
-			const directorRecord = await db.query.directors.findFirst({
-				where: (table, { eq, exists }) =>
-					exists(
-						db
-							.select()
-							.from(playerProfiles)
-							.where(
-								and(
-									eq(playerProfiles.id, table.profileId),
-									eq(playerProfiles.userId, viewer.id),
-								),
-							),
-					),
-			});
+			// Get pagination parameters
+			const { limit, offset } = getLimitAndOffset({ page, size: pageSize });
 
-			if (directorRecord) {
-				targetDirectorIds = [directorRecord.id];
+			// Admin users see all tournaments
+			if (viewer?.role === "admin") {
+				const [results, countResult] = await Promise.all([
+					// Query all tournaments with pagination
+					db
+						.select({
+							id: tournaments.id,
+							name: tournaments.name,
+							date: tournaments.date,
+							startTime: tournaments.startTime,
+							visible: tournaments.visible,
+							venueId: tournaments.venueId,
+							externalRef: tournaments.externalRef,
+							venue: {
+								id: venues.id,
+								name: venues.name,
+								city: venues.city,
+							},
+						})
+						.from(tournaments)
+						.innerJoin(venues, eq(tournaments.venueId, venues.id))
+						.where(dateFilter)
+						.orderBy(tournaments.date)
+						.limit(limit)
+						.offset(offset),
+					// Count total matching tournaments
+					db
+						.select({ totalCount: count() })
+						.from(tournaments)
+						.where(dateFilter),
+				]);
+
+				const totalItems = countResult?.[0]?.totalCount ?? 0;
+
+				return {
+					data: results,
+					pageInfo: {
+						totalItems,
+						totalPages: Math.ceil(totalItems / pageSize),
+					},
+				};
 			}
-		}
 
-		// If still no director IDs, return empty array
-		if (!targetDirectorIds || targetDirectorIds.length === 0) {
-			return [];
-		}
+			// Non-admin users: Get director IDs to filter by
+			let targetDirectorIds = directorIds;
 
-		// Build date filter
-		const today = sql`CURRENT_DATE`;
-		const dateFilter = past
-			? lt(tournaments.date, today)
-			: gte(tournaments.date, today);
+			// If no directorIds provided, use the current viewer's director ID from context
+			if (!targetDirectorIds && director) {
+				targetDirectorIds = [director.id];
+			}
 
-		// Query tournaments by director IDs
-		const results = await db
-			.selectDistinct({
-				id: tournaments.id,
-				name: tournaments.name,
-				date: tournaments.date,
-				startTime: tournaments.startTime,
-				visible: tournaments.visible,
-				venueId: tournaments.venueId,
-				externalRef: tournaments.externalRef,
-				venue: {
-					id: venues.id,
-					name: venues.name,
-					city: venues.city,
+			// If still no director IDs, return empty result
+			if (!targetDirectorIds || targetDirectorIds.length === 0) {
+				return {
+					data: [],
+					pageInfo: {
+						totalItems: 0,
+						totalPages: 0,
+					},
+				};
+			}
+
+			// Build the base query for filtering
+			const whereConditions = and(
+				inArray(tournamentDirectors.directorId, targetDirectorIds),
+				dateFilter,
+			);
+
+			// Run the data query and count query in parallel
+			const [results, countResult] = await Promise.all([
+				// Query tournaments by director IDs with pagination
+				db
+					.selectDistinct({
+						id: tournaments.id,
+						name: tournaments.name,
+						date: tournaments.date,
+						startTime: tournaments.startTime,
+						visible: tournaments.visible,
+						venueId: tournaments.venueId,
+						externalRef: tournaments.externalRef,
+						venue: {
+							id: venues.id,
+							name: venues.name,
+							city: venues.city,
+						},
+					})
+					.from(tournaments)
+					.innerJoin(
+						tournamentDirectors,
+						eq(tournaments.id, tournamentDirectors.tournamentId),
+					)
+					.innerJoin(venues, eq(tournaments.venueId, venues.id))
+					.where(whereConditions)
+					.orderBy(tournaments.date)
+					.limit(limit)
+					.offset(offset),
+				// Count total matching tournaments
+				db
+					.select({ totalCount: count() })
+					.from(
+						db
+							.selectDistinct({ id: tournaments.id })
+							.from(tournaments)
+							.innerJoin(
+								tournamentDirectors,
+								eq(tournaments.id, tournamentDirectors.tournamentId),
+							)
+							.where(whereConditions)
+							.as("subquery"),
+					),
+			]);
+
+			const totalItems = countResult?.[0]?.totalCount ?? 0;
+
+			return {
+				data: results,
+				pageInfo: {
+					totalItems,
+					totalPages: Math.ceil(totalItems / pageSize),
 				},
-			})
-			.from(tournaments)
-			.innerJoin(
-				tournamentDirectors,
-				eq(tournaments.id, tournamentDirectors.tournamentId),
-			)
-			.innerJoin(venues, eq(tournaments.venueId, venues.id))
-			.where(
-				and(
-					inArray(tournamentDirectors.directorId, targetDirectorIds),
-					dateFilter,
-				),
-			)
-			.orderBy(tournaments.date);
-
-		return results;
-	});
+			};
+		},
+	);
 
 export const getTournamentsByDirectorsOptions = (
-	data: z.infer<typeof getTournamentsByDirectorsSchema> = {},
+	data: z.infer<typeof getTournamentsByDirectorsSchema> = {
+		page: 1,
+		pageSize: 25,
+	},
 ) =>
 	queryOptions({
 		queryKey: ["getTournamentsByDirectors", JSON.stringify(data)],
