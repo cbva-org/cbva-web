@@ -179,6 +179,8 @@ export function TeamsPanel({
 												<TeamControlsDropdown
 													tournamentDivisionTeamId={id}
 													status={status}
+													seed={seed}
+													poolTeam={poolTeam}
 												/>
 											</div>
 										</TableCell>

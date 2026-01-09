@@ -10,24 +10,30 @@ import { UndoAbandonRefForm } from "./undo-abandon-ref";
 import { useQuery } from "@tanstack/react-query";
 import { checkAbandonedRefQueryOptions } from "@/functions/refs/check-abandoned-ref";
 import { isDefined } from "@/utils/types";
-import type { TournamentDivisionTeam } from "@/db/schema";
+import type { PoolTeam, TournamentDivisionTeam } from "@/db/schema";
 import { PromoteFromWaitlistForm } from "./promote-from-waitlist";
 import { RemoveTeamForm } from "./remove-team";
+import { EditSeedFormModal } from "./edit-seed";
+import { EditPoolFormModal } from "./edit-pool";
 
 enum ModalKind {
 	Remove = 0,
 	UndoAbandonedRef = 1,
 	PromoteFromWaitlist = 2,
+	EditSeed = 3,
+	EditPool = 4,
 }
 
 export type TeamControlsDropdownProps = {
 	tournamentDivisionTeamId: number;
-	status: TournamentDivisionTeam["status"];
-};
+	poolTeam?: Pick<PoolTeam, "poolId">;
+} & Pick<TournamentDivisionTeam, "seed" | "status">;
 
 export function TeamControlsDropdown({
 	tournamentDivisionTeamId,
 	status,
+	seed,
+	poolTeam,
 }: TeamControlsDropdownProps) {
 	const canUpdate = useViewerHasPermission({
 		tournament: ["update"],
@@ -49,9 +55,14 @@ export function TeamControlsDropdown({
 		onOpenChange: (open: boolean) => {
 			const next = open ? kind : undefined;
 
+			console.log("hello", next);
+
 			setActiveModal(next);
 		},
 	});
+
+	const hasSeed = isDefined(seed);
+	const hasPool = isDefined(poolTeam);
 
 	return (
 		<>
@@ -65,6 +76,20 @@ export function TeamControlsDropdown({
 						</DropdownMenuItem>
 					) : (
 						<>
+							{hasSeed && (
+								<DropdownMenuItem
+									onPress={() => setActiveModal(ModalKind.EditSeed)}
+								>
+									Edit Seed
+								</DropdownMenuItem>
+							)}
+							{hasPool && (
+								<DropdownMenuItem
+									onPress={() => setActiveModal(ModalKind.EditPool)}
+								>
+									Edit Pool
+								</DropdownMenuItem>
+							)}
 							<DropdownMenuItem
 								onPress={() => setActiveModal(ModalKind.Remove)}
 							>
@@ -99,6 +124,23 @@ export function TeamControlsDropdown({
 				{...makeModalOpenProps(ModalKind.Remove)}
 				tournamentDivisionTeamId={tournamentDivisionTeamId}
 			/>
+
+			{hasSeed && (
+				<EditSeedFormModal
+					{...makeModalOpenProps(ModalKind.EditSeed)}
+					tournamentDivisionTeamId={tournamentDivisionTeamId}
+					target="division"
+					seed={seed}
+				/>
+			)}
+
+			{hasPool && (
+				<EditPoolFormModal
+					{...makeModalOpenProps(ModalKind.EditPool)}
+					tournamentDivisionTeamId={tournamentDivisionTeamId}
+					poolId={poolTeam.poolId}
+				/>
+			)}
 		</>
 	);
 }

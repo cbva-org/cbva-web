@@ -95,6 +95,17 @@ export function useActiveTeams() {
 	return teams;
 }
 
+export function useTeam(id: number) {
+	const query = useTeamsQueryOptions();
+
+	const { data: teams } = useQuery({
+		...query,
+		select: (data) => data.find((team) => id === team.id),
+	});
+
+	return teams;
+}
+
 export function useWaitlist() {
 	const query = useTeamsQueryOptions();
 

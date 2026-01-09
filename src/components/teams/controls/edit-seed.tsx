@@ -1,9 +1,11 @@
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
+import { Modal, ModalHeading } from "@/components/base/modal";
 import { Popover } from "@/components/base/popover";
 import {
 	useLastSeed,
 	usePoolsQueryOptions,
+	useTeam,
 	useTeamsQueryOptions,
 } from "@/components/tournaments/context";
 import {
@@ -14,6 +16,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EditIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { Dialog } from "react-aria-components";
+import { TeamNames } from "../names";
 
 export type EditSeedFormProps = {
 	tournamentDivisionTeamId: number;
@@ -119,29 +122,115 @@ export function EditSeedForm({
 			</Popover>
 		</>
 	);
+}
 
-	// return (
-	// 	<form
-	// 		className="flex flex-row gap-1 flex-1 items-center w-full"
-	// 		onSubmit={(event) => {
-	// 			event.preventDefault();
-	//
-	// 			form.handleSubmit();
-	// 		}}
-	// 	>
-	// 		<form.AppField name="seed">
-	// 			{(field) => (
-	// 				<field.Number field={field} name="seed" className="flex-1 min-w-0" />
-	// 			)}
-	// 		</form.AppField>
-	// 		<form.AppForm>
-	// 			<Button variant="icon" size="sm" onPress={() => setShowForm(false)}>
-	// 				<XIcon size={16} />
-	// 			</Button>
-	// 			<form.SubmitButton variant="icon" size="sm">
-	// 				<CheckIcon size={16} />
-	// 			</form.SubmitButton>
-	// 		</form.AppForm>
-	// 	</form>
-	// );
+export type EditSeedFormModalProps = {
+	tournamentDivisionTeamId: number;
+	seed: number;
+	target: "division" | "pool";
+	isOpen: boolean;
+	onOpenChange: (open: boolean) => void;
+};
+
+export function EditSeedFormModal({
+	tournamentDivisionTeamId,
+	target,
+	seed,
+	...props
+}: EditSeedFormModalProps) {
+	const team = useTeam(tournamentDivisionTeamId);
+
+	const teamsQueryOptions = useTeamsQueryOptions();
+	const poolsQueryOptions = usePoolsQueryOptions();
+
+	const lastSeed = useLastSeed();
+
+	const queryClient = useQueryClient();
+
+	const { mutate, failureReason } = useMutation({
+		...editSeedMutationOptions(),
+		onSuccess: () => {
+			props.onOpenChange(false);
+
+			if (target === "division") {
+				queryClient.invalidateQueries(teamsQueryOptions);
+			} else {
+				queryClient.invalidateQueries(poolsQueryOptions);
+			}
+		},
+	});
+
+	const schema = editSeedSchema.omit({ id: true, target: true });
+
+	const form = useAppForm({
+		defaultValues: {
+			seed,
+		},
+		validators: {
+			onMount: schema,
+			onChange: schema,
+		},
+		onSubmit: ({ value: { seed } }) => {
+			mutate({
+				id: tournamentDivisionTeamId,
+				seed,
+				target,
+			});
+		},
+	});
+
+	return (
+		<Modal {...props}>
+			<div className="p-3 flex flex-col space-y-8 relative">
+				<ModalHeading>Edit Seed</ModalHeading>
+
+				<p>
+					Edit {target} seed for{" "}
+					<TeamNames
+						className="font-semibold italic"
+						players={team?.team.players || []}
+						link={false}
+					/>
+					.
+				</p>
+
+				<form
+					className="p-3 flex flex-col"
+					onSubmit={(e) => {
+						e.preventDefault();
+
+						form.handleSubmit();
+					}}
+				>
+					{failureReason && (
+						<form.AppForm>
+							<form.Alert
+								title={"Unable to update seed"}
+								description={failureReason.message}
+							/>
+						</form.AppForm>
+					)}
+
+					<form.AppField name="seed">
+						{(field) => (
+							<field.Number
+								field={field}
+								name="seed"
+								label="Desired Seed"
+								minValue={1}
+								maxValue={lastSeed}
+							/>
+						)}
+					</form.AppField>
+
+					<form.AppForm>
+						<form.Footer>
+							<Button onPress={() => props.onOpenChange(false)}>Cancel</Button>
+							<form.SubmitButton>Save</form.SubmitButton>
+						</form.Footer>
+					</form.AppForm>
+				</form>
+			</div>
+		</Modal>
+	);
 }
