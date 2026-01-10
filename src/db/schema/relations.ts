@@ -57,6 +57,13 @@ export const relations = defineRelations(tables, (r) => ({
 			to: r.venues.id,
 			optional: false,
 		}),
+		directors: r.many.tournamentDirectors(),
+	},
+	tournamentDirectors: {
+		tournament: r.one.tournaments({
+			from: r.tournamentDirectors.tournamentId,
+			to: r.tournaments.id,
+		}),
 	},
 	venues: {
 		tournaments: r.many.tournaments(),
