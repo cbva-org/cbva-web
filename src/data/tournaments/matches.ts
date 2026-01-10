@@ -282,7 +282,7 @@ function getWinnerId(
 
 const handleCompletedPoolMatchSet = createServerOnlyFn(
   async (txn: Transaction, poolMatchId: number) => {
-    const match = await txn.query.poolMatches.findFirst({
+    const match = await txn._query.poolMatches.findFirst({
       with: {
         sets: true,
       },
@@ -331,7 +331,7 @@ const handleCompletedPoolMatchSet = createServerOnlyFn(
 
 const handleCompletedPlayoffMatchSet = createServerOnlyFn(
   async (txn: Transaction, playoffMatchId: number) => {
-    const match = await txn.query.playoffMatches.findFirst({
+    const match = await txn._query.playoffMatches.findFirst({
       with: {
         sets: true,
         nextMatch: true,

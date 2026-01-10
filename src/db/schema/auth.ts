@@ -12,6 +12,8 @@ import {
 import { createSchemaFactory } from "drizzle-zod";
 import z from "zod";
 import { playerProfiles } from "./player-profiles";
+// import { defineRelations, defineRelationsPart } from "drizzle-orm";
+// import { tables } from ".";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({ zodInstance: z });
@@ -59,6 +61,12 @@ export type Role = z.infer<typeof roleSchema>;
 export const userRelations = relations(users, ({ many }) => ({
 	profiles: many(playerProfiles),
 }));
+
+// export const usersRelationsDefinitions = defineRelations(tables, (r) => ({
+// 	users: {
+// 		profiles: r.many.playerProfiles(),
+// 	},
+// }));
 
 export const sessions = pgTable("sessions", {
 	id: text().primaryKey(),

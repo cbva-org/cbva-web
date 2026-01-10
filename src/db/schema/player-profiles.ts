@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/_relations";
-import { sql } from "drizzle-orm";
+import { defineRelations, defineRelationsPart, sql } from "drizzle-orm";
 import {
 	check,
 	date,
@@ -15,6 +15,7 @@ import { z } from "zod";
 import { users } from "./auth";
 import { levels } from "./levels";
 import { genderEnum, playerRoleEnum, rightLeftEnum } from "./shared";
+import { tables } from ".";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({ zodInstance: z });

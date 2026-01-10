@@ -40,7 +40,7 @@ async function main() {
 
   await db.transaction(async (txn) => {
     for (const user of legacyUsers) {
-      const existing = await txn.query.users.findFirst({
+      const existing = await txn._query.users.findFirst({
         where: (t, { eq }) => eq(t.phoneNumber, user.phone),
       })
 

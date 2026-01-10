@@ -1,4 +1,3 @@
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import {
 	accounts,
 	userRelations,
@@ -42,32 +41,7 @@ import {
 import { tournamentRelations, tournaments } from "./tournaments";
 import { venueDirectorRelations, venueDirectors } from "./venue-directors";
 import { venuesRelations, venues } from "./venues";
-import type { relations } from "./relations";
-
-export * from "./relations";
-
-export * from "./auth";
-export * from "./blocks";
-export * from "./directors";
-export * from "./divisions";
-export * from "./levels";
-export * from "./match-ref-teams";
-export * from "./match-sets";
-export * from "./player-profiles";
-export * from "./playoff-matches";
-export * from "./pool-matches";
-export * from "./pool-teams";
-export * from "./pools";
-export * from "./rate-limits";
-export * from "./team-players";
-export * from "./teams";
-export * from "./tournament-directors";
-export * from "./tournament-division-requirements";
-export * from "./tournament-division-teams";
-export * from "./tournament-divisions";
-export * from "./tournaments";
-export * from "./venue-directors";
-export * from "./venues";
+import { defineRelations } from "drizzle-orm";
 
 export const tables = {
 	blocks,
@@ -95,33 +69,3 @@ export const tables = {
 	venueDirectors,
 	rateLimiterFlexibleSchema,
 };
-
-export const relationships = {
-	directorRelations,
-	divisionRelations,
-	matchSetsRelations,
-	playerProfileRelations,
-	playoffMatchRelations,
-	poolMatchRelations,
-	poolRelations,
-	matchRefTeamsRelations,
-	poolTeamsRelations,
-	teamPlayerRelations,
-	teamRelations,
-	tournamentDirectorRelations,
-	tournamentDivisionRelations,
-	tournamentDivisionRequirementsRelations,
-	tournamentDivisionTeamsRelations,
-	tournamentRelations,
-	venuesRelations,
-	venueDirectorRelations,
-	userRelations,
-};
-
-const schema = {
-	...tables,
-	...relationships,
-};
-
-export type Database = PostgresJsDatabase<typeof schema, typeof relations>;
-export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];

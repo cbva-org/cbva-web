@@ -119,7 +119,7 @@ export const removeTeam = createServerFn()
 
         if (seededCount === 0) {
           const nextWaitlistedTeam =
-            await txn.query.tournamentDivisionTeams.findFirst({
+            await txn._query.tournamentDivisionTeams.findFirst({
               where: (t, { eq, and }) =>
                 and(
                   eq(t.tournamentDivisionId, team.tournamentDivisionId),
