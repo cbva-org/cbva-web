@@ -39,16 +39,47 @@ export const relations = defineRelations(tables, (r) => ({
 		pool: r.one.pools({
 			from: r.poolMatches.poolId,
 			to: r.pools.id,
+			optional: false,
+		}),
+	},
+	teams: {
+		players: r.many.teamPlayers(),
+		profiles: r.many.playerProfiles({
+			from: r.teams.id.through(r.teamPlayers.playerProfileId),
+			to: r.playerProfiles.id.through(r.teamPlayers.teamId),
+		}),
+	},
+	teamPlayers: {
+		profile: r.one.playerProfiles({
+			from: r.teamPlayers.playerProfileId,
+			to: r.playerProfiles.id,
+			optional: false,
+		}),
+		team: r.one.teams({
+			from: r.teamPlayers.teamId,
+			to: r.teams.id,
+			optional: false,
 		}),
 	},
 	tournamentDivisionTeams: {
 		team: r.one.teams({
 			from: r.tournamentDivisionTeams.teamId,
 			to: r.teams.id,
+			optional: false,
 		}),
 		poolTeam: r.one.poolTeams({
 			from: r.tournamentDivisionTeams.id,
 			to: r.poolTeams.teamId,
+		}),
+		// tournamentDivision: r.one.divisions({
+		// 	from: r.tournamentDivisionTeams.tournamentDivisionId,
+		// 	to: r.tournamentDivisions.id,
+		// 	optional: false,
+		// }),
+		tournamentDivision: r.one.tournamentDivisions({
+			from: r.tournamentDivisionTeams.tournamentDivisionId,
+			to: r.tournamentDivisions.id,
+			optional: false,
 		}),
 	},
 	tournaments: {
@@ -58,12 +89,25 @@ export const relations = defineRelations(tables, (r) => ({
 			optional: false,
 		}),
 		directors: r.many.tournamentDirectors(),
+		tournamentDivisions: r.many.tournamentDivisions(),
 	},
 	tournamentDirectors: {
 		tournament: r.one.tournaments({
 			from: r.tournamentDirectors.tournamentId,
 			to: r.tournaments.id,
 		}),
+	},
+	tournamentDivisions: {
+		tournament: r.one.tournaments({
+			from: r.tournamentDivisions.tournamentId,
+			to: r.tournaments.id,
+		}),
+		division: r.one.divisions({
+			from: r.tournamentDivisions.divisionId,
+			to: r.divisions.id,
+			optional: false,
+		}),
+		teams: r.many.tournamentDivisionTeams(),
 	},
 	venues: {
 		tournaments: r.many.tournaments(),
