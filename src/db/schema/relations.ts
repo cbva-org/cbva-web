@@ -1,0 +1,115 @@
+import { defineRelations } from "drizzle-orm";
+import { tables } from "./tables";
+
+export const relations = defineRelations(tables, (r) => ({
+	playerProfiles: {
+		user: r.one.users({
+			from: r.playerProfiles.userId,
+			to: r.users.id,
+		}),
+		level: r.one.levels({
+			from: r.playerProfiles.levelId,
+			to: r.levels.id,
+		}),
+	},
+	pools: {
+		tournamentDivision: r.one.tournamentDivisions({
+			from: r.pools.tournamentDivisionId,
+			to: r.tournamentDivisions.id,
+		}),
+		teams: r.many.poolTeams(),
+		// tournamentDivisionTeams: r.many.tournamentDivisionTeams({
+		// 	from: r.pools.id.through(r.poolTeams.poolId),
+		// 	to: r.tournamentDivisionTeams.id.through(r.poolTeams.teamId),
+		// }),
+		matches: r.many.poolMatches(),
+	},
+	poolTeams: {
+		pool: r.one.pools({
+			from: r.poolTeams.poolId,
+			to: r.pools.id,
+		}),
+		team: r.one.tournamentDivisionTeams({
+			from: r.poolTeams.teamId,
+			to: r.tournamentDivisionTeams.id,
+			optional: false,
+		}),
+	},
+	poolMatches: {
+		pool: r.one.pools({
+			from: r.poolMatches.poolId,
+			to: r.pools.id,
+			optional: false,
+		}),
+	},
+	teams: {
+		players: r.many.teamPlayers(),
+		profiles: r.many.playerProfiles({
+			from: r.teams.id.through(r.teamPlayers.playerProfileId),
+			to: r.playerProfiles.id.through(r.teamPlayers.teamId),
+		}),
+	},
+	teamPlayers: {
+		profile: r.one.playerProfiles({
+			from: r.teamPlayers.playerProfileId,
+			to: r.playerProfiles.id,
+			optional: false,
+		}),
+		team: r.one.teams({
+			from: r.teamPlayers.teamId,
+			to: r.teams.id,
+			optional: false,
+		}),
+	},
+	tournamentDivisionTeams: {
+		team: r.one.teams({
+			from: r.tournamentDivisionTeams.teamId,
+			to: r.teams.id,
+			optional: false,
+		}),
+		poolTeam: r.one.poolTeams({
+			from: r.tournamentDivisionTeams.id,
+			to: r.poolTeams.teamId,
+		}),
+		// tournamentDivision: r.one.divisions({
+		// 	from: r.tournamentDivisionTeams.tournamentDivisionId,
+		// 	to: r.tournamentDivisions.id,
+		// 	optional: false,
+		// }),
+		tournamentDivision: r.one.tournamentDivisions({
+			from: r.tournamentDivisionTeams.tournamentDivisionId,
+			to: r.tournamentDivisions.id,
+			optional: false,
+		}),
+	},
+	tournaments: {
+		venue: r.one.venues({
+			from: r.tournaments.venueId,
+			to: r.venues.id,
+			optional: false,
+		}),
+		directors: r.many.tournamentDirectors(),
+		tournamentDivisions: r.many.tournamentDivisions(),
+	},
+	tournamentDirectors: {
+		tournament: r.one.tournaments({
+			from: r.tournamentDirectors.tournamentId,
+			to: r.tournaments.id,
+		}),
+	},
+	tournamentDivisions: {
+		tournament: r.one.tournaments({
+			from: r.tournamentDivisions.tournamentId,
+			to: r.tournaments.id,
+		}),
+		division: r.one.divisions({
+			from: r.tournamentDivisions.divisionId,
+			to: r.divisions.id,
+			optional: false,
+		}),
+		teams: r.many.tournamentDivisionTeams(),
+	},
+	venues: {
+		tournaments: r.many.tournaments(),
+	},
+}));

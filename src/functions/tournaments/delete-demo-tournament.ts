@@ -1,11 +1,7 @@
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import type z from "zod";
-import { requireAuthenticated, requirePermissions } from "@/auth/shared";
 import { selectTournamentSchema, tournaments } from "@/db/schema";
-import { duplicateTournamentFn } from "@/data/schedule";
-import { today } from "@internationalized/date";
-import { getDefaultTimeZone } from "@/lib/dates";
 import { db } from "@/db/connection";
 import { and, eq } from "drizzle-orm";
 import { assertFound, badRequest, forbidden } from "@/lib/responses";
@@ -19,7 +15,7 @@ export const deleteDemoTournament = createServerFn()
 	.middleware([withDirectorId])
 	.inputValidator(deleteDemoTournamentSchema)
 	.handler(async ({ data: { id }, context: { directorId, viewer } }) => {
-		const tournament = await db.query.tournaments.findFirst({
+		const tournament = await db._query.tournaments.findFirst({
 			with: {
 				directors: {
 					with: {

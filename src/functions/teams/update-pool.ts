@@ -70,7 +70,9 @@ export const updatePoolTransaction = createServerOnlyFn(
 				with: {
 					team: true,
 				},
-				where: (table, { eq }) => eq(table.poolId, poolId),
+				where: {
+					poolId,
+				},
 			});
 
 			await Promise.all(
@@ -88,8 +90,12 @@ export const updatePoolTransaction = createServerOnlyFn(
 		// If the team was in a different pool, resequence the seeds in the previous pool
 		if (previousPoolId && previousPoolId !== poolId) {
 			const remainingTeams = await txn.query.poolTeams.findMany({
-				where: (table, { eq }) => eq(table.poolId, previousPoolId),
-				orderBy: (table, { asc }) => [asc(table.seed)],
+				where: {
+					poolId: previousPoolId,
+				},
+				orderBy: {
+					seed: "asc",
+				},
 			});
 
 			await Promise.all(
@@ -119,7 +125,7 @@ export const updatePool = createServerFn()
 				with: {
 					poolTeam: true,
 				},
-				where: (table, { eq }) => eq(table.id, tournamentDivisionTeamId),
+				where: { id: tournamentDivisionTeamId },
 			});
 
 			if (!targetTeam) {

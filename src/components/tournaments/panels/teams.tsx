@@ -11,8 +11,6 @@ import {
 import { TabPanel } from "@/components/base/tabs";
 import { TeamsControlsToolbar } from "@/components/teams/controls/toolbar";
 import { TeamControlsDropdown } from "@/components/teams/controls/dropdown";
-import { EditPoolForm } from "@/components/teams/controls/edit-pool";
-import { EditSeedForm } from "@/components/teams/controls/edit-seed";
 import { teamsQueryOptions } from "@/data/teams";
 import type { TournamentDivision } from "@/db/schema";
 import { getLevelDisplay } from "@/hooks/tournament";
@@ -21,6 +19,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { orderBy } from "lodash-es";
 import { useState, type ReactNode } from "react";
+import { assert } from "@/utils/assert";
 
 export function TeamsPanel({
 	tournamentDivisionId,
@@ -121,6 +120,9 @@ export function TeamsPanel({
 						<TableBody
 							key={edit ? "edit" : "not-edit"}
 							items={activeTeams || []}
+							renderEmptyState={() => (
+								<div className="p-2 text-center w-full">No teams to show.</div>
+							)}
 						>
 							{({
 								id,
@@ -130,46 +132,67 @@ export function TeamsPanel({
 								seed,
 								poolTeam,
 								status,
-							}) => (
-								<TableRow key={id} data-order={order}>
-									<TableCell>{finish ?? "-"}</TableCell>
-									<TableCell>
-										<div className="flex flex-row items-center gap-4">
-											<span>{seed ?? "-"}</span>
-										</div>
-									</TableCell>
-									<TableCell className="uppercase">
-										<div className="flex flex-row items-center gap-4">
-											<span>{poolTeam?.pool.name ?? "-"}</span>
-										</div>
-									</TableCell>
+							}) => {
+								assert(
+									players.length === teamSize,
+									`players.length and teamSize should never be different: ${players.length} !== ${teamSize}`,
+								);
 
-									{players.map(
-										({
-											id: playerId,
-											profile: { firstName, preferredName, lastName, level },
-										}) => (
-											<TableCell key={playerId}>
-												{preferredName ?? firstName} {lastName} (
-												{getLevelDisplay(level)})
-											</TableCell>
-										),
-									)}
-
-									{canEdit && (
+								return (
+									<TableRow key={id} data-order={order}>
+										<TableCell>{finish ?? "-"}</TableCell>
 										<TableCell>
-											<div className="flex flex-row flex-wrap">
-												<TeamControlsDropdown
-													tournamentDivisionTeamId={id}
-													status={status}
-													seed={seed}
-													poolTeam={poolTeam}
-												/>
+											<div className="flex flex-row items-center gap-4">
+												<span>{seed ?? "-"}</span>
 											</div>
 										</TableCell>
-									)}
-								</TableRow>
-							)}
+										<TableCell className="uppercase">
+											<div className="flex flex-row items-center gap-4">
+												<span>{poolTeam?.pool.name ?? "-"}</span>
+											</div>
+										</TableCell>
+
+										{players.map(
+											({
+												id: playerId,
+												profile: { firstName, preferredName, lastName, level },
+											}) => (
+												<TableCell key={playerId}>
+													{preferredName ?? firstName} {lastName} (
+													{getLevelDisplay(level)})
+												</TableCell>
+											),
+										)}
+
+										{/* {Array.from({ length: teamSize }).map((_, i) => { */}
+										{/* 	const { */}
+										{/* 		id: playerId, */}
+										{/* 		profile: { firstName, preferredName, lastName, level }, */}
+										{/* 	} = players[i]; */}
+										{/**/}
+										{/* 	return ( */}
+										{/* 		<TableCell key={playerId}> */}
+										{/* 			{preferredName ?? firstName} {lastName} ( */}
+										{/* 			{getLevelDisplay(level)}) */}
+										{/* 		</TableCell> */}
+										{/* 	); */}
+										{/* })} */}
+
+										{canEdit && (
+											<TableCell>
+												<div className="flex flex-row flex-wrap">
+													<TeamControlsDropdown
+														tournamentDivisionTeamId={id}
+														status={status}
+														seed={seed}
+														poolTeam={poolTeam}
+													/>
+												</div>
+											</TableCell>
+										)}
+									</TableRow>
+								);
+							}}
 						</TableBody>
 					</Table>
 				</div>

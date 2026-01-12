@@ -66,7 +66,7 @@ const updateScoreFn = createServerFn()
   .middleware([requireAuthenticated])
   .inputValidator(matchSetActionSchema)
   .handler(async ({ data: { id, teamA, action } }) => {
-    const matchSet = await db.query.matchSets.findFirst({
+    const matchSet = await db._query.matchSets.findFirst({
       where: (t, { and, eq }) => and(eq(t.id, id), eq(t.status, "in_progress")),
     })
 
@@ -104,7 +104,7 @@ const startMatchFn = createServerFn()
   .middleware([requireAuthenticated])
   .inputValidator(findMatchSetSchema)
   .handler(async ({ data: { id } }) => {
-    const matchSet = await db.query.matchSets.findFirst({
+    const matchSet = await db._query.matchSets.findFirst({
       where: (t, { and, eq }) => and(eq(t.id, id), eq(t.status, "not_started")),
     })
 
@@ -138,7 +138,7 @@ const undoSetCompletedMatchFn = createServerFn()
     })
   )
   .handler(async ({ data: { id } }) => {
-    const matchSet = await db.query.matchSets.findFirst({
+    const matchSet = await db._query.matchSets.findFirst({
       where: (t, { and, eq }) => and(eq(t.id, id), eq(t.status, "completed")),
     })
 
@@ -180,7 +180,7 @@ async function overrideScoreHandler({
   teamAScore,
   teamBScore,
 }: z.infer<typeof overrideScoreSchema>) {
-  const matchSet = await db.query.matchSets.findFirst({
+  const matchSet = await db._query.matchSets.findFirst({
     with: {
       poolMatch: {
         columns: {
@@ -282,7 +282,7 @@ function getWinnerId(
 
 const handleCompletedPoolMatchSet = createServerOnlyFn(
   async (txn: Transaction, poolMatchId: number) => {
-    const match = await txn.query.poolMatches.findFirst({
+    const match = await txn._query.poolMatches.findFirst({
       with: {
         sets: true,
       },
@@ -331,7 +331,7 @@ const handleCompletedPoolMatchSet = createServerOnlyFn(
 
 const handleCompletedPlayoffMatchSet = createServerOnlyFn(
   async (txn: Transaction, playoffMatchId: number) => {
-    const match = await txn.query.playoffMatches.findFirst({
+    const match = await txn._query.playoffMatches.findFirst({
       with: {
         sets: true,
         nextMatch: true,
@@ -466,7 +466,7 @@ export const simulateMatchesFn = createServerFn()
   ])
   .inputValidator(simulateMatchesSchema)
   .handler(async ({ data: { tournamentId } }) => {
-    const divisions = await db.query.tournamentDivisions.findMany({
+    const divisions = await db._query.tournamentDivisions.findMany({
       with: {
         pools: {
           with: {
@@ -642,7 +642,7 @@ export const simulateMatchFn = createServerFn()
   ])
   .inputValidator(simulateMatchSchema)
   .handler(async ({ data: { playoffMatchId, poolMatchId } }) => {
-    const sets = await db.query.matchSets.findMany({
+    const sets = await db._query.matchSets.findMany({
       where: (t, { eq }) =>
         isNotNullOrUndefined(playoffMatchId)
           ? eq(t.playoffMatchId, playoffMatchId)

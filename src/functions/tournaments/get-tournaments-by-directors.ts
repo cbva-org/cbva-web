@@ -1,14 +1,14 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { sql } from "drizzle-orm";
 import z from "zod";
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
-import { findPaged } from "@/db/pagination";
-import { tournamentDirectors } from "@/db/schema/tournament-directors";
 import { withDirectorId } from "@/middlewares/with-director-id";
 import { isDefined } from "@/utils/types";
 import { forbidden } from "@/lib/responses";
+import { getDefaultTimeZone } from "@/lib/dates";
+import { today } from "@internationalized/date";
+import { findPaged } from "@/db/pagination2";
 
 export const getTournamentsByDirectorsSchema = z.object({
 	directorIds: z.array(z.number()).optional(),
@@ -54,13 +54,12 @@ export const getTournamentsByDirectors = createServerFn()
 				}
 			}
 
-			// Build date filter
-			const today = sql`CURRENT_DATE`;
+			const todaysDate = today(getDefaultTimeZone()).toString();
 
-			// Use findPaged with a unified query
-			return await findPaged("tournaments", {
+			return findPaged(db, "tournaments", {
 				paging: { page, size: pageSize },
-				config: {
+				countColumn: "id",
+				query: {
 					with: {
 						venue: {
 							columns: {
@@ -70,35 +69,20 @@ export const getTournamentsByDirectors = createServerFn()
 							},
 						},
 					},
-					where: (tournaments, { lt, gte, and, exists, eq, inArray }) => {
-						const filters = [
-							// Date filter
-							past ? lt(tournaments.date, today) : gte(tournaments.date, today),
-						];
-
-						// Non-admin users: filter by director IDs
-						if (!isAdmin && targetDirectorIds) {
-							filters.push(
-								exists(
-									db
-										.select()
-										.from(tournamentDirectors)
-										.where(
-											and(
-												eq(tournamentDirectors.tournamentId, tournaments.id),
-												inArray(
-													tournamentDirectors.directorId,
-													targetDirectorIds,
-												),
-											),
-										),
-								),
-							);
-						}
-
-						return and(...filters);
+					where: {
+						date: past ? { lt: todaysDate } : { gte: todaysDate },
+						directors: {
+							directorId:
+								!isAdmin && targetDirectorIds
+									? {
+											in: targetDirectorIds,
+										}
+									: undefined,
+						},
 					},
-					orderBy: (tournaments, { asc }) => [asc(tournaments.date)],
+					orderBy: (tournaments, { asc, desc }) => [
+						past ? desc(tournaments.date) : asc(tournaments.date),
+					],
 				},
 			});
 		},
