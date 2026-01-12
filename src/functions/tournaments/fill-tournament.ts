@@ -47,11 +47,19 @@ export async function fillTournament(tournamentId: number) {
 			await db.select().from(levels).where(lte(levels.order, order))
 		).map(({ id }) => id);
 
+		if (existingTeams.length === capacity) {
+			continue;
+		}
+
 		const randomTeams = chunk(
 			shuffle(
-				await db._query.playerProfiles.findMany({
-					where: (t, { inArray, and, eq }) =>
-						and(inArray(t.levelId, validLevelIds), eq(t.gender, gender)),
+				await db.query.playerProfiles.findMany({
+					where: {
+						levelId: {
+							in: validLevelIds,
+						},
+						gender,
+					},
 					limit: (capacity - existingTeams.length) * teamSize,
 				}),
 			),
@@ -96,10 +104,7 @@ export async function fillTournament(tournamentId: number) {
 			})
 			.from(tournamentDivisionTeams)
 			.where(
-				eq(
-					tournamentDivisionTeams.tournamentDivisionId,
-					tournamentDivisionId,
-				),
+				eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisionId),
 			);
 
 		const startOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;

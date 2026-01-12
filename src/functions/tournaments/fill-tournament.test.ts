@@ -94,6 +94,14 @@ describe("fillTournament", () => {
 			),
 			"not all valid levels",
 		);
+
+		await fillTournament(tournamentInfo.id);
+
+		const teamsFinal = await db.query.tournamentDivisionTeams.findMany({
+			where: { tournamentDivisionId },
+		});
+
+		expect(teamsFinal).toHaveLength(capacity);
 	});
 
 	test("if division already has teams, does not overfill", async () => {
