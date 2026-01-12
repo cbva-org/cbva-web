@@ -52,7 +52,7 @@ export async function fillTournament(tournamentId: number) {
 				await db._query.playerProfiles.findMany({
 					where: (t, { inArray, and, eq }) =>
 						and(inArray(t.levelId, validLevelIds), eq(t.gender, gender)),
-					limit: capacity * teamSize - existingTeams.length,
+					limit: (capacity - existingTeams.length) * teamSize,
 				}),
 			),
 			2,

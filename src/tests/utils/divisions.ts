@@ -1,11 +1,15 @@
-import { eq, lte } from "drizzle-orm"
-import { type Database, divisions, levels } from "@/db/schema"
+import { eq, lte } from "drizzle-orm";
+import { type Database, divisions, levels } from "@/db/schema";
 
 export async function getQualifiedLevels(db: Database, division: string) {
-  const [{ order }] = await db
-    .select()
-    .from(divisions)
-    .where(eq(divisions.name, division))
+	const [{ order }] = await db
+		.select()
+		.from(divisions)
+		.where(eq(divisions.name, division));
 
-  return await db.select().from(levels).where(lte(levels.order, order))
+	return await db.select().from(levels).where(lte(levels.order, order));
+}
+
+export async function getAllLevels(db: Database) {
+	return await db.select().from(levels);
 }
