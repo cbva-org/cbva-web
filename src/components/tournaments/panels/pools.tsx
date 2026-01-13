@@ -76,7 +76,7 @@ export function PoolsPanel({
 										tournamentId={id}
 										tournamentDivisionId={tournamentDivisionId}
 										poolId={pool.id}
-										poolName={pool.name}
+										name={`Pool ${pool.name.toUpperCase()}`}
 										court={pool.court}
 									/>
 								</h3>

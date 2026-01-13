@@ -17,14 +17,15 @@ import { EditIcon } from "lucide-react";
 export type SetCourtForm = {
 	tournamentId: number;
 	tournamentDivisionId: number;
-	poolId: number;
-	poolName: string;
+	poolId?: number;
+	playoffMatchId?: number;
+	name: string;
 	court?: string | null;
 };
 
 export function SetCourtForm({
 	poolId,
-	poolName,
+	name,
 	court,
 	tournamentId,
 	tournamentDivisionId,
@@ -129,16 +130,11 @@ export function SetCourtForm({
 						Set Court
 					</Heading>
 					<p>
-						Set{" "}
-						<span className="font-semibold italic uppercase">
-							Pool {poolName}
-						</span>
+						Set <span className="font-semibold italic">{name}</span>
 						{"'s "}
-						court for the division{" "}
-						<span className="font-semibold italic uppercase">
-							{divisionName}
-						</span>
-						.
+						court for the{" "}
+						<span className="font-semibold italic">{divisionName}</span>{" "}
+						division.
 					</p>
 					<form
 						onSubmit={(e) => {

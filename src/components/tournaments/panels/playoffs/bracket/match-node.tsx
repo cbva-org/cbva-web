@@ -23,8 +23,12 @@ import { isDefined, isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../../games/pool-match-grid";
 import { useActiveTeam, useSetActiveTeam, useSetNodeIdToCenter } from ".";
 import { Wildcard } from "./wildcard";
-import { useIsDemoTournament } from "@/components/tournaments/context";
+import {
+	useIsDemoTournament,
+	useTournament,
+} from "@/components/tournaments/context";
 import { RefTeamsList } from "@/components/refs/ref-teams-list";
+import { SetCourtForm } from "@/components/tournaments/controls/set-court";
 
 export const scoreTextStyles = tv({
 	base: "p-3 text-center flex flex-col justify-center col-span-1 text-xl font-light border-gray-300",
@@ -74,6 +78,7 @@ export function MatchNode({
 	};
 	type: string;
 }) {
+	const tournament = useTournament();
 	const isDemo = useIsDemoTournament();
 
 	const {
@@ -125,6 +130,8 @@ export function MatchNode({
 		tournament: ["update"],
 	});
 
+	const name = `${sets.length > 1 ? "Match" : "Game"} ${matchNumber}`;
+
 	return (
 		<div>
 			<div className="p-3 flex flex-row space-x-2 items-center">
@@ -168,17 +175,19 @@ export function MatchNode({
 								matchId: data.id.toString(),
 							}}
 							variant="alt"
+							className="flex flex-row gap-4 items-center"
 						>
-							{court ? (
-								<span className="whitespace-nowrap text-ellipsis">
-									Court {court}
-								</span>
-							) : (
-								<span className="whitespace-nowrap text-ellipsis">
-									{sets.length > 1 ? "Match" : "Game"} {matchNumber}
-								</span>
-							)}
+							<span className="whitespace-nowrap text-ellipsis">{name}</span>
 						</Link>
+
+						{tournament && (
+							<SetCourtForm
+								tournamentId={tournament?.id}
+								tournamentDivisionId={tournamentDivisionId}
+								playoffMatchId={data.id}
+								name={name}
+							/>
+						)}
 
 						{sets.some(({ status }) => status === "in_progress") ? (
 							<Button
@@ -356,12 +365,12 @@ export function MatchNode({
 						/>
 					</div>
 				))}
-				{isDefined(loserFinish) && (
-					<div className="p-3 flex flex-row space-x-2 items-center">
-						Losers finish {loserFinish}
-					</div>
-				)}
 			</div>
+			{isDefined(loserFinish) && (
+				<div className="p-3 flex flex-row space-x-2 items-center">
+					Losers finish {formatOrdinals(loserFinish)}
+				</div>
+			)}
 		</div>
 	);
 }
