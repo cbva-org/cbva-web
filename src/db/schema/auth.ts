@@ -12,8 +12,6 @@ import {
 import { createSchemaFactory } from "drizzle-zod";
 import z from "zod";
 import { playerProfiles } from "./player-profiles";
-// import { defineRelations, defineRelationsPart } from "drizzle-orm";
-// import { tables } from ".";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({ zodInstance: z });

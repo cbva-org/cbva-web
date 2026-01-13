@@ -10,6 +10,7 @@ import {
 } from "@/db/schema";
 import { getFinishForRound } from "@/lib/playoffs";
 import { internalServerError } from "@/lib/responses";
+import { dbg } from "@/utils/dbg";
 import { createServerOnlyFn } from "@tanstack/react-start";
 import { eq, max } from "drizzle-orm";
 
@@ -153,15 +154,6 @@ export const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 
 		const loserId = winnerId === match.teamAId ? match.teamBId : match.teamAId;
 
-		const [{ totalRounds }] = await txn
-			.select({
-				totalRounds: max(playoffMatches.round),
-			})
-			.from(playoffMatches)
-			.where(
-				eq(playoffMatches.tournamentDivisionId, match.tournamentDivisionId),
-			);
-
 		if (match.nextMatchId) {
 			await txn
 				.delete(matchRefTeams)
@@ -172,21 +164,9 @@ export const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 				playoffMatchId: match.nextMatchId,
 			});
 
-			// Set finish for losing team based on the round they were eliminated
-			// In single-elimination brackets:
-			// - Round 0 (first round): finish depends on total number of teams
-			// - Higher rounds: finish = 2^(round+1)
-			// For example: Round 1 (semifinals) losers get 3rd-4th place
-			//              Round 2 (finals) loser gets 2nd place
-			const finish = getFinishForRound(totalRounds! - match.round);
-
-			console.log(
-				`${finish} = getFinishForRound(${totalRounds} - ${match.round})`,
-			);
-
 			await txn
 				.update(tournamentDivisionTeams)
-				.set({ finish })
+				.set({ finish: dbg(match.loserFinish) })
 				.where(eq(tournamentDivisionTeams.id, loserId));
 		} else {
 			// This is the finals match - set finish for both teams

@@ -1,0 +1,1 @@
+ALTER TABLE "playoff_matches" ADD COLUMN "loser_finish" integer;

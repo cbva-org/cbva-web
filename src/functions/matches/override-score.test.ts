@@ -3,7 +3,7 @@ import { assert, describe, expect, test } from "vitest";
 import { db } from "@/db/connection";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
 import { overrideScoreFn } from "./override-score";
-import { simulateMatchesFn, simulateMatchFn } from "@/data/tournaments/matches";
+import { simulateMatchFn } from "@/data/tournaments/matches";
 
 describe("playoff match finish", () => {
 	test("assign loser's finish and advance winner", async () => {
@@ -95,7 +95,7 @@ describe("playoff match finish", () => {
 
 	test("calculates finish correctly", async () => {
 		const tournamentInfo = await bootstrapTournament(db, {
-			date: "2025-01-01",
+			date: "2025-01-02",
 			startTime: "09:00:00",
 			divisions: [
 				{

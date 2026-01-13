@@ -16,7 +16,7 @@ import {
 	selectTournamentDivisionSchema,
 	tournamentDivisionTeams,
 } from "@/db/schema";
-import { draftPlayoffs, seedPlayoffs } from "@/lib/playoffs";
+import { draftPlayoffs, getFinishForRound, seedPlayoffs } from "@/lib/playoffs";
 import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 export type MatchKind = "set-to-21" | "set-to-28" | "best-of-3";
@@ -116,6 +116,10 @@ export async function createPlayoffsHandler({
 		for (const [i, round] of bracket.entries()) {
 			roundIds[i] = [];
 
+			const loserFinish = getFinishForRound(bracket.length - 1 - i);
+
+			console.log(bracket.length - 1, i, "loserFinish", loserFinish);
+
 			for (const match of round) {
 				if (match) {
 					const teamA: PoolTeam | null | undefined =
@@ -155,6 +159,7 @@ export async function createPlayoffsHandler({
 								isNotNullOrUndefined(match.bFrom) && i > 0
 									? roundIds[i - 1][match.bFrom]
 									: null,
+							loserFinish,
 						})
 						.returning({
 							id: playoffMatches.id,

@@ -17,7 +17,7 @@ const overrideScoreSchema = selectMatchSetSchema.pick({
 	teamBScore: true,
 });
 
-async function overrideScoreHandler({
+export async function overrideScoreHandler({
 	id,
 	teamAScore,
 	teamBScore,
