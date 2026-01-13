@@ -7,7 +7,7 @@ import { Modal } from "@/components/base/modal"
 import { title } from "@/components/base/primitives"
 import { TeamNames } from "@/components/teams/names"
 import { playoffMatchQueryOptions, poolMatchQueryOptions } from "@/data/matches"
-import { overrideScoreMutationOptions } from "@/data/tournaments/matches"
+import { overrideScoreMutationOptions } from "@/functions/matches"
 import { useMatchSets, useMatchTeams } from "@/lib/matches"
 
 export type OverrideScoreFormProps = {

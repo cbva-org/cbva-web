@@ -118,8 +118,6 @@ export async function createPlayoffsHandler({
 
 			const loserFinish = getFinishForRound(bracket.length - 1 - i);
 
-			console.log(bracket.length - 1, i, "loserFinish", loserFinish);
-
 			for (const match of round) {
 				if (match) {
 					const teamA: PoolTeam | null | undefined =
@@ -238,15 +236,6 @@ export async function createPlayoffsHandler({
 			}
 		}
 
-		// for (const node of bracket[1]) {
-		// 	const currentMatch = currentRound[j];
-		// 	const currentMatchId = roundIds[i][j];
-
-		// 	if (!match?.teamAId && !match?.teamBId) {
-		// 		// ...
-		// 	}
-		// }
-
 		const matchSetValues: CreateMatchSet[] = roundIds
 			.flatMap((ids) => ids.filter(isNotNull))
 			.map((id) => id)
@@ -281,11 +270,6 @@ export async function createPlayoffsHandler({
 		await txn.insert(matchSets).values(matchSetValues);
 	});
 
-	// TODO: assign refs
-	//
-	// const availableRefs = round index 1, only one team assigned, open slot is not wildcard
-	// const matchesThatNeedRefs = round index 0, next match has a team assigned already
-
 	return { success: true };
 }
 
@@ -297,10 +281,6 @@ export const createPlayoffsFn = createServerFn()
 	])
 	.inputValidator(createPlayoffsSchema)
 	.handler(createPlayoffsHandler);
-
-// TODO: reffing playoffs
-// - when game ends and winner assigned next match, if its the second team assigned, assign losing team as ref (so that its the last game to finish loser's that ref)
-// - td can assign refs
 
 export const createPlayoffsMutationOptions = () =>
 	mutationOptions({

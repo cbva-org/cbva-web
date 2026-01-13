@@ -13,7 +13,7 @@ import { teamsQueryOptions } from "@/data/teams"
 import {
   simulateMatchMutationOptions,
   simulateMatchSchema,
-} from "@/data/tournaments/matches"
+} from "@/functions/matches"
 import { useMatchTeams } from "@/lib/matches"
 import type { MatchTeam } from "../panels/games/pool-match-grid"
 

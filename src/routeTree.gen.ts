@@ -28,7 +28,6 @@ import { Route as VenuesVenueIdRouteImport } from './routes/venues/$venueId'
 import { Route as TournamentsCreateRouteImport } from './routes/tournaments/create'
 import { Route as JuniorsLeaderboardRouteImport } from './routes/juniors/leaderboard'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
-import { Route as ApiFilesRouteImport } from './routes/api/files'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
 import { Route as AccountSetupRouteImport } from './routes/account/setup'
@@ -141,11 +140,6 @@ const ApiPingRoute = ApiPingRouteImport.update({
   path: '/api/ping',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiFilesRoute = ApiFilesRouteImport.update({
-  id: '/api/files',
-  path: '/api/files',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
@@ -247,7 +241,6 @@ export interface FileRoutesByFullPath {
   '/account/setup': typeof AccountSetupRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
-  '/api/files': typeof ApiFilesRoute
   '/api/ping': typeof ApiPingRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
   '/tournaments/create': typeof TournamentsCreateRoute
@@ -285,7 +278,6 @@ export interface FileRoutesByTo {
   '/account/setup': typeof AccountSetupRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
-  '/api/files': typeof ApiFilesRoute
   '/api/ping': typeof ApiPingRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
   '/tournaments/create': typeof TournamentsCreateRoute
@@ -324,7 +316,6 @@ export interface FileRoutesById {
   '/account/setup': typeof AccountSetupRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
-  '/api/files': typeof ApiFilesRoute
   '/api/ping': typeof ApiPingRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
   '/tournaments/create': typeof TournamentsCreateRoute
@@ -364,7 +355,6 @@ export interface FileRouteTypes {
     | '/account/setup'
     | '/admin/schedule'
     | '/admin/users'
-    | '/api/files'
     | '/api/ping'
     | '/juniors/leaderboard'
     | '/tournaments/create'
@@ -402,7 +392,6 @@ export interface FileRouteTypes {
     | '/account/setup'
     | '/admin/schedule'
     | '/admin/users'
-    | '/api/files'
     | '/api/ping'
     | '/juniors/leaderboard'
     | '/tournaments/create'
@@ -440,7 +429,6 @@ export interface FileRouteTypes {
     | '/account/setup'
     | '/admin/schedule'
     | '/admin/users'
-    | '/api/files'
     | '/api/ping'
     | '/juniors/leaderboard'
     | '/tournaments/create'
@@ -479,7 +467,6 @@ export interface RootRouteChildren {
   AccountSetupRoute: typeof AccountSetupRoute
   AdminScheduleRoute: typeof AdminScheduleRoute
   AdminUsersRoute: typeof AdminUsersRoute
-  ApiFilesRoute: typeof ApiFilesRoute
   ApiPingRoute: typeof ApiPingRoute
   JuniorsLeaderboardRoute: typeof JuniorsLeaderboardRoute
   TournamentsCreateRoute: typeof TournamentsCreateRoute
@@ -637,13 +624,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/files': {
-      id: '/api/files'
-      path: '/api/files'
-      fullPath: '/api/files'
-      preLoaderRoute: typeof ApiFilesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/users': {
       id: '/admin/users'
       path: '/admin/users'
@@ -775,7 +755,6 @@ const rootRouteChildren: RootRouteChildren = {
   AccountSetupRoute: AccountSetupRoute,
   AdminScheduleRoute: AdminScheduleRoute,
   AdminUsersRoute: AdminUsersRoute,
-  ApiFilesRoute: ApiFilesRoute,
   ApiPingRoute: ApiPingRoute,
   JuniorsLeaderboardRoute: JuniorsLeaderboardRoute,
   TournamentsCreateRoute: TournamentsCreateRoute,

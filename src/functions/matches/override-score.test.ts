@@ -3,7 +3,7 @@ import { assert, describe, expect, test } from "vitest";
 import { db } from "@/db/connection";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
 import { overrideScoreFn } from "./override-score";
-import { simulateMatchFn } from "@/data/tournaments/matches";
+import { simulateMatchFn } from "./simulate-match";
 
 describe("playoff match finish", () => {
 	test("assign loser's finish and advance winner", async () => {

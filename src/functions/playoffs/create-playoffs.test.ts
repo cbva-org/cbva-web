@@ -3,7 +3,7 @@ import { assert, describe, expect, test } from "vitest";
 import { db } from "@/db/connection";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
 import { isNotNull } from "@/utils/types";
-import { overrideScoreFn } from "../../data/tournaments/matches";
+import { overrideScoreFn } from "../matches/override-score";
 import { createPlayoffsHandler } from "./create-playoffs";
 
 describe("Generating playoffs", () => {

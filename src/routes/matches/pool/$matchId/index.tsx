@@ -18,7 +18,7 @@ import { poolMatchQueryOptions } from "@/data/matches"
 import {
   applyMatchSetAction,
   updateScoreMutationOptions,
-} from "@/data/tournaments/matches"
+} from "@/functions/matches"
 import { DefaultLayout } from "@/layouts/default"
 import { playerNames } from "@/utils/profiles"
 import { isNotNull } from "@/utils/types"

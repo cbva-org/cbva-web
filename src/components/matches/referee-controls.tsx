@@ -7,7 +7,7 @@ import { useViewer } from "@/auth/shared"
 import {
   startMatchMutationOptions,
   undoSetCompletedMutationOptions,
-} from "@/data/tournaments/matches"
+} from "@/functions/matches"
 import type {
   MatchRefTeam,
   MatchSet,

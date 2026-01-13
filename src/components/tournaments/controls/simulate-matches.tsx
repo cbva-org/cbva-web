@@ -9,7 +9,7 @@ import { teamsQueryOptions } from "@/data/teams";
 import {
 	simulateMatchesMutationOptions,
 	simulateMatchesSchema,
-} from "@/data/tournaments/matches";
+} from "@/functions/matches";
 import type { Division, TournamentDivision } from "@/db/schema";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 

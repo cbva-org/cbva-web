@@ -1,18 +1,23 @@
+import { requireAuthenticated } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
 	matchRefTeams,
 	MatchSet,
+	matchSets,
 	playoffMatches,
 	poolMatches,
+	selectMatchSetSchema,
 	tournamentDivisionTeams,
 	Transaction,
 	UpdatePlayoffMatch,
 } from "@/db/schema";
-import { getFinishForRound } from "@/lib/playoffs";
-import { internalServerError } from "@/lib/responses";
+import { isSetDone } from "@/lib/matches";
+import { assertFound, internalServerError } from "@/lib/responses";
 import { dbg } from "@/utils/dbg";
-import { createServerOnlyFn } from "@tanstack/react-start";
-import { eq, max } from "drizzle-orm";
+import { mutationOptions } from "@tanstack/react-query";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
+import { eq } from "drizzle-orm";
+import z from "zod";
 
 export function getWinnerId(
 	{ teamAId, teamBId }: { teamAId: number; teamBId: number },
@@ -190,3 +195,73 @@ export const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 		};
 	},
 );
+
+const matchSetActionSchema = selectMatchSetSchema
+	.pick({
+		id: true,
+	})
+	.extend({
+		action: z.enum(["increment", "decrement"]),
+		teamA: z.boolean(),
+	});
+
+export function applyMatchSetAction(
+	{ action, teamA }: z.infer<typeof matchSetActionSchema>,
+	current: MatchSet,
+) {
+	const next = { ...current };
+
+	const diff = action === "increment" ? 1 : -1;
+
+	if (teamA) {
+		next.teamAScore = Math.max(0, next.teamAScore + diff);
+	} else {
+		next.teamBScore = Math.max(0, next.teamBScore + diff);
+	}
+
+	// Calculate if the set is done: a team must reach winScore AND be ahead by at least 2 points
+	const isDone = isSetDone(next.teamAScore, next.teamBScore, current.winScore);
+
+	if (isDone) {
+		next.status = "completed";
+		next.endedAt = new Date();
+	}
+
+	return next;
+}
+
+const updateScoreFn = createServerFn()
+	.middleware([requireAuthenticated])
+	.inputValidator(matchSetActionSchema)
+	.handler(async ({ data: { id, teamA, action } }) => {
+		const matchSet = await db._query.matchSets.findFirst({
+			where: (t, { and, eq }) => and(eq(t.id, id), eq(t.status, "in_progress")),
+		});
+
+		assertFound(matchSet);
+
+		const next = applyMatchSetAction({ id, teamA, action }, matchSet);
+
+		const { playoffMatchId, poolMatchId } = matchSet;
+
+		await db.transaction(async (txn) => {
+			await txn.update(matchSets).set(next).where(eq(matchSets.id, id));
+
+			if (next.status === "completed") {
+				if (poolMatchId) {
+					return await handleCompletedPoolMatchSet(txn, poolMatchId);
+				}
+
+				if (playoffMatchId) {
+					return await handleCompletedPlayoffMatchSet(txn, playoffMatchId);
+				}
+			}
+		});
+	});
+
+export const updateScoreMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof matchSetActionSchema>) => {
+			return await updateScoreFn({ data });
+		},
+	});

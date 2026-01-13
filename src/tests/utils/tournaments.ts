@@ -1,5 +1,5 @@
 import { eq, inArray, sql } from "drizzle-orm";
-import { simulateMatchesFn } from "@/data/tournaments/matches";
+import { simulateMatchesFn } from "@/functions/matches/simulate-matches";
 import {
 	type CreatePlayoffsParams,
 	createPlayoffsHandler,
