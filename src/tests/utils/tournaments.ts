@@ -2,8 +2,8 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { simulateMatchesFn } from "@/data/tournaments/matches";
 import {
 	type CreatePlayoffsParams,
-	createPlayoffsFn,
-} from "@/data/tournaments/playoffs";
+	createPlayoffsHandler,
+} from "@/functions/playoffs/create-playoffs";
 import {
 	completePoolsFn,
 	createPoolMatchesFn,
@@ -176,22 +176,16 @@ export async function bootstrapTournament(
 		data: { id: tournamentId, overwrite: false },
 	});
 
-	let hasPools = false;
-
 	for (const [i, { pools: poolCount }] of config.divisions.entries()) {
 		if (poolCount && poolCount > 0) {
-			hasPools = true;
-
 			await createPoolsFn({
 				data: { id: divisionIds[i], count: poolCount, overwrite: false },
 			});
-		}
-	}
 
-	if (hasPools) {
-		await createPoolMatchesFn({
-			data: { tournamentId, overwrite: false },
-		});
+			await createPoolMatchesFn({
+				data: { tournamentId, id: divisionIds[i], overwrite: false },
+			});
+		}
 	}
 
 	if (config.simulatePoolMatches) {
@@ -204,7 +198,7 @@ export async function bootstrapTournament(
 		});
 
 		if (config.playoffConfig) {
-			await createPlayoffsFn({
+			await createPlayoffsHandler({
 				data: { id, ...config.playoffConfig },
 			});
 

@@ -2,7 +2,8 @@ import { random } from "lodash-es";
 import { assert, describe, expect, test } from "vitest";
 import { db } from "@/db/connection";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
-import { overrideScoreFn } from "./matches";
+import { overrideScoreFn } from "./override-score";
+import { simulateMatchesFn, simulateMatchFn } from "@/data/tournaments/matches";
 
 describe("playoff match finish", () => {
 	test("assign loser's finish and advance winner", async () => {
@@ -90,5 +91,74 @@ describe("playoff match finish", () => {
 		} else {
 			throw new Error("unexpected error finding winning team in next match");
 		}
+	});
+
+	test("calculates finish correctly", async () => {
+		const tournamentInfo = await bootstrapTournament(db, {
+			date: "2025-01-01",
+			startTime: "09:00:00",
+			divisions: [
+				{
+					division: "b",
+					gender: "male",
+					teams: 10,
+					pools: 2,
+				},
+			],
+			poolMatches: true,
+			simulatePoolMatches: true,
+			playoffConfig: {
+				teamCount: 6,
+				wildcardCount: 2,
+				matchKind: "set-to-28",
+				overwrite: false,
+				assignWildcards: true,
+			},
+		});
+
+		const [tournamentDivisionId] = tournamentInfo.divisions;
+
+		const playoffMatches = await db.query.playoffMatches.findMany({
+			where: {
+				tournamentDivisionId,
+			},
+			orderBy: {
+				matchNumber: "asc",
+			},
+		});
+
+		for (const { id } of playoffMatches) {
+			const match = await db.query.playoffMatches.findFirst({
+				where: {
+					id,
+				},
+			});
+
+			assert(match);
+			assert(match.teamAId);
+			assert(match.teamBId);
+
+			await simulateMatchFn({
+				data: {
+					playoffMatchId: match.id,
+				},
+			});
+		}
+
+		const playoffTeams = await db.query.tournamentDivisionTeams.findMany({
+			where: {
+				tournamentDivisionId,
+				finish: {
+					isNotNull: true,
+				},
+			},
+			orderBy: {
+				finish: "asc",
+			},
+		});
+
+		expect(playoffTeams.map(({ finish }) => finish)).toStrictEqual([
+			1, 2, 3, 3, 5, 5, 5, 5,
+		]);
 	});
 });

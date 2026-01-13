@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Heading } from "react-aria-components";
 
 import { Button } from "@/components/base/button";
@@ -6,12 +6,11 @@ import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
 import { playoffsQueryOptions } from "@/data/playoffs";
-import { teamsQueryOptions } from "@/data/teams";
 import {
 	createPlayoffsMutationOptions,
 	createPlayoffsSchema,
 	type MatchKind,
-} from "@/data/tournaments/playoffs";
+} from "@/functions/playoffs/create-playoffs";
 import type { Division, TournamentDivision } from "@/db/schema";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { useActiveTeams } from "../context";

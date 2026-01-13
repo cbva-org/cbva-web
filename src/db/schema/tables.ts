@@ -1,47 +1,25 @@
-import {
-	accounts,
-	userRelations,
-	users,
-	// usersRelationsDefinitions,
-} from "./auth";
+import { accounts, users } from "./auth";
 import { blocks, pages } from "./blocks";
-import { directorRelations, directors } from "./directors";
-import { divisionRelations, divisions } from "./divisions";
+import { directors } from "./directors";
+import { divisions } from "./divisions";
 import { levels } from "./levels";
-import { matchRefTeams, matchRefTeamsRelations } from "./match-ref-teams";
-import { matchSets, matchSetsRelations } from "./match-sets";
-import {
-	playerProfileRelations,
-	playerProfiles,
-	// playerProfilesRelationsDefinitions,
-} from "./player-profiles";
-import { playoffMatches, playoffMatchRelations } from "./playoff-matches";
-import { poolMatches, poolMatchRelations } from "./pool-matches";
-import { poolTeams, poolTeamsRelations } from "./pool-teams";
-import { poolRelations, pools } from "./pools";
+import { matchRefTeams } from "./match-ref-teams";
+import { matchSets } from "./match-sets";
+import { playerProfiles } from "./player-profiles";
+import { playoffMatches } from "./playoff-matches";
+import { poolMatches } from "./pool-matches";
+import { poolTeams } from "./pool-teams";
+import { pools } from "./pools";
 import { rateLimiterFlexibleSchema } from "./rate-limits";
-import { teamPlayerRelations, teamPlayers } from "./team-players";
-import { teamRelations, teams } from "./teams";
-import {
-	tournamentDirectorRelations,
-	tournamentDirectors,
-} from "./tournament-directors";
-import {
-	tournamentDivisionRequirements,
-	tournamentDivisionRequirementsRelations,
-} from "./tournament-division-requirements";
-import {
-	tournamentDivisionTeams,
-	tournamentDivisionTeamsRelations,
-} from "./tournament-division-teams";
-import {
-	tournamentDivisionRelations,
-	tournamentDivisions,
-} from "./tournament-divisions";
-import { tournamentRelations, tournaments } from "./tournaments";
-import { venueDirectorRelations, venueDirectors } from "./venue-directors";
-import { venuesRelations, venues } from "./venues";
-import { defineRelations } from "drizzle-orm";
+import { teamPlayers } from "./team-players";
+import { teams } from "./teams";
+import { tournamentDirectors } from "./tournament-directors";
+import { tournamentDivisionRequirements } from "./tournament-division-requirements";
+import { tournamentDivisionTeams } from "./tournament-division-teams";
+import { tournamentDivisions } from "./tournament-divisions";
+import { tournaments } from "./tournaments";
+import { venueDirectors } from "./venue-directors";
+import { venues } from "./venues";
 
 export const tables = {
 	blocks,

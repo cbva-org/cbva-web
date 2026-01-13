@@ -50,6 +50,7 @@ export const playoffMatches = pgTable(
 		scheduledTime: timestamp(),
 		status: matchStatusEnum().notNull().default("scheduled"),
 		winnerId: integer().references(() => tournamentDivisionTeams.id),
+		// loserFinish: integer(),
 		nextMatchId: integer().references((): AnyPgColumn => playoffMatches.id),
 		externalRef: uuid().unique(),
 	},
