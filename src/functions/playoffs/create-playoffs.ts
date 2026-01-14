@@ -116,12 +116,56 @@ export async function createPlayoffsHandler({
 		// Track courts for each match to propagate through the bracket
 		const matchCourts: Map<number, string | null> = new Map();
 
+		// Helper: find the bye team seed that a match at (roundIndex, matchIndex) feeds into
+		// by tracing forward through the bracket
+		const findByeTeamForTrack = (
+			roundIndex: number,
+			matchIndex: number,
+		): number | null => {
+			let currentRound = roundIndex;
+			let currentMatchIdx = matchIndex;
+
+			while (currentRound < bracket.length - 1) {
+				const nextRound = bracket[currentRound + 1];
+
+				// Find which match in next round this feeds into
+				const nextMatchIdx = nextRound.findIndex(
+					(m) =>
+						m && (m.aFrom === currentMatchIdx || m.bFrom === currentMatchIdx),
+				);
+
+				if (nextMatchIdx === -1) break;
+
+				const nextMatch = nextRound[nextMatchIdx];
+				if (!nextMatch) break;
+
+				// Check if the opponent side has a bye (direct seed)
+				const comesFromA = nextMatch.aFrom === currentMatchIdx;
+
+				if (comesFromA && isNotNullOrUndefined(nextMatch.bSeed)) {
+					// The B side has a bye - return that seed
+					return nextMatch.bSeed;
+				}
+
+				if (!comesFromA && isNotNullOrUndefined(nextMatch.aSeed)) {
+					// The A side has a bye - return that seed
+					return nextMatch.aSeed;
+				}
+
+				// No bye at this level, continue tracing forward
+				currentRound++;
+				currentMatchIdx = nextMatchIdx;
+			}
+
+			return null; // No bye found on this track
+		};
+
 		for (const [i, round] of bracket.entries()) {
 			roundIds[i] = [];
 
 			const loserFinish = getFinishForRound(bracket.length - 1 - i);
 
-			for (const match of round) {
+			for (const [matchIndex, match] of round.entries()) {
 				if (match) {
 					const teamA: PoolTeam | null | undefined =
 						isNotNullOrUndefined(match.aSeed) && match.aSeed <= teamCount
@@ -133,8 +177,8 @@ export async function createPlayoffsHandler({
 							? seededTeams[match.bSeed - 1]
 							: null;
 
-					// Determine court based on higher seed (lower seed number = higher seed)
-					// For first round, use the higher seed's pool court
+					// Determine court based on the highest seed in this "track" of the bracket
+					// For first round, look forward to find the bye team this match feeds into
 					// For later rounds, propagate court from the previous match on the higher seed's path
 					let court: string | null = null;
 
@@ -143,16 +187,32 @@ export async function createPlayoffsHandler({
 						(match.bSeed ?? Number.POSITIVE_INFINITY);
 
 					if (i === 0) {
-						// First round: get court from the higher seed's pool
-						const higherSeedTeam = higherSeedIsA ? teamA : teamB;
+						// First round: find the bye team this track leads to and use their pool's court
+						const byeTeamSeed = findByeTeamForTrack(i, matchIndex);
 
-						if (higherSeedTeam) {
-							const pool = pools.find((p) => p.id === higherSeedTeam.poolId);
+						if (
+							byeTeamSeed &&
+							byeTeamSeed <= teamCount &&
+							seededTeams[byeTeamSeed - 1]
+						) {
+							const byeTeam = seededTeams[byeTeamSeed - 1];
+							const pool = pools.find((p) => p.id === byeTeam?.poolId);
 							court = pool?.court ?? null;
+						}
+
+						// Fallback: if no bye team found, use the higher seed's pool
+						if (!court) {
+							const higherSeedTeam = higherSeedIsA ? teamA : teamB;
+							if (higherSeedTeam) {
+								const pool = pools.find((p) => p.id === higherSeedTeam.poolId);
+								court = pool?.court ?? null;
+							}
 						}
 					} else {
 						// Later rounds: get court from the previous match on the higher seed's path
-						const previousMatchIndex = higherSeedIsA ? match.aFrom : match.bFrom;
+						const previousMatchIndex = higherSeedIsA
+							? match.aFrom
+							: match.bFrom;
 
 						if (isNotNullOrUndefined(previousMatchIndex)) {
 							const previousMatchId = roundIds[i - 1][previousMatchIndex];
@@ -160,25 +220,12 @@ export async function createPlayoffsHandler({
 								court = matchCourts.get(previousMatchId) ?? null;
 							}
 						} else {
-							// Bye case: higher seed has no previous match, get court from their pool
+							// Bye case: higher seed has no previous match
+							// Use the bye team's pool court
 							const higherSeedTeam = higherSeedIsA ? teamA : teamB;
-
 							if (higherSeedTeam) {
 								const pool = pools.find((p) => p.id === higherSeedTeam.poolId);
 								court = pool?.court ?? null;
-							} else {
-								// Fallback: try the other side's previous match
-								const otherPreviousMatchIndex = higherSeedIsA
-									? match.bFrom
-									: match.aFrom;
-
-								if (isNotNullOrUndefined(otherPreviousMatchIndex)) {
-									const otherPreviousMatchId =
-										roundIds[i - 1][otherPreviousMatchIndex];
-									if (otherPreviousMatchId) {
-										court = matchCourts.get(otherPreviousMatchId) ?? null;
-									}
-								}
 							}
 						}
 					}

@@ -378,7 +378,7 @@ describe("court assignment", () => {
 		// Verify the finals court comes from the #1 seed's path
 		// The #1 seed should maintain their pool's court through to finals
 		const seed1Pool = pools.find((p) => p.name === "a"); // Pool A has seed 1
-		expect(finalsMatch!.court).toBe(`Court 1`);
+		expect(finalsMatch!.court).toBe("Court 1");
 
 		// Verify court propagation chain: trace from finals back to first round
 		// The finals match court should match the court of the higher seed's path
@@ -401,7 +401,7 @@ describe("court assignment", () => {
 		}
 	});
 
-	test("courts propagate correctly with byes", async () => {
+	test("courts propagate correctly with byes - track-based assignment", async () => {
 		const tournamentInfo = await bootstrapTournament(db, {
 			date: "2025-01-01",
 			startTime: "09:00:00",
@@ -432,7 +432,7 @@ describe("court assignment", () => {
 				.where(eq(poolsTable.id, pool.id));
 		}
 
-		// Create playoffs with 6 teams (some will get byes)
+		// Create playoffs with 6 teams (seeds 1 and 2 get byes)
 		await createPlayoffsHandler({
 			data: {
 				id: tournamentDivisionId,
@@ -468,27 +468,12 @@ describe("court assignment", () => {
 			orderBy: (t, { asc }) => [asc(t.round), asc(t.matchNumber)],
 		});
 
-		// Find the finals match
-		const finalsMatch = matches.reduce((max, m) =>
-			m.round > max.round ? m : max,
-		);
-
-		// Finals should have a court assigned (fixed bye propagation)
-		expect(finalsMatch.court).not.toBeNull();
-
-		// All matches with teams or previous matches should have courts
+		// All matches should have courts
 		for (const match of matches) {
-			if (
-				match.teamAId ||
-				match.teamBId ||
-				match.teamAPreviousMatchId ||
-				match.teamBPreviousMatchId
-			) {
-				expect(match.court).not.toBeNull();
-			}
+			expect(match.court).not.toBeNull();
 		}
 
-		// Verify the bye teams' courts come from their pool
+		// Verify bye teams get their own pool's court
 		const byeMatches = matches.filter(
 			(m) =>
 				m.round === 1 &&
@@ -497,15 +482,43 @@ describe("court assignment", () => {
 		);
 
 		for (const match of byeMatches) {
-			// The bye team should have contributed their pool's court
 			const byeTeam =
-				match.teamAId && !match.teamAPreviousMatchId ? match.teamA : match.teamB;
+				match.teamAId && !match.teamAPreviousMatchId
+					? match.teamA
+					: match.teamB;
 
 			if (byeTeam?.poolTeam?.pool?.court) {
-				// The match court should be set (either from bye team or other side)
-				expect(match.court).not.toBeNull();
+				// The match should use the bye team's pool court
+				expect(match.court).toBe(byeTeam.poolTeam.pool.court);
 			}
 		}
+
+		// Key test: verify "track" logic
+		// First round matches should use the court of the bye team they feed into
+		for (const match of byeMatches) {
+			const byeTeam =
+				match.teamAId && !match.teamAPreviousMatchId
+					? match.teamA
+					: match.teamB;
+			const feederMatchId =
+				match.teamAId && !match.teamAPreviousMatchId
+					? match.teamBPreviousMatchId
+					: match.teamAPreviousMatchId;
+
+			if (byeTeam?.poolTeam?.pool?.court && feederMatchId) {
+				const feederMatch = matches.find((m) => m.id === feederMatchId);
+
+				// The feeder match (first round) should have the same court as the bye match
+				// because they're on the same "track"
+				expect(feederMatch?.court).toBe(byeTeam.poolTeam.pool.court);
+			}
+		}
+
+		// Finals should have a court
+		const finalsMatch = matches.reduce((max, m) =>
+			m.round > max.round ? m : max,
+		);
+		expect(finalsMatch.court).not.toBeNull();
 	});
 
 	test("courts propagate correctly in larger brackets (16 teams)", async () => {
