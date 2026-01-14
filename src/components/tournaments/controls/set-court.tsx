@@ -140,6 +140,7 @@ export function SetCourtForm({
 						division.
 					</p>
 					<form
+						className="flex flex-col space-y-2"
 						onSubmit={(e) => {
 							e.preventDefault();
 
@@ -149,10 +150,16 @@ export function SetCourtForm({
 						<form.AppField
 							name="court"
 							children={(field) => (
-								<field.Text
+								<field.Text isRequired label="Court" field={field} />
+							)}
+						/>
+
+						<form.AppField
+							name="followWinnerInBracket"
+							children={(field) => (
+								<field.Checkbox
 									isRequired
-									className="col-span-3"
-									label="Court"
+									label="Keep court for winners"
 									field={field}
 								/>
 							)}
