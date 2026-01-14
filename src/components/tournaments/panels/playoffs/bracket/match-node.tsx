@@ -368,7 +368,7 @@ export function MatchNode({
 				))}
 			</div>
 			{isDefined(loserFinish) && (
-				<div className="p-3 flex flex-row space-x-2 items-center">
+				<div className="px-3 py-1 text-end">
 					Losers finish {formatOrdinals(loserFinish)}
 				</div>
 			)}

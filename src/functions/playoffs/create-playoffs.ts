@@ -130,6 +130,22 @@ export async function createPlayoffsHandler({
 							? seededTeams[match.bSeed - 1]
 							: null;
 
+					// Determine court based on higher seed (lower seed number = higher seed)
+					let court: string | null = null;
+
+					if (teamA || teamB) {
+						const higherSeedTeam =
+							(match.aSeed ?? Number.POSITIVE_INFINITY) <=
+							(match.bSeed ?? Number.POSITIVE_INFINITY)
+								? teamA
+								: teamB;
+
+						if (higherSeedTeam) {
+							const pool = pools.find((p) => p.id === higherSeedTeam.poolId);
+							court = pool?.court ?? null;
+						}
+					}
+
 					const [
 						{
 							id,
@@ -158,6 +174,7 @@ export async function createPlayoffsHandler({
 									? roundIds[i - 1][match.bFrom]
 									: null,
 							loserFinish,
+							court,
 						})
 						.returning({
 							id: playoffMatches.id,
