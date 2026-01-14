@@ -76,7 +76,7 @@ export function PoolsPanel({
 										tournamentId={id}
 										tournamentDivisionId={tournamentDivisionId}
 										poolId={pool.id}
-										poolName={pool.name}
+										name={`Pool ${pool.name.toUpperCase()}`}
 										court={pool.court}
 									/>
 								</h3>
@@ -152,7 +152,7 @@ export function PoolsPanel({
 															<span>
 																{finish ?? stats?.[teamId]?.rank ?? "-"}
 															</span>
-															{finish && (
+															{(finish ?? stats?.[teamId]?.rank) && (
 																<PoolFinishInfo
 																	poolId={pool.id}
 																	activeTeamId={teamId}

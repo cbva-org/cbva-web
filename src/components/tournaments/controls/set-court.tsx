@@ -8,23 +8,30 @@ import { Modal } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
 import { poolsQueryOptions } from "@/data/pools";
 import {
-	setPoolCourtMutationOptions,
-	setPoolCourtSchema,
-} from "@/functions/pools";
+	setMatchCourtMutationOptions,
+	setMatchCourtSchema,
+} from "@/functions/matches/set-match-court";
 import { useTournamentDivisionName } from "@/hooks/tournament";
 import { EditIcon } from "lucide-react";
+import { isDefined } from "@/utils/types";
+import type z from "zod";
+import { usePlayoffsQueryOptions, usePoolsQueryOptions } from "../context";
+
+// TODO: confirm works with pools and playoffs
 
 export type SetCourtForm = {
 	tournamentId: number;
 	tournamentDivisionId: number;
-	poolId: number;
-	poolName: string;
-	court?: string | null;
+	poolId?: number;
+	playoffMatchId?: number;
+	name: string;
+	court: string | null | undefined;
 };
 
 export function SetCourtForm({
 	poolId,
-	poolName,
+	playoffMatchId,
+	name,
 	court,
 	tournamentId,
 	tournamentDivisionId,
@@ -41,51 +48,38 @@ export function SetCourtForm({
 	);
 
 	const queryClient = useQueryClient();
+	const poolsQueryOptions = usePoolsQueryOptions();
+	const playoffsQueryOptions = usePlayoffsQueryOptions();
 
 	const { mutate } = useMutation({
-		...setPoolCourtMutationOptions(),
-		onSuccess: (_, { court }) => {
+		...setMatchCourtMutationOptions(),
+		onSuccess: (_) => {
 			setOpen(false);
 
-			queryClient.setQueryData(
-				poolsQueryOptions({
-					tournamentDivisionId,
-				}).queryKey,
-				(data) => {
-					return data?.map((pool) => {
-						if (pool.id !== poolId) {
-							return pool;
-						}
-
-						return {
-							...pool,
-							court,
-						};
-					});
-				},
-			);
-
-			queryClient.invalidateQueries({
-				queryKey: poolsQueryOptions({
-					tournamentDivisionId,
-				}).queryKey,
-			});
+			if (poolId) {
+				queryClient.invalidateQueries(poolsQueryOptions);
+			} else {
+				queryClient.invalidateQueries(playoffsQueryOptions);
+			}
 		},
 	});
 
-	const schema = setPoolCourtSchema.omit({ id: true });
+	const schema = setMatchCourtSchema.pick({
+		court: true,
+	});
 
 	const form = useAppForm({
 		defaultValues: {
-			court: "",
-		},
+			court: court ?? "Court ",
+		} as z.infer<typeof setMatchCourtSchema>,
 		validators: {
 			onMount: schema,
 			onChange: schema,
 		},
 		onSubmit: ({ value: { court } }) => {
 			mutate({
-				id: poolId,
+				poolId,
+				playoffMatchId,
 				court,
 			});
 		},
@@ -95,13 +89,14 @@ export function SetCourtForm({
 		<>
 			{court && (
 				<span className="flex flex-row items-center gap-2">
-					Court {court}
+					{court}
 					{canUpdate && (
 						<Button
 							variant="text"
 							className="text-blue-500"
 							size="sm"
 							onPress={() => setOpen(true)}
+							tooltip="Set or update court"
 						>
 							<EditIcon size={16} />
 						</Button>
@@ -110,17 +105,15 @@ export function SetCourtForm({
 			)}
 
 			{!court && canUpdate && (
-				<span className="flex flex-row items-center gap-2">
-					Court{" "}
-					<Button
-						variant="text"
-						className="text-blue-500"
-						size="sm"
-						onPress={() => setOpen(true)}
-					>
-						<EditIcon size={16} />
-					</Button>
-				</span>
+				<Button
+					className="text-blue-500"
+					size="sm"
+					onPress={() => setOpen(true)}
+					tooltip="Set or update court"
+					variant="link"
+				>
+					Set Court <EditIcon size={12} />
+				</Button>
 			)}
 
 			<Modal isOpen={isOpen} onOpenChange={setOpen}>
@@ -129,18 +122,14 @@ export function SetCourtForm({
 						Set Court
 					</Heading>
 					<p>
-						Set{" "}
-						<span className="font-semibold italic uppercase">
-							Pool {poolName}
-						</span>
+						Set <span className="font-semibold italic">{name}</span>
 						{"'s "}
-						court for the division{" "}
-						<span className="font-semibold italic uppercase">
-							{divisionName}
-						</span>
-						.
+						court for the{" "}
+						<span className="font-semibold italic">{divisionName}</span>{" "}
+						division.
 					</p>
 					<form
+						className="flex flex-col space-y-2"
 						onSubmit={(e) => {
 							e.preventDefault();
 
@@ -150,12 +139,7 @@ export function SetCourtForm({
 						<form.AppField
 							name="court"
 							children={(field) => (
-								<field.Text
-									isRequired
-									className="col-span-3"
-									label="Court"
-									field={field}
-								/>
+								<field.Text isRequired label="Court" field={field} />
 							)}
 						/>
 
