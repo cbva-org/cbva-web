@@ -113,6 +113,9 @@ export async function createPlayoffsHandler({
 
 		const refTeamsToCreate: CreateMatchRefTeam[] = [];
 
+		// Track courts for each match to propagate through the bracket
+		const matchCourts: Map<number, string | null> = new Map();
+
 		for (const [i, round] of bracket.entries()) {
 			roundIds[i] = [];
 
@@ -131,18 +134,52 @@ export async function createPlayoffsHandler({
 							: null;
 
 					// Determine court based on higher seed (lower seed number = higher seed)
+					// For first round, use the higher seed's pool court
+					// For later rounds, propagate court from the previous match on the higher seed's path
 					let court: string | null = null;
 
-					if (teamA || teamB) {
-						const higherSeedTeam =
-							(match.aSeed ?? Number.POSITIVE_INFINITY) <=
-							(match.bSeed ?? Number.POSITIVE_INFINITY)
-								? teamA
-								: teamB;
+					const higherSeedIsA =
+						(match.aSeed ?? Number.POSITIVE_INFINITY) <=
+						(match.bSeed ?? Number.POSITIVE_INFINITY);
+
+					if (i === 0) {
+						// First round: get court from the higher seed's pool
+						const higherSeedTeam = higherSeedIsA ? teamA : teamB;
 
 						if (higherSeedTeam) {
 							const pool = pools.find((p) => p.id === higherSeedTeam.poolId);
 							court = pool?.court ?? null;
+						}
+					} else {
+						// Later rounds: get court from the previous match on the higher seed's path
+						const previousMatchIndex = higherSeedIsA ? match.aFrom : match.bFrom;
+
+						if (isNotNullOrUndefined(previousMatchIndex)) {
+							const previousMatchId = roundIds[i - 1][previousMatchIndex];
+							if (previousMatchId) {
+								court = matchCourts.get(previousMatchId) ?? null;
+							}
+						} else {
+							// Bye case: higher seed has no previous match, get court from their pool
+							const higherSeedTeam = higherSeedIsA ? teamA : teamB;
+
+							if (higherSeedTeam) {
+								const pool = pools.find((p) => p.id === higherSeedTeam.poolId);
+								court = pool?.court ?? null;
+							} else {
+								// Fallback: try the other side's previous match
+								const otherPreviousMatchIndex = higherSeedIsA
+									? match.bFrom
+									: match.aFrom;
+
+								if (isNotNullOrUndefined(otherPreviousMatchIndex)) {
+									const otherPreviousMatchId =
+										roundIds[i - 1][otherPreviousMatchIndex];
+									if (otherPreviousMatchId) {
+										court = matchCourts.get(otherPreviousMatchId) ?? null;
+									}
+								}
+							}
 						}
 					}
 
@@ -186,6 +223,7 @@ export async function createPlayoffsHandler({
 						});
 
 					roundIds[i].push(id);
+					matchCourts.set(id, court);
 
 					createdMatches.push({
 						id,
