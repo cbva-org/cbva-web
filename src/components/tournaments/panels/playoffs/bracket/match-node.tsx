@@ -186,6 +186,7 @@ export function MatchNode({
 								tournamentDivisionId={tournamentDivisionId}
 								playoffMatchId={data.id}
 								name={name}
+								court={court}
 							/>
 						)}
 

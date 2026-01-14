@@ -13,6 +13,8 @@ import {
 } from "@/functions/matches/set-match-court";
 import { useTournamentDivisionName } from "@/hooks/tournament";
 import { EditIcon } from "lucide-react";
+import { isDefined } from "@/utils/types";
+import type z from "zod";
 
 // TODO: confirm works with pools and playoffs
 
@@ -22,7 +24,7 @@ export type SetCourtForm = {
 	poolId?: number;
 	playoffMatchId?: number;
 	name: string;
-	court?: string | null;
+	court: string | null | undefined;
 };
 
 export function SetCourtForm({
@@ -77,12 +79,16 @@ export function SetCourtForm({
 		},
 	});
 
-	const schema = setMatchCourtSchema.pick({ court: true });
+	const schema = setMatchCourtSchema.pick({
+		court: true,
+		followWinnerInBracket: true,
+	});
 
 	const form = useAppForm({
 		defaultValues: {
 			court: "",
-		},
+			followWinnerInBracket: isDefined(playoffMatchId) ? true : undefined,
+		} as z.infer<typeof setMatchCourtSchema>,
 		validators: {
 			onMount: schema,
 			onChange: schema,
@@ -96,36 +102,29 @@ export function SetCourtForm({
 		},
 	});
 
+	const button = (
+		<Button
+			variant="text"
+			className="text-blue-500"
+			size="sm"
+			onPress={() => setOpen(true)}
+			tooltip="Set or update court"
+		>
+			<EditIcon size={16} />
+		</Button>
+	);
+
 	return (
 		<>
 			{court && (
 				<span className="flex flex-row items-center gap-2">
 					Court {court}
-					{canUpdate && (
-						<Button
-							variant="text"
-							className="text-blue-500"
-							size="sm"
-							onPress={() => setOpen(true)}
-						>
-							<EditIcon size={16} />
-						</Button>
-					)}
+					{canUpdate && button}
 				</span>
 			)}
 
 			{!court && canUpdate && (
-				<span className="flex flex-row items-center gap-2">
-					Court{" "}
-					<Button
-						variant="text"
-						className="text-blue-500"
-						size="sm"
-						onPress={() => setOpen(true)}
-					>
-						<EditIcon size={16} />
-					</Button>
-				</span>
+				<span className="flex flex-row items-center gap-2">Court {button}</span>
 			)}
 
 			<Modal isOpen={isOpen} onOpenChange={setOpen}>
