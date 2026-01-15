@@ -25,7 +25,8 @@ import {
 } from "@/functions/tournaments/get-tournaments-by-directors";
 import { DefaultLayout } from "@/layouts/default";
 import { getDefaultTimeZone } from "@/lib/dates";
-import { parseDate } from "@internationalized/date";
+import { dbg } from "@/utils/dbg";
+import { parseDate, today } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
@@ -147,6 +148,9 @@ function RouteComponent() {
 
 						<TableBody items={tournaments} dependencies={[manageDivisionsId]}>
 							{({ id, name, date, venue, visible, demo }) => {
+								const isInFuture =
+									parseDate(date).compare(today(getDefaultTimeZone())) > 0;
+
 								return (
 									<TableRow
 										key={id}
@@ -182,13 +186,15 @@ function RouteComponent() {
 										<TableCell>
 											<Toolbar>
 												<DropdownMenu buttonIcon={<SettingsIcon />}>
-													<DropdownMenuItem
-														onPress={() => {
-															setManageDivisionsId(id);
-														}}
-													>
-														Manage Divisions
-													</DropdownMenuItem>
+													{isInFuture && (
+														<DropdownMenuItem
+															onPress={() => {
+																setManageDivisionsId(id);
+															}}
+														>
+															Manage Divisions
+														</DropdownMenuItem>
+													)}
 													{demo ? (
 														<DropdownMenuItem
 															onPress={() => {
