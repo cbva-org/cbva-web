@@ -29,7 +29,7 @@ export function ProfileSearch() {
 
 	return (
 		<section className="flex flex-col space-y-8">
-			<Header className={title({ size: "sm" })}>Search Players</Header>
+			<Header className={title({ size: "sm" })}>Player Search</Header>
 
 			<SearchField value={query} onChange={(value) => setQuery(value)} />
 
