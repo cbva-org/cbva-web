@@ -33,6 +33,7 @@ export const matchRefs = pgTable(
 			.references(() => playerProfiles.id, {
 				onDelete: "cascade",
 			}),
+		teamId: integer().references(() => tournamentDivisionTeams.id),
 		abandoned: boolean(),
 	},
 	(table) => [

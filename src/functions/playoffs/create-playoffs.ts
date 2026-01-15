@@ -16,9 +16,11 @@ import {
 	selectTournamentDivisionSchema,
 	tournamentDivisionTeams,
 	selectMatchSetSchema,
+	CreateMatchRef,
+	matchRefs,
 } from "@/db/schema";
 import { draftPlayoffs, getFinishForRound, seedPlayoffs } from "@/lib/playoffs";
-import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
+import { isDefined, isNotNull, isNotNullOrUndefined } from "@/utils/types";
 
 export const createSetSchema = selectMatchSetSchema.pick({
 	winScore: true,
@@ -78,16 +80,16 @@ export async function createPlayoffsHandler({
 		({ pool, seed }) => pools[pool].teams.find(({ finish }) => finish === seed),
 	);
 
-	if (overwrite) {
-		// Delete existing playoff matches if overwrite is true
-		await db
-			.delete(playoffMatches)
-			.where(eq(playoffMatches.tournamentDivisionId, tournamentDivisionId));
-	}
-
 	const bracket = draftPlayoffs(teamCount + wildcardCount);
 
 	await db.transaction(async (txn) => {
+		if (overwrite) {
+			// Delete existing playoff matches if overwrite is true
+			await txn
+				.delete(playoffMatches)
+				.where(eq(playoffMatches.tournamentDivisionId, tournamentDivisionId));
+		}
+
 		const roundIds: (number | null)[][] = [];
 
 		let matchNumber = 1;
@@ -338,7 +340,40 @@ export async function createPlayoffsHandler({
 		}
 
 		if (refTeamsToCreate.length) {
-			await txn.insert(matchRefTeams).values(refTeamsToCreate);
+			const teams = await txn.query.tournamentDivisionTeams.findMany({
+				with: {
+					team: {
+						with: {
+							profiles: true,
+						},
+					},
+				},
+				where: {
+					id: {
+						in: refTeamsToCreate.map(({ teamId }) => teamId),
+					},
+				},
+			});
+
+			const matchRefsToCreate: CreateMatchRef[] = refTeamsToCreate
+				.map(({ teamId, playoffMatchId, poolMatchId }) => ({
+					playoffMatchId,
+					poolMatchId,
+					teamId,
+					profiles: teams.find(({ id }) => id === teamId)?.team.profiles,
+				}))
+				.flatMap(({ poolMatchId, playoffMatchId, teamId, profiles = [] }) =>
+					profiles.map(({ id }) => ({
+						poolMatchId,
+						playoffMatchId,
+						profileId: id,
+						teamId,
+					})),
+				);
+
+			await txn.insert(matchRefs).values(matchRefsToCreate);
+
+			// await txn.insert(matchRefTeams).values(refTeamsToCreate);
 		}
 
 		// Set nextMatchId for all playoff matches

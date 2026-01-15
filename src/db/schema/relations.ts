@@ -86,12 +86,16 @@ export const relations = defineRelations(tables, (r) => ({
 			from: r.matchRefs.profileId.through(r.playerProfiles.id),
 			to: r.users.id.through(r.playerProfiles.userId),
 		}),
+		team: r.one.tournamentDivisionTeams({
+			from: r.matchRefs.teamId,
+			to: r.tournamentDivisionTeams.id,
+		}),
 	},
 	teams: {
 		players: r.many.teamPlayers(),
 		profiles: r.many.playerProfiles({
-			from: r.teams.id.through(r.teamPlayers.playerProfileId),
-			to: r.playerProfiles.id.through(r.teamPlayers.teamId),
+			from: r.teams.id.through(r.teamPlayers.teamId),
+			to: r.playerProfiles.id.through(r.teamPlayers.playerProfileId),
 		}),
 	},
 	teamPlayers: {
