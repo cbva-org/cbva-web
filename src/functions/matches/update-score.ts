@@ -188,7 +188,7 @@ export const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 
 			await txn
 				.update(tournamentDivisionTeams)
-				.set({ finish: dbg(match.loserFinish) })
+				.set({ finish: match.loserFinish })
 				.where(eq(tournamentDivisionTeams.id, loserId));
 		} else {
 			// This is the finals match - set finish for both teams

@@ -1,6 +1,5 @@
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { setResponseStatus } from "@tanstack/react-start/server";
 import { eq } from "drizzle-orm";
 import range from "lodash-es/range";
 import z from "zod";
@@ -33,14 +32,6 @@ export const createPoolsFn = createServerFn()
 	])
 	.inputValidator(createPoolsSchema)
 	.handler(async ({ data: { id: tournamentDivisionId, count, overwrite } }) => {
-		const alphabet = "abcdefghijklmnopqrstuvwxyz";
-
-		if (count > alphabet.length) {
-			setResponseStatus(400);
-
-			throw new Error("Pool count exceeds limit");
-		}
-
 		await db.transaction(async (txn) => {
 			if (overwrite) {
 				await txn
@@ -53,7 +44,7 @@ export const createPoolsFn = createServerFn()
 				.values(
 					range(0, count).map((i) => ({
 						tournamentDivisionId,
-						name: alphabet[i],
+						name: `${i + 1}`,
 					})),
 				)
 				.returning({

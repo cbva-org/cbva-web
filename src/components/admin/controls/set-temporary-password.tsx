@@ -41,7 +41,7 @@ function generatePassword() {
 	let password = "";
 
 	for (let i = 0; i < length; i++) {
-		password += chars.charAt(Math.floor(dbg(secureRandom()) * chars.length));
+		password += chars.charAt(Math.floor(secureRandom() * chars.length));
 	}
 
 	return password;
