@@ -20,6 +20,7 @@ import { TextField } from "./fields/text";
 import { TextAreaField } from "./fields/text-area";
 import { TimeField } from "./fields/time";
 import { RadioGroupField } from "./fields/radio-group";
+import { ProfilePickerField } from "./fields/profile-picker";
 
 function Alert({ className, ...props }: AlertProps) {
 	return <BaseAlert className={className} {...props} />;
@@ -205,6 +206,7 @@ export const { useAppForm } = createFormHook({
 		DatePicker: DatePickerField,
 		Time: TimeField,
 		MultiSelect: MultiSelectField,
+		ProfilePicker: ProfilePickerField,
 	},
 	formComponents: {
 		Alert,

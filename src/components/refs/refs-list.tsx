@@ -1,5 +1,6 @@
 import { useViewerHasPermission } from "@/auth/shared";
 import type {
+	MatchRef,
 	MatchRefTeam,
 	PlayerProfile,
 	Team,
@@ -10,6 +11,9 @@ import { AbandonRefForm } from "../teams/controls/abandon-ref";
 import { RemoveRefForm } from "../teams/controls/remove-ref";
 import { TeamNames } from "../teams/names";
 import { EditMatchRefsForm } from "../tournaments/controls/edit-playoff-match-refs";
+import { ProfileName } from "../profiles/name";
+import { groupBy } from "lodash-es";
+import { SetMatchRefsForm } from "./set-match-refs";
 
 // TODO: match ref teams -> match refs
 // - change this (or new) file to modify refs. if refs have same teamId, operate on them equally
@@ -19,21 +23,27 @@ import { EditMatchRefsForm } from "../tournaments/controls/edit-playoff-match-re
 // - abandon ref      should take id or teamId
 // - undo abandon ref "
 
-export type RefTeamsListProps = {
+export type RefsListProps = {
 	tournamentDivisionId: number;
 	matchStatus: string | "completed" | "tbd";
-	refTeams: (MatchRefTeam & {
-		team: Pick<TournamentDivisionTeam, "id"> & {
-			team: Pick<Team, "id"> & {
-				players: (TeamPlayer & {
-					profile: Pick<
-						PlayerProfile,
-						"id" | "preferredName" | "firstName" | "lastName"
-					>;
-				})[];
-			};
-		};
+	refs: (MatchRef & {
+		profile: Pick<
+			PlayerProfile,
+			"id" | "preferredName" | "firstName" | "lastName"
+		>;
 	})[];
+	// refTeams: (MatchRefTeam & {
+	// 	team: Pick<TournamentDivisionTeam, "id"> & {
+	// 		team: Pick<Team, "id"> & {
+	// 			players: (TeamPlayer & {
+	// 				profile: Pick<
+	// 					PlayerProfile,
+	// 					"id" | "preferredName" | "firstName" | "lastName"
+	// 				>;
+	// 			})[];
+	// 		};
+	// 	};
+	// })[];
 } & (
 	| {
 			poolMatchId: number;
@@ -42,41 +52,52 @@ export type RefTeamsListProps = {
 	| { playoffMatchId: number; poolMatchId?: never }
 );
 
-export function RefTeamsList({
+export function RefsList({
 	tournamentDivisionId,
 	playoffMatchId,
 	poolMatchId,
 	matchStatus,
-	refTeams,
-}: RefTeamsListProps) {
+	refs,
+}: RefsListProps) {
 	const canEdit = useViewerHasPermission({
 		tournament: ["update"],
 	});
 
+	const groupedRefs = groupBy(refs, "teamId");
+
 	return (
 		<>
-			{refTeams.length ? (
+			{refs.length ? (
 				<div className="whitespace-nowrap text-ellipsis flex flex-row items-center gap-2">
 					Refs:{" "}
-					{refTeams.map((team) => (
-						<span key={team.id} className="flex flex-row items-center gap-2">
-							<TeamNames {...team.team.team} />
+					{Object.keys(groupedRefs)
+						.map((teamId) => ({
+							teamId: teamId === "null" ? null : Number.parseInt(teamId, 10),
+							refs: groupedRefs[teamId],
+						}))
+						.map(({ teamId, refs }) => (
+							<span key={teamId} className="flex flex-row items-center gap-2">
+								<TeamNames players={refs} />
 
-							{canEdit && matchStatus !== "completed" && (
-								<>
-									<RemoveRefForm refTeamId={team.id} />
-									<AbandonRefForm refTeamId={team.id} />
-								</>
-							)}
-						</span>
-					))}
+								{canEdit && matchStatus !== "completed" && (
+									<>
+										<RemoveRefForm
+											ids={refs.map(({ id }) => id)}
+											teamId={teamId}
+										/>
+
+										{teamId && <AbandonRefForm teamId={teamId} />}
+									</>
+								)}
+							</span>
+						))}
 				</div>
 			) : matchStatus === "tbd" ? null : (
 				<div>Self Ref</div>
 			)}
 
 			{canEdit && !["completed", "tbd"].includes(matchStatus) && (
-				<EditMatchRefsForm
+				<SetMatchRefsForm
 					tournamentDivisionId={tournamentDivisionId}
 					playoffMatchId={playoffMatchId}
 					poolMatchId={poolMatchId}

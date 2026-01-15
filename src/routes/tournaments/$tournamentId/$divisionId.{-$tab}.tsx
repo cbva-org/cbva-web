@@ -25,9 +25,9 @@ import { PlayoffsPanel } from "@/components/tournaments/panels/playoffs";
 import { PoolsPanel } from "@/components/tournaments/panels/pools";
 import { TeamsPanel } from "@/components/tournaments/panels/teams";
 import { VenueHeader } from "@/components/venues/header";
-import { playoffsQueryOptions } from "@/data/playoffs";
-import { poolsQueryOptions } from "@/data/pools";
-import { teamsQueryOptions } from "@/data/teams";
+import { playoffsQueryOptions } from "@/functions/playoffs/get-playoffs";
+import { getPoolsQueryOptions } from "@/functions/pools/get-pools";
+import { teamsQueryOptions } from "@/functions/teams/get-teams";
 import { tournamentQueryOptions } from "@/data/tournaments";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { DefaultLayout } from "@/layouts/default";
@@ -137,7 +137,7 @@ function RouteComponent() {
 	}, [navigate, canShowTeams, tabParam, tournamentId, divisionId]);
 
 	const { data: hasPools } = useQuery({
-		...poolsQueryOptions({
+		...getPoolsQueryOptions({
 			tournamentDivisionId: activeDivision.id,
 		}),
 		select: (data) => data.length > 0,
@@ -159,7 +159,7 @@ function RouteComponent() {
 	}, [navigate, canShowPools, tabParam, tournamentId, divisionId]);
 
 	const { data: hasGames } = useQuery({
-		...poolsQueryOptions({
+		...getPoolsQueryOptions({
 			tournamentDivisionId: activeDivision.id,
 		}),
 		select: (data) => data.some((pool) => pool.matches.length > 0),

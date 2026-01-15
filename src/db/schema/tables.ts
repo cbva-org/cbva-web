@@ -4,6 +4,7 @@ import { directors } from "./directors";
 import { divisions } from "./divisions";
 import { levels } from "./levels";
 import { matchRefTeams } from "./match-ref-teams";
+import { matchRefs } from "./match-refs";
 import { matchSets } from "./match-sets";
 import { playerProfiles } from "./player-profiles";
 import { playoffMatches } from "./playoff-matches";
@@ -28,6 +29,7 @@ export const tables = {
 	levels,
 	matchSets,
 	matchRefTeams,
+	matchRefs,
 	pages,
 	playerProfiles,
 	playoffMatches,

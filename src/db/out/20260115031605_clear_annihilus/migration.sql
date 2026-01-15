@@ -1,0 +1,2 @@
+ALTER TABLE "match_refs" ADD COLUMN "team_id" integer;--> statement-breakpoint
+ALTER TABLE "match_refs" ADD CONSTRAINT "match_refs_team_id_tournament_division_teams_id_fkey" FOREIGN KEY ("team_id") REFERENCES "tournament_division_teams"("id");

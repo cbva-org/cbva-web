@@ -5,7 +5,7 @@ import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
 import { Modal } from "@/components/base/modal";
 import { title } from "@/components/base/primitives";
-import { playoffsQueryOptions } from "@/data/playoffs";
+import { playoffsQueryOptions } from "@/functions/playoffs/get-playoffs";
 import {
 	createPlayoffsMutationOptions,
 	createPlayoffsSchema,
