@@ -69,12 +69,12 @@ export function CreatePlayoffsForm({
 			sets: [
 				{
 					winScore: 28,
-					switchCount: 7,
+					switchScore: 7,
 				},
 			],
 			assignCourts: true,
 			overwrite: false,
-		},
+		} as z.infer<typeof schema>,
 		validators: {
 			onMount: schema,
 			onChange: schema,
@@ -87,21 +87,21 @@ export function CreatePlayoffsForm({
 							? [
 									{
 										winScore: 28,
-										switchCount: 7,
+										switchScore: 7,
 									},
 								]
 							: [
 									{
 										winScore: 21,
-										switchCount: 7,
+										switchScore: 7,
 									},
 									{
 										winScore: 21,
-										switchCount: 7,
+										switchScore: 7,
 									},
 									{
 										winScore: 15,
-										switchCount: 5,
+										switchScore: 5,
 									},
 								];
 
@@ -150,7 +150,7 @@ export function CreatePlayoffsForm({
 					</p>
 				)}
 
-				<div
+				<form
 					className="flex flex-col space-y-6"
 					onSubmit={(e) => {
 						e.preventDefault();
@@ -181,59 +181,61 @@ export function CreatePlayoffsForm({
 						)}
 					/>
 
-					<form.AppField
-						name="matchKind"
-						children={(field) => (
-							<field.RadioGroup
-								label="Match Style"
-								orientation="horizontal"
-								field={field}
-							>
-								<Radio value="set">Single Set</Radio>
-								<Radio value="match">Best of 3</Radio>
-							</field.RadioGroup>
-						)}
-					/>
+					<div className="flex flex-col gap-3">
+						<form.AppField
+							name="matchKind"
+							children={(field) => (
+								<field.RadioGroup
+									label="Match Style"
+									orientation="horizontal"
+									field={field}
+								>
+									<Radio value="set">Single Set</Radio>
+									<Radio value="match">Best of 3</Radio>
+								</field.RadioGroup>
+							)}
+						/>
 
-					<Disclosure card={false}>
-						<DisclosureHeader card={false} size="sm">
-							Score Options
-						</DisclosureHeader>
-						<DisclosurePanel card={false}>
-							<form.AppField name="sets" mode="array">
-								{(field) => (
-									<div className="grid grid-cols-6 gap-3">
-										{field.state.value.map((_, i) => (
-											<>
-												<form.AppField name={`sets[${i}].winScore`}>
-													{(subField) => (
-														<>
-															<subField.Number
-																className="col-span-3"
-																field={subField}
-																label="Win Score"
-															/>
-														</>
-													)}
-												</form.AppField>
-												<form.AppField name={`sets[${i}].switchCount`}>
-													{(subField) => (
-														<>
-															<subField.Number
-																className="col-span-3"
-																field={subField}
-																label="Switch Every"
-															/>
-														</>
-													)}
-												</form.AppField>
-											</>
-										))}
-									</div>
-								)}
-							</form.AppField>
-						</DisclosurePanel>
-					</Disclosure>
+						<Disclosure card={false}>
+							<DisclosureHeader card={false} size="sm">
+								Score Options
+							</DisclosureHeader>
+							<DisclosurePanel card={false}>
+								<form.AppField name="sets" mode="array">
+									{(field) => (
+										<div className="flex flex-col space-y-2">
+											{field.state.value.map((_, i) => (
+												<div className="grid grid-cols-6 gap-3" key={i}>
+													<form.AppField name={`sets[${i}].winScore`}>
+														{(subField) => (
+															<>
+																<subField.Number
+																	className="col-span-3"
+																	field={subField}
+																	label={i === 0 ? "Win Score" : null}
+																/>
+															</>
+														)}
+													</form.AppField>
+													<form.AppField name={`sets[${i}].switchScore`}>
+														{(subField) => (
+															<>
+																<subField.Number
+																	className="col-span-3"
+																	field={subField}
+																	label={i === 0 ? "Switch Every" : null}
+																/>
+															</>
+														)}
+													</form.AppField>
+												</div>
+											))}
+										</div>
+									)}
+								</form.AppField>
+							</DisclosurePanel>
+						</Disclosure>
+					</div>
 
 					<form.AppField
 						name="assignCourts"
@@ -261,7 +263,7 @@ export function CreatePlayoffsForm({
 							</form.SubmitButton>
 						</form.Footer>
 					</form.AppForm>
-				</div>
+				</form>
 			</div>
 		</Modal>
 	);
