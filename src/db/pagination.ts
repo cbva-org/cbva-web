@@ -1,12 +1,10 @@
-// Solution for paginated query with page info returned taken from this issue:
-//
-// - https://github.com/drizzle-team/drizzle-orm/issues/2403#issuecomment-3126072359
-//
 import { count, sql } from "drizzle-orm";
-import type { DBQueryConfig } from "drizzle-orm/_relations";
+import type { DBQueryConfig } from "drizzle-orm/relations";
 import type { KnownKeysOnly } from "drizzle-orm/utils";
 import z from "zod";
-import { db } from "./connection";
+import type { db } from "./connection";
+import type { Database, Transaction } from "./schema";
+import { omit } from "lodash-es";
 
 export const pagingOptionsSchema = z.object({
 	page: z.number().min(1).default(1),
@@ -22,59 +20,64 @@ export function getLimitAndOffset({ page, size }: PagingOptions) {
 	};
 }
 
-// export interface PagingOptions {
-// 	page: number;
-// 	size: number;
-// }
-
 type TableNames = keyof typeof db._query;
 type Schema = NonNullable<typeof db._.schema>;
-export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type Relations = NonNullable<typeof db._.relations>;
 
-interface FindPagedOptions<
+export interface FindPagedOptions<
 	TTableName extends TableNames,
 	TConfig extends Omit<
-		DBQueryConfig<"many", true, Schema, Schema[TTableName]>,
+		DBQueryConfig<"many", Relations, Relations[TTableName]>,
 		"limit" | "offset"
 	>,
+	TCountColumn extends keyof Relations[TTableName]["table"]["$inferSelect"],
 > {
 	paging: PagingOptions;
-	config?: KnownKeysOnly<
+	query?: KnownKeysOnly<
 		TConfig,
 		Omit<
-			DBQueryConfig<"many", true, Schema, Schema[TTableName]>,
+			DBQueryConfig<"many", Relations, Relations[TTableName]>,
 			"limit" | "offset"
 		>
 	>;
-	tx?: Transaction;
+	countColumn?: TCountColumn;
 }
 
-/**
- * Runs a findMany query with paging and returns the result and total count.
- *
- * Config is identical to the one used in `drizzle-orm` findMany, minus the limit and offset.
- */
 export async function findPaged<
 	TTableName extends TableNames,
-	TConfig extends DBQueryConfig<"many", true, Schema, Schema[TTableName]>,
->(table: TTableName, options: FindPagedOptions<TTableName, TConfig>) {
-	const { paging, config, tx } = options;
-	const txOrDb = tx || db;
-	const { with: _, ...countConfig } = config ?? {};
-	const qCount = txOrDb._query[table].findMany({
-		...countConfig,
-		columns: { id: true },
-	});
+	TConfig extends Omit<
+		DBQueryConfig<"many", Relations, Relations[TTableName]>,
+		"limit" | "offset"
+	>,
+	TCountColumn extends keyof Relations[TTableName]["table"]["$inferSelect"],
+>(
+	db: Database | Transaction,
+	table: TTableName,
+	{
+		paging,
+		query,
+		countColumn,
+	}: FindPagedOptions<TTableName, TConfig, TCountColumn>,
+) {
+	const countQuery = omit(query, "with");
+
+	const qCount = db.query[table].findMany({
+		...countQuery,
+		columns: countColumn ? { [countColumn]: true } : undefined,
+	} as KnownKeysOnly<
+		TConfig,
+		DBQueryConfig<"many", Relations, Relations[TTableName]>
+	>);
 
 	const [result, countResult] = await Promise.all([
-		txOrDb._query[table].findMany({
-			...config,
+		db.query[table].findMany({
+			...query,
 			...getLimitAndOffset(paging),
 		} as KnownKeysOnly<
 			TConfig,
-			DBQueryConfig<"many", true, Schema, Schema[TTableName]>
+			DBQueryConfig<"many", Relations, Relations[TTableName]>
 		>),
-		txOrDb.select({ totalCount: count() }).from(sql`${qCount}`),
+		db.select({ totalCount: count() }).from(sql`${qCount}`),
 	]);
 
 	const totalItems = countResult?.[0]?.totalCount ?? 0;
