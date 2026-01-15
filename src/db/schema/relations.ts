@@ -120,15 +120,14 @@ export const relations = defineRelations(tables, (r) => ({
 			to: r.teams.id,
 			optional: false,
 		}),
+		players: r.many.teamPlayers({
+			from: r.tournamentDivisionTeams.teamId.through(r.teamPlayers.teamId),
+			to: r.teamPlayers.id.through(r.teamPlayers.id),
+		}),
 		poolTeam: r.one.poolTeams({
 			from: r.tournamentDivisionTeams.id,
 			to: r.poolTeams.teamId,
 		}),
-		// tournamentDivision: r.one.divisions({
-		// 	from: r.tournamentDivisionTeams.tournamentDivisionId,
-		// 	to: r.tournamentDivisions.id,
-		// 	optional: false,
-		// }),
 		tournamentDivision: r.one.tournamentDivisions({
 			from: r.tournamentDivisionTeams.tournamentDivisionId,
 			to: r.tournamentDivisions.id,

@@ -13,6 +13,7 @@ import { TeamNames } from "../teams/names";
 import { EditMatchRefsForm } from "../tournaments/controls/edit-playoff-match-refs";
 import { ProfileName } from "../profiles/name";
 import { groupBy } from "lodash-es";
+import { SetMatchRefsForm } from "./set-match-refs";
 
 // TODO: match ref teams -> match refs
 // - change this (or new) file to modify refs. if refs have same teamId, operate on them equally
@@ -64,6 +65,8 @@ export function RefsList({
 
 	const groupedRefs = groupBy(refs, "teamId");
 
+	console.log(groupedRefs);
+
 	return (
 		<>
 			{refs.length ? (
@@ -71,7 +74,7 @@ export function RefsList({
 					Refs:{" "}
 					{Object.keys(groupedRefs)
 						.map((teamId) => ({
-							teamId: Number.parseInt(teamId, 10),
+							teamId: teamId === "null" ? null : Number.parseInt(teamId, 10),
 							refs: groupedRefs[teamId],
 						}))
 						.map(({ teamId, refs }) => (
@@ -80,8 +83,12 @@ export function RefsList({
 
 								{canEdit && matchStatus !== "completed" && (
 									<>
-										<RemoveRefForm teamId={teamId} />
-										<AbandonRefForm teamId={teamId} />
+										<RemoveRefForm
+											ids={refs.map(({ id }) => id)}
+											teamId={teamId}
+										/>
+
+										{teamId && <AbandonRefForm teamId={teamId} />}
 									</>
 								)}
 							</span>
@@ -92,7 +99,7 @@ export function RefsList({
 			)}
 
 			{canEdit && !["completed", "tbd"].includes(matchStatus) && (
-				<EditMatchRefsForm
+				<SetMatchRefsForm
 					tournamentDivisionId={tournamentDivisionId}
 					playoffMatchId={playoffMatchId}
 					poolMatchId={poolMatchId}

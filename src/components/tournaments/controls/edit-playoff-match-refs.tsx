@@ -12,7 +12,7 @@ import { editPlayoffMatchRefTeamSchema } from "@/data/tournaments/referee";
 import { getPoolStats, type PoolTeamStats } from "@/hooks/matches";
 import { isDefined, isNotNullOrUndefined } from "@/utils/types";
 import type { MatchTeam } from "../panels/games/pool-match-grid";
-import { editMatchRefTeamMutationOptions } from "@/functions/refs/edit-match-ref-teams";
+import { setMatchRefMutationOptions } from "@/functions/refs/set-match-refs";
 import {
 	playoffMatchQueryOptions,
 	poolMatchQueryOptions,
@@ -67,7 +67,7 @@ export function EditMatchRefsForm({
 	const playoffsQueryOptions = usePlayoffsQueryOptions();
 
 	const { mutate, failureReason } = useMutation({
-		...editMatchRefTeamMutationOptions(),
+		...setMatchRefMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries(teamsQueryOptions);
 			queryClient.invalidateQueries(poolsQueryOptions);

@@ -17,11 +17,11 @@ import { DeleteIcon } from "lucide-react";
 import { useState } from "react";
 
 export type RemoveRefFormProps = {
-	id?: number;
-	teamId?: number;
+	ids?: number[];
+	teamId?: number | null;
 };
 
-export function RemoveRefForm({ id, teamId, ...props }: RemoveRefFormProps) {
+export function RemoveRefForm({ ids, teamId, ...props }: RemoveRefFormProps) {
 	const [open, setOpen] = useState(false);
 
 	const queryClient = useQueryClient();
@@ -41,7 +41,7 @@ export function RemoveRefForm({ id, teamId, ...props }: RemoveRefFormProps) {
 		},
 	});
 
-	const schema = removeRefSchema.omit({ teamId: true });
+	const schema = removeRefSchema.omit({ ids: true, teamId: true });
 
 	const form = useAppForm({
 		defaultValues: {},
@@ -51,7 +51,7 @@ export function RemoveRefForm({ id, teamId, ...props }: RemoveRefFormProps) {
 		},
 		onSubmit: () => {
 			mutate({
-				id,
+				ids,
 				teamId,
 			});
 		},
@@ -71,10 +71,10 @@ export function RemoveRefForm({ id, teamId, ...props }: RemoveRefFormProps) {
 			<Modal {...props} isOpen={open} onOpenChange={setOpen}>
 				<div className="p-3 flex flex-col space-y-4 relative">
 					<Heading className={title({ size: "sm" })} slot="title">
-						Remove Ref Team?
+						Remove Refs?
 					</Heading>
 
-					<p>Are you sure you want to remove this reffing team?</p>
+					<p>Are you sure you want to remove this reffing assignment?</p>
 
 					<form
 						className="flex flex-col space-y-6"

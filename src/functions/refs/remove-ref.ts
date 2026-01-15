@@ -4,21 +4,21 @@ import { badRequest } from "@/lib/responses";
 import { isDefined } from "@/utils/types";
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import z from "zod";
 
 export const removeRefSchema = z.object({
-	id: z.number().optional(),
-	teamId: z.number().optional(),
+	ids: z.array(z.number()).optional(),
+	teamId: z.number().optional().nullable(),
 });
 
 export const removeRef = createServerFn()
 	.inputValidator(removeRefSchema)
-	.handler(async ({ data: { id, teamId } }) => {
+	.handler(async ({ data: { ids, teamId } }) => {
 		const filter = isDefined(teamId)
 			? eq(matchRefs.teamId, teamId)
-			: isDefined(id)
-				? eq(matchRefs.id, id)
+			: isDefined(ids)
+				? inArray(matchRefs.id, ids)
 				: null;
 
 		if (!filter) {
