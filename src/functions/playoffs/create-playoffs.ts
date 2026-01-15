@@ -53,6 +53,13 @@ export async function createPlayoffsHandler({
 }: {
 	data: CreatePlayoffsParams;
 }) {
+	if (overwrite) {
+		// Delete existing playoff matches if overwrite is true
+		await db
+			.delete(playoffMatches)
+			.where(eq(playoffMatches.tournamentDivisionId, tournamentDivisionId));
+	}
+
 	const pools = await db.query.pools.findMany({
 		with: {
 			teams: {
@@ -83,13 +90,6 @@ export async function createPlayoffsHandler({
 	const bracket = draftPlayoffs(teamCount + wildcardCount);
 
 	await db.transaction(async (txn) => {
-		if (overwrite) {
-			// Delete existing playoff matches if overwrite is true
-			await txn
-				.delete(playoffMatches)
-				.where(eq(playoffMatches.tournamentDivisionId, tournamentDivisionId));
-		}
-
 		const roundIds: (number | null)[][] = [];
 
 		let matchNumber = 1;

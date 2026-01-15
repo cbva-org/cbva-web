@@ -25,7 +25,7 @@ import { PlayoffsPanel } from "@/components/tournaments/panels/playoffs";
 import { PoolsPanel } from "@/components/tournaments/panels/pools";
 import { TeamsPanel } from "@/components/tournaments/panels/teams";
 import { VenueHeader } from "@/components/venues/header";
-import { playoffsQueryOptions } from "@/data/playoffs";
+import { playoffsQueryOptions } from "@/functions/playoffs/get-playoffs";
 import { poolsQueryOptions } from "@/data/pools";
 import { teamsQueryOptions } from "@/data/teams";
 import { tournamentQueryOptions } from "@/data/tournaments";

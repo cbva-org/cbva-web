@@ -58,6 +58,10 @@ export const relations = defineRelations(tables, (r) => ({
 			from: r.playoffMatches.teamBId,
 			to: r.tournamentDivisionTeams.id,
 		}),
+		refs: r.many.matchRefs({
+			from: r.playoffMatches.id,
+			to: r.matchRefs.playoffMatchId,
+		}),
 	},
 	matchSets: {
 		poolMatch: r.one.poolMatches({

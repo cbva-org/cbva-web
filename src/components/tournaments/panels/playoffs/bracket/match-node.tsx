@@ -8,8 +8,9 @@ import { Button } from "@/components/base/button";
 import { Link } from "@/components/base/link";
 import { TeamNames } from "@/components/teams/names";
 import { SimulateMatchModal } from "@/components/tournaments/controls/simulate-match";
-import { playoffsQueryOptions } from "@/data/playoffs";
+import { playoffsQueryOptions } from "@/functions/playoffs/get-playoffs";
 import type {
+	MatchRef,
 	MatchRefTeam,
 	MatchSet,
 	PlayerProfile,
@@ -31,6 +32,7 @@ import { RefTeamsList } from "@/components/refs/ref-teams-list";
 import { SetCourtForm } from "@/components/tournaments/controls/set-court";
 import { OverrideScoreForm } from "@/components/matches/director-controls/override-score";
 import { useState } from "react";
+import { RefsList } from "@/components/refs/refs-list";
 
 export const scoreTextStyles = tv({
 	base: "p-3 text-center flex flex-col justify-center col-span-1 text-xl font-light border-gray-300",
@@ -64,17 +66,11 @@ export function MatchNode({
 		sets: MatchSet[];
 		teamA?: MatchTeam;
 		teamB?: MatchTeam;
-		refTeams: (MatchRefTeam & {
-			team: Pick<TournamentDivisionTeam, "id"> & {
-				team: Pick<Team, "id"> & {
-					players: (TeamPlayer & {
-						profile: Pick<
-							PlayerProfile,
-							"id" | "preferredName" | "firstName" | "lastName"
-						>;
-					})[];
-				};
-			};
+		refs: (MatchRef & {
+			profile: Pick<
+				PlayerProfile,
+				"id" | "preferredName" | "firstName" | "lastName"
+			>;
 		})[];
 		refetch: () => void;
 	};
@@ -97,7 +93,7 @@ export function MatchNode({
 		teamBPreviousMatchId,
 		refetch,
 		tournamentDivisionId,
-		refTeams,
+		refs,
 		loserFinish,
 	} = data;
 
@@ -139,7 +135,7 @@ export function MatchNode({
 	return (
 		<div>
 			<div className="p-3 flex flex-row space-x-2 items-center">
-				<RefTeamsList
+				<RefsList
 					tournamentDivisionId={tournamentDivisionId}
 					playoffMatchId={data.id}
 					matchStatus={
@@ -147,7 +143,7 @@ export function MatchNode({
 							? data.status
 							: "tbd"
 					}
-					refTeams={refTeams}
+					refs={refs}
 				/>
 
 				{canUpdate &&

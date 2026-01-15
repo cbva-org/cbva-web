@@ -3,7 +3,7 @@ import { useParams } from "@tanstack/react-router";
 import { tournamentQueryOptions } from "@/data/tournaments";
 import { teamsQueryOptions } from "@/data/teams";
 import { poolsQueryOptions } from "@/data/pools";
-import { playoffsQueryOptions } from "@/data/playoffs";
+import { playoffsQueryOptions } from "@/functions/playoffs/get-playoffs";
 import { isDefined } from "@/utils/types";
 import { parseDate, today } from "@internationalized/date";
 import { getDefaultTimeZone } from "@/lib/dates";
@@ -113,6 +113,17 @@ export function usePlayoffMatches() {
 	});
 
 	return playoffs;
+}
+
+export function usePlayoffMatch(matchId: number) {
+	const query = usePlayoffsQueryOptions();
+
+	const { data } = useQuery({
+		...query,
+		select: (data) => data.find(({ id }) => id === matchId),
+	});
+
+	return data;
 }
 
 export function useIsPlayoffsComplete() {
