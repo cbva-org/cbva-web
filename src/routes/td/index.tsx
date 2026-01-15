@@ -1,5 +1,4 @@
 import { roleHasPermission } from "@/auth/shared";
-import { Button } from "@/components/base/button";
 import { Checkbox } from "@/components/base/checkbox";
 import {
 	DropdownMenu,
@@ -26,12 +25,11 @@ import {
 } from "@/functions/tournaments/get-tournaments-by-directors";
 import { DefaultLayout } from "@/layouts/default";
 import { getDefaultTimeZone } from "@/lib/dates";
-import { dbg } from "@/utils/dbg";
 import { parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { Gamepad2Icon, SettingsIcon, XIcon } from "lucide-react";
+import { SettingsIcon } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/td/")({
