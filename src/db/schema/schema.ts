@@ -4,6 +4,7 @@ export * from "./directors";
 export * from "./divisions";
 export * from "./levels";
 export * from "./match-ref-teams";
+export * from "./match-refs";
 export * from "./match-sets";
 export * from "./player-profiles";
 export * from "./playoff-matches";

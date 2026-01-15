@@ -1,21 +1,13 @@
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import {
-	accounts,
-	userRelations,
-	users,
-	// usersRelationsDefinitions,
-} from "./auth";
+import { accounts, userRelations, users } from "./auth";
 import { blocks, pages } from "./blocks";
 import { directorRelations, directors } from "./directors";
 import { divisionRelations, divisions } from "./divisions";
 import { levels } from "./levels";
 import { matchRefTeams, matchRefTeamsRelations } from "./match-ref-teams";
+import { matchRefs, matchRefsRelations } from "./match-refs";
 import { matchSets, matchSetsRelations } from "./match-sets";
-import {
-	playerProfileRelations,
-	playerProfiles,
-	// playerProfilesRelationsDefinitions,
-} from "./player-profiles";
+import { playerProfileRelations, playerProfiles } from "./player-profiles";
 import { playoffMatches, playoffMatchRelations } from "./playoff-matches";
 import { poolMatches, poolMatchRelations } from "./pool-matches";
 import { poolTeams, poolTeamsRelations } from "./pool-teams";
@@ -52,6 +44,7 @@ export * from "./directors";
 export * from "./divisions";
 export * from "./levels";
 export * from "./match-ref-teams";
+export * from "./match-refs";
 export * from "./match-sets";
 export * from "./player-profiles";
 export * from "./playoff-matches";
@@ -76,6 +69,7 @@ export const tables = {
 	levels,
 	matchSets,
 	matchRefTeams,
+	matchRefs,
 	pages,
 	playerProfiles,
 	playoffMatches,
@@ -105,6 +99,7 @@ export const relationships = {
 	poolMatchRelations,
 	poolRelations,
 	matchRefTeamsRelations,
+	matchRefsRelations,
 	poolTeamsRelations,
 	teamPlayerRelations,
 	teamRelations,
