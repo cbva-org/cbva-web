@@ -1,6 +1,9 @@
 import { roleHasPermission } from "@/auth/shared";
-import { Button } from "@/components/base/button";
 import { Checkbox } from "@/components/base/checkbox";
+import {
+	DropdownMenu,
+	DropdownMenuItem,
+} from "@/components/base/dropdown-menu";
 import { Link } from "@/components/base/link";
 import { Pagination } from "@/components/base/pagination";
 import { title } from "@/components/base/primitives";
@@ -13,7 +16,8 @@ import {
 	TableRow,
 } from "@/components/base/table";
 import { Toolbar } from "@/components/base/toolbar";
-import { createDemoTournamentMuationOptions } from "@/functions/tournaments/create-demo-tournament";
+import { ManageDivisionsForm } from "@/components/tournaments/controls/manage-divisions";
+import { createDemoTournamentMutationOptions } from "@/functions/tournaments/create-demo-tournament";
 import { deleteDemoTournamentMuationOptions } from "@/functions/tournaments/delete-demo-tournament";
 import {
 	getTournamentsByDirectorsOptions,
@@ -25,7 +29,8 @@ import { parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { Gamepad2Icon, XIcon } from "lucide-react";
+import { SettingsIcon } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/td/")({
 	validateSearch: getTournamentsByDirectorsSchema,
@@ -75,7 +80,7 @@ function RouteComponent() {
 	const navigate = useNavigate();
 
 	const { mutate: copyAsDemo } = useMutation({
-		...createDemoTournamentMuationOptions(),
+		...createDemoTournamentMutationOptions(),
 		onSuccess: ({ data }) => {
 			navigate({
 				to: "/tournaments/$tournamentId",
@@ -92,6 +97,10 @@ function RouteComponent() {
 			refetch();
 		},
 	});
+
+	const [manageDivisionsId, setManageDivisionsId] = useState<number | null>(
+		null,
+	);
 
 	return (
 		<DefaultLayout
@@ -136,7 +145,7 @@ function RouteComponent() {
 							<TableColumn id="actions">Actions</TableColumn>
 						</TableHeader>
 
-						<TableBody items={tournaments}>
+						<TableBody items={tournaments} dependencies={[manageDivisionsId]}>
 							{({ id, name, date, venue, visible, demo }) => {
 								return (
 									<TableRow
@@ -172,38 +181,43 @@ function RouteComponent() {
 										</TableCell>
 										<TableCell>
 											<Toolbar>
-												{demo ? (
-													<Button
-														variant="icon"
-														color="default"
-														tooltip="Delete demo tournament"
-														radius="md"
+												<DropdownMenu buttonIcon={<SettingsIcon />}>
+													<DropdownMenuItem
 														onPress={() => {
-															deleteDemo({
-																id,
-															});
+															setManageDivisionsId(id);
 														}}
 													>
-														<XIcon className="text-red-500" size={16} />
-													</Button>
-												) : (
-													<Button
-														variant="icon"
-														color="default"
-														tooltip="Copy as demo"
-														radius="md"
-														onPress={() => {
-															copyAsDemo({
-																id,
-															});
-														}}
-													>
-														<Gamepad2Icon
-															className="text-green-500"
-															size={16}
-														/>
-													</Button>
-												)}
+														Manage Divisions
+													</DropdownMenuItem>
+													{demo ? (
+														<DropdownMenuItem
+															onPress={() => {
+																deleteDemo({
+																	id,
+																});
+															}}
+														>
+															Delete Demo
+														</DropdownMenuItem>
+													) : (
+														<DropdownMenuItem
+															onPress={() => {
+																copyAsDemo({
+																	id,
+																});
+															}}
+														>
+															Copy as Demo
+														</DropdownMenuItem>
+													)}
+												</DropdownMenu>
+												<ManageDivisionsForm
+													tournamentId={id}
+													isOpen={manageDivisionsId === id}
+													onOpenChange={(open) => {
+														setManageDivisionsId(open ? id : null);
+													}}
+												/>
 											</Toolbar>
 										</TableCell>
 									</TableRow>

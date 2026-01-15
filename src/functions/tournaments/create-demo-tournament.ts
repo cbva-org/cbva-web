@@ -33,7 +33,7 @@ export const createDemoTournament = createServerFn()
 		};
 	});
 
-export const createDemoTournamentMuationOptions = () =>
+export const createDemoTournamentMutationOptions = () =>
 	mutationOptions({
 		mutationFn: (data: z.infer<typeof createDemoTournamentSchema>) =>
 			createDemoTournament({ data }),

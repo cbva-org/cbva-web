@@ -1,7 +1,7 @@
 import { authMiddleware, type SessionViewer } from "@/auth/shared";
 import { tournamentListFilterSchema } from "@/components/tournaments/filters";
 import { db } from "@/db/connection";
-import { findPaged } from "@/db/pagination";
+import { findPaged } from "@/db/_pagination";
 import { type TournamentDivision, tournamentDivisions } from "@/db/schema";
 import { isNotNull } from "@/utils/types";
 import { queryOptions } from "@tanstack/react-query";

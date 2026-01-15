@@ -8,7 +8,7 @@ import { isDefined } from "@/utils/types";
 import { forbidden } from "@/lib/responses";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { today } from "@internationalized/date";
-import { findPaged } from "@/db/pagination2";
+import { findPaged } from "@/db/pagination";
 
 export const getTournamentsByDirectorsSchema = z.object({
 	directorIds: z.array(z.number()).optional(),
