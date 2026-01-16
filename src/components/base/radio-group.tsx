@@ -10,6 +10,7 @@ import { tv } from "tailwind-variants";
 import { Description, FieldError, Label } from "./field";
 import { composeTailwindRenderProps, focusRing } from "./utils";
 import { twMerge } from "tailwind-merge";
+import { Link, LinkProps, useNavigate } from "@tanstack/react-router";
 
 export interface RadioGroupProps extends Omit<RACRadioGroupProps, "children"> {
 	label?: string;
@@ -78,5 +79,24 @@ export function Radio(props: RadioProps) {
 				</>
 			)}
 		</RACRadio>
+	);
+}
+
+export function RadioLink({
+	to,
+	params,
+	...props
+}: RadioProps & Pick<LinkProps, "to" | "params">) {
+	const navigate = useNavigate();
+
+	return (
+		<Link to={to} params={params} onClick={(e) => e.preventDefault()}>
+			<Radio
+				{...props}
+				onPress={() => {
+					navigate({ to, params });
+				}}
+			/>
+		</Link>
 	);
 }

@@ -16,7 +16,6 @@ import { Route as RatingsRouteImport } from './routes/ratings'
 import { Route as NotFoundRouteImport } from './routes/not-found'
 import { Route as LogOutRouteImport } from './routes/log-out'
 import { Route as LogInRouteImport } from './routes/log-in'
-import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TournamentsIndexRouteImport } from './routes/tournaments/index'
@@ -26,6 +25,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
 import { Route as VenuesVenueIdRouteImport } from './routes/venues/$venueId'
 import { Route as TournamentsCreateRouteImport } from './routes/tournaments/create'
+import { Route as LeaderboardGenderRouteImport } from './routes/leaderboard.$gender'
 import { Route as JuniorsLeaderboardRouteImport } from './routes/juniors/leaderboard'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
@@ -81,11 +81,6 @@ const LogInRoute = LogInRouteImport.update({
   path: '/log-in',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LeaderboardRoute = LeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
@@ -129,6 +124,11 @@ const VenuesVenueIdRoute = VenuesVenueIdRouteImport.update({
 const TournamentsCreateRoute = TournamentsCreateRouteImport.update({
   id: '/tournaments/create',
   path: '/tournaments/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardGenderRoute = LeaderboardGenderRouteImport.update({
+  id: '/leaderboard/$gender',
+  path: '/leaderboard/$gender',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JuniorsLeaderboardRoute = JuniorsLeaderboardRouteImport.update({
@@ -234,7 +234,6 @@ const ApiTasksCleanupStorageRoute = ApiTasksCleanupStorageRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/health': typeof HealthRoute
-  '/leaderboard': typeof LeaderboardRoute
   '/log-in': typeof LogInRoute
   '/log-out': typeof LogOutRoute
   '/not-found': typeof NotFoundRoute
@@ -250,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
+  '/leaderboard/$gender': typeof LeaderboardGenderRoute
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account': typeof AccountIndexRoute
@@ -272,7 +272,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/health': typeof HealthRoute
-  '/leaderboard': typeof LeaderboardRoute
   '/log-in': typeof LogInRoute
   '/log-out': typeof LogOutRoute
   '/not-found': typeof NotFoundRoute
@@ -288,6 +287,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
+  '/leaderboard/$gender': typeof LeaderboardGenderRoute
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account': typeof AccountIndexRoute
@@ -311,7 +311,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/health': typeof HealthRoute
-  '/leaderboard': typeof LeaderboardRoute
   '/log-in': typeof LogInRoute
   '/log-out': typeof LogOutRoute
   '/not-found': typeof NotFoundRoute
@@ -327,6 +326,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
+  '/leaderboard/$gender': typeof LeaderboardGenderRoute
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account/': typeof AccountIndexRoute
@@ -351,7 +351,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/health'
-    | '/leaderboard'
     | '/log-in'
     | '/log-out'
     | '/not-found'
@@ -367,6 +366,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/api/ping'
     | '/juniors/leaderboard'
+    | '/leaderboard/$gender'
     | '/tournaments/create'
     | '/venues/$venueId'
     | '/account'
@@ -389,7 +389,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/health'
-    | '/leaderboard'
     | '/log-in'
     | '/log-out'
     | '/not-found'
@@ -405,6 +404,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/api/ping'
     | '/juniors/leaderboard'
+    | '/leaderboard/$gender'
     | '/tournaments/create'
     | '/venues/$venueId'
     | '/account'
@@ -427,7 +427,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/health'
-    | '/leaderboard'
     | '/log-in'
     | '/log-out'
     | '/not-found'
@@ -443,6 +442,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/api/ping'
     | '/juniors/leaderboard'
+    | '/leaderboard/$gender'
     | '/tournaments/create'
     | '/venues/$venueId'
     | '/account/'
@@ -466,7 +466,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HealthRoute: typeof HealthRoute
-  LeaderboardRoute: typeof LeaderboardRoute
   LogInRoute: typeof LogInRoute
   LogOutRoute: typeof LogOutRoute
   NotFoundRoute: typeof NotFoundRoute
@@ -482,6 +481,7 @@ export interface RootRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   ApiPingRoute: typeof ApiPingRoute
   JuniorsLeaderboardRoute: typeof JuniorsLeaderboardRoute
+  LeaderboardGenderRoute: typeof LeaderboardGenderRoute
   TournamentsCreateRoute: typeof TournamentsCreateRoute
   VenuesVenueIdRoute: typeof VenuesVenueIdRoute
   AccountIndexRoute: typeof AccountIndexRoute
@@ -553,13 +553,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LogInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/leaderboard': {
-      id: '/leaderboard'
-      path: '/leaderboard'
-      fullPath: '/leaderboard'
-      preLoaderRoute: typeof LeaderboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/health': {
       id: '/health'
       path: '/health'
@@ -621,6 +614,13 @@ declare module '@tanstack/react-router' {
       path: '/tournaments/create'
       fullPath: '/tournaments/create'
       preLoaderRoute: typeof TournamentsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard/$gender': {
+      id: '/leaderboard/$gender'
+      path: '/leaderboard/$gender'
+      fullPath: '/leaderboard/$gender'
+      preLoaderRoute: typeof LeaderboardGenderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/juniors/leaderboard': {
@@ -762,7 +762,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HealthRoute: HealthRoute,
-  LeaderboardRoute: LeaderboardRoute,
   LogInRoute: LogInRoute,
   LogOutRoute: LogOutRoute,
   NotFoundRoute: NotFoundRoute,
@@ -778,6 +777,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   ApiPingRoute: ApiPingRoute,
   JuniorsLeaderboardRoute: JuniorsLeaderboardRoute,
+  LeaderboardGenderRoute: LeaderboardGenderRoute,
   TournamentsCreateRoute: TournamentsCreateRoute,
   VenuesVenueIdRoute: VenuesVenueIdRoute,
   AccountIndexRoute: AccountIndexRoute,

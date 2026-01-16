@@ -36,7 +36,7 @@ export function ProfileName({
 }: ProfileNameProps) {
 	const content = (
 		<>
-			{showFirst ? `${preferredName ?? firstName} ` : null}
+			{showFirst ? `${preferredName ? preferredName : firstName} ` : null}
 
 			<span className={lastNameStyles({ showFirst, abbreviateLast })}>
 				{lastName}
