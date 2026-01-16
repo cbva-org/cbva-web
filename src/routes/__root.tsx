@@ -71,6 +71,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 		<>
 			<Outlet />
 			<TanStackDevtools
+				config={{
+					position: "bottom-left",
+				}}
 				plugins={[
 					{
 						name: "Query",

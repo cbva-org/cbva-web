@@ -9,9 +9,8 @@ import { and, count, desc, eq, inArray, not } from "drizzle-orm";
 import { round } from "lodash-es";
 import { titleCase } from "title-case";
 import z from "zod";
-import type { Viewer } from "@/auth";
 import { getViewer } from "@/auth/server";
-import { authMiddleware, requireAuthenticated } from "@/auth/shared";
+import { requireAuthenticated } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
 	getLimitAndOffset,
@@ -35,33 +34,8 @@ import { tournamentDivisions } from "@/db/schema/tournament-divisions";
 import { tournaments } from "@/db/schema/tournaments";
 import { venues } from "@/db/schema/venues";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
-import { forbidden, unauthorized } from "@/lib/responses";
+import { forbidden } from "@/lib/responses";
 import { isNotNull, isNotNullOrUndefined } from "@/utils/types";
-
-async function readViewerProfiles(userId: Viewer["id"]) {
-	return await db._query.playerProfiles.findMany({
-		where: (t, { eq }) => eq(t.userId, userId),
-	});
-}
-
-// TODO: write test for unauthenticated request
-const getViewerProfiles = createServerFn({
-	method: "GET",
-})
-	.middleware([authMiddleware])
-	.handler(async ({ context: { viewer } }) => {
-		if (!viewer) {
-			throw unauthorized();
-		}
-
-		return await readViewerProfiles(viewer.id);
-	});
-
-export const viewerProfileQueryOptions = () =>
-	queryOptions({
-		queryKey: ["viewer_profiles"],
-		queryFn: () => getViewerProfiles(),
-	});
 
 export const insertPlayerProfileFn = createServerFn({ method: "POST" })
 	.inputValidator(createPlayerProfileSchema)
@@ -94,18 +68,6 @@ export function useInsertPlayerProfile() {
 	});
 }
 
-async function readProfile(id: number, viewerId: Viewer["id"]) {
-	const result = await db._query.playerProfiles.findFirst({
-		where: (t, { eq, and }) => and(eq(t.id, id), eq(t.userId, viewerId)),
-	});
-
-	if (!result) {
-		throw notFound();
-	}
-
-	return result;
-}
-
 const getProfile = createServerFn({
 	method: "GET",
 })
@@ -118,7 +80,20 @@ const getProfile = createServerFn({
 			throw new Error("UNAUTHENTICATED");
 		}
 
-		return await readProfile(id, viewer.id);
+		const isAdmin = viewer.role === "admin";
+
+		const result = await db.query.playerProfiles.findFirst({
+			where: {
+				id,
+				userId: isAdmin ? undefined : viewer.id,
+			},
+		});
+
+		if (!result) {
+			throw notFound();
+		}
+
+		return result;
 	});
 
 export const profileQueryOptions = (id: number) =>
@@ -132,7 +107,7 @@ const getProfileOverview = createServerFn({
 })
 	.inputValidator(selectPlayerProfileSchema.pick({ id: true }))
 	.handler(async ({ data: { id } }) => {
-		const result = await db._query.playerProfiles.findFirst({
+		const result = await db.query.playerProfiles.findFirst({
 			columns: {
 				id: true,
 				userId: true,
@@ -157,7 +132,7 @@ const getProfileOverview = createServerFn({
 			with: {
 				level: true,
 			},
-			where: (t, { eq }) => eq(t.id, id),
+			where: { id },
 		});
 
 		if (!result) {
