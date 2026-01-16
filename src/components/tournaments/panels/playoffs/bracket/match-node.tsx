@@ -222,6 +222,7 @@ export function MatchNode({
 								<EditIcon size={16} />
 							</Button>
 							<OverrideScoreForm
+								tournamentDivisionId={data.tournamentDivisionId}
 								matchId={data.id}
 								matchKind="playoff"
 								setId={s.id}

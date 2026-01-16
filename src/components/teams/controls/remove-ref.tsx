@@ -26,6 +26,7 @@ export function RemoveRefForm({ ids, teamId, ...props }: RemoveRefFormProps) {
 
 	const queryClient = useQueryClient();
 
+	// TODO: get rid of this
 	const teamsQueryOptions = useTeamsQueryOptions();
 	const poolsQueryOptions = usePoolsQueryOptions();
 	const playoffsQueryOptions = usePlayoffsQueryOptions();

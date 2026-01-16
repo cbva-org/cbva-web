@@ -10,7 +10,7 @@ import { Navbar } from "@/components/navbar";
 import { ToastRegion } from "@/components/base/toast";
 
 export function DefaultLayout({
-	classNames = { content: "pt-18 pb-12 space-y-12 w-full" },
+	classNames = { content: "pt-18 px-3 pb-12 space-y-12 w-full" },
 	children,
 	sideNavItems,
 }: {
@@ -24,7 +24,7 @@ export function DefaultLayout({
 				<Navbar />
 			</header>
 
-			<div className="flex flex-row h-full flex-1 relative">
+			<div className="flex flex-row h-full flex-1 relative max-w-full">
 				{sideNavItems && (
 					<SideNav>
 						{sideNavItems.map((props) => (

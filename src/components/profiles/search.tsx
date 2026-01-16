@@ -8,6 +8,7 @@ import { getProfilesQueryOptions } from "@/functions/profiles/get-profiles";
 import { ProfileName } from "./name";
 import { Link } from "../base/link";
 import { getLevelDisplay } from "@/hooks/tournament";
+import { ProfilePhoto } from "./photo";
 
 export function ProfileSearch() {
 	const [query, setQuery] = useState("");
@@ -47,7 +48,10 @@ export function ProfileSearch() {
 									"py-2 px-4 flex flex-row justify-between items-center",
 							})}
 						>
-							<ProfileName {...profile} link={false} />
+							<div className="flex flex-row gap-2">
+								<ProfilePhoto {...profile} />
+								<ProfileName {...profile} abbreviateLast={false} link={false} />
+							</div>
 
 							<span>{getLevelDisplay(profile.level, 0)}</span>
 						</Link>

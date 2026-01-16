@@ -9,7 +9,9 @@ export const Route = createFileRoute("/search")({
 
 function RouteComponent() {
 	return (
-		<DefaultLayout classNames={{ content: "w-full max-w-lg mx-auto py-12" }}>
+		<DefaultLayout
+			classNames={{ content: "w-full max-w-lg mx-auto py-6 px-3 md:py-12" }}
+		>
 			<ProfileSearch />
 		</DefaultLayout>
 	);

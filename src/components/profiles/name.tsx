@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import type { PlayerProfile } from "@/db/schema";
+import { tv } from "tailwind-variants";
 
 export type ProfileNameProps = Pick<
 	PlayerProfile,
@@ -8,8 +9,20 @@ export type ProfileNameProps = Pick<
 > & {
 	className?: string;
 	showFirst?: boolean;
+	abbreviateLast?: boolean;
 	link?: boolean;
 };
+
+const lastNameStyles = tv({
+	variants: {
+		showFirst: {
+			true: "hidden sm:inline",
+		},
+		abbreviateLast: {
+			false: "inline",
+		},
+	},
+});
 
 export function ProfileName({
 	className,
@@ -18,15 +31,18 @@ export function ProfileName({
 	firstName,
 	lastName,
 	showFirst = true,
+	abbreviateLast = true,
 	link = true,
 }: ProfileNameProps) {
 	const content = (
 		<>
 			{showFirst ? `${preferredName ?? firstName} ` : null}
 
-			<span className={clsx(showFirst && "hidden sm:inline")}>{lastName}</span>
+			<span className={lastNameStyles({ showFirst, abbreviateLast })}>
+				{lastName}
+			</span>
 
-			{showFirst && (
+			{showFirst && abbreviateLast && (
 				<span className={clsx("sm:hidden")}>{lastName.slice(0, 1)}.</span>
 			)}
 		</>

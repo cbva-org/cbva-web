@@ -106,7 +106,8 @@ function RouteComponent() {
 	return (
 		<DefaultLayout
 			classNames={{
-				content: "flex flex-col space-y-12 max-w-2xl px-3 py-12 mx-auto",
+				content:
+					"flex flex-col space-y-12 max-w-full md:max-w-2xl px-3 py-12 mx-auto",
 			}}
 		>
 			<div className="flex flex-col space-y-2">
@@ -128,8 +129,11 @@ function RouteComponent() {
 					/>
 				</Toolbar>
 
-				<div className="flex flex-col space-y-6 items-center">
-					<Table aria-label="Player's tournament results">
+				<div className="flex flex-col space-y-6 items-center max-w-full overflow-hidden">
+					<Table
+						aria-label="Player's tournament results"
+						className="max-w-full overflow-hidden"
+					>
 						<TableHeader className="bg-navbar-background">
 							<TableColumn id="date" allowsSorting minWidth={100}>
 								Date

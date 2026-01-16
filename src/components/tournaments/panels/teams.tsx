@@ -20,6 +20,7 @@ import clsx from "clsx";
 import { orderBy } from "lodash-es";
 import { useState, type ReactNode } from "react";
 import { assert } from "@/utils/assert";
+import { isDefined } from "@/utils/types";
 
 export function TeamsPanel({
 	tournamentDivisionId,
@@ -57,7 +58,7 @@ export function TeamsPanel({
 
 				<div className="md:hidden border border-gray-300 rounded-lg">
 					{activeTeams?.map(
-						({ id, team: { players }, finish, seed, poolTeam }, i) => {
+						({ id, team: { players }, status, finish, seed, poolTeam }, i) => {
 							const columns: [string, ReactNode][] = [
 								["Finish", finish ?? "-"],
 								["Seed", seed ?? "-"],
@@ -66,7 +67,19 @@ export function TeamsPanel({
 									`Player ${j + 1}`,
 									playerName(profile),
 								]),
-							];
+								canEdit
+									? [
+											"Actions",
+											<TeamControlsDropdown
+												key="actions"
+												tournamentDivisionTeamId={id}
+												status={status}
+												seed={seed}
+												poolTeam={poolTeam}
+											/>,
+										]
+									: null,
+							].filter(isDefined);
 
 							return (
 								<div

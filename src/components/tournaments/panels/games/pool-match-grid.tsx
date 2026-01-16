@@ -104,7 +104,7 @@ export function PoolMatchGrid({
 			<div className="grid grid-cols-10 items-center bg-navbar-background text-navbar-foreground">
 				<div
 					className={clsx(
-						"p-3 flex flex-row items-center space-x-3",
+						"p-3 flex flex-col items-start md:flex-row md:items-center space-x-3",
 						sets.length > 1
 							? "col-span-4 md:col-span-7"
 							: "col-span-8 md:col-span-9",

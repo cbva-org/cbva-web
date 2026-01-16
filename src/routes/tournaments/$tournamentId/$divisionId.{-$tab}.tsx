@@ -253,7 +253,7 @@ function RouteComponent() {
 		});
 
 	return (
-		<DefaultLayout classNames={{ content: "bg-white" }}>
+		<DefaultLayout classNames={{ content: "bg-white max-w-full" }}>
 			<VenueHeader {...venue} />
 
 			<div className="relative">
@@ -262,7 +262,7 @@ function RouteComponent() {
 					division={activeDivision}
 				/>
 
-				<div className="py-12 max-w-lg mx-auto flex flex-col space-y-6">
+				<div className="py-12 max-w-full md:max-w-lg mx-auto flex flex-col space-y-6">
 					<div className="text-center flex flex-col space-y-2">
 						{name && <h1 className={title()}>{name}</h1>}
 

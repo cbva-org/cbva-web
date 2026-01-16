@@ -12,9 +12,10 @@ import {
 } from "@/data/matches";
 import { overrideScoreMutationOptions } from "@/functions/matches";
 import { useMatchSets, useMatchTeams } from "@/lib/matches";
-import { usePlayoffsQueryOptions } from "@/components/tournaments/context";
+import { playoffsQueryOptions } from "@/functions/playoffs/get-playoffs";
 
 export type OverrideScoreFormProps = {
+	tournamentDivisionId?: number;
 	setId: number;
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -24,6 +25,7 @@ export type OverrideScoreFormProps = {
 );
 
 export function OverrideScoreForm({
+	tournamentDivisionId,
 	matchId,
 	matchKind,
 	setId,
@@ -35,8 +37,6 @@ export function OverrideScoreForm({
 
 	const queryClient = useQueryClient();
 
-	const playoffsQueryOptions = usePlayoffsQueryOptions();
-
 	const { mutate, failureReason } = useMutation({
 		...overrideScoreMutationOptions(),
 		onSuccess: () => {
@@ -44,7 +44,12 @@ export function OverrideScoreForm({
 				queryClient.invalidateQueries(poolMatchQueryOptions(matchId));
 			} else if (matchKind === "playoff") {
 				queryClient.invalidateQueries(playoffMatchQueryOptions(matchId));
-				queryClient.invalidateQueries(playoffsQueryOptions);
+
+				if (tournamentDivisionId) {
+					queryClient.invalidateQueries(
+						playoffsQueryOptions({ tournamentDivisionId }),
+					);
+				}
 			}
 
 			onOpenChange(false);

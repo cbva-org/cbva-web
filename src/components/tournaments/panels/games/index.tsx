@@ -152,7 +152,7 @@ export function GamesPanel({
 							})}
 						>
 							Pool {pool.name.toUpperCase()}
-							{pool.court ? <> — Court {pool.court}</> : null}
+							{pool.court ? <> — {pool.court}</> : null}
 						</h2>
 
 						<div className="flex flex-col space-y-6 w-full max-w-xl pb-8 mx-auto content-center">
