@@ -118,6 +118,7 @@ export function ScoreBoard({ poolMatchId, playoffMatchId }: ScoreBoardProps) {
 				params={{
 					tournamentId: match?.tournamentId.toString(),
 					divisionId: match?.tournamentDivisionId.toString(),
+					tab: poolMatchId ? "games" : "playoffs",
 				}}
 			>
 				<ChevronLeftIcon size={16} /> <span>Back to tournament</span>
