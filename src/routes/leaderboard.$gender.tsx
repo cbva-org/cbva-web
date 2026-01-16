@@ -19,10 +19,7 @@ import z from "zod";
 import { Pagination } from "@/components/base/pagination";
 import { levelsQueryOptions } from "@/data/levels";
 import { ToggleButtonGroup } from "@/components/base/toggle-button-group";
-import {
-	ToggleButton,
-	ToggleButtonLink,
-} from "@/components/base/toggle-button";
+import { ToggleButtonLink } from "@/components/base/toggle-button";
 import { withoutItem } from "@/lib/array";
 
 function displayToGender(display: string): Gender | null {
@@ -43,7 +40,7 @@ export const Route = createFileRoute("/leaderboard/$gender")({
 	loaderDeps: ({ search }) => search,
 	loader: async ({
 		params: { gender: genderStr },
-		deps: { page, pageSize },
+		deps: { page, pageSize, levels },
 		context: { queryClient },
 	}) => {
 		const gender = displayToGender(genderStr);
@@ -57,6 +54,7 @@ export const Route = createFileRoute("/leaderboard/$gender")({
 		const profiles = await queryClient.ensureQueryData(
 			getLeaderboardQueryOptions({
 				gender,
+				levels,
 				page,
 				pageSize,
 			}),
@@ -78,6 +76,7 @@ function RouteComponent() {
 	} = useSuspenseQuery(
 		getLeaderboardQueryOptions({
 			gender,
+			levels: selectedLevels,
 			page,
 			pageSize,
 		}),
@@ -128,7 +127,7 @@ function RouteComponent() {
 							to="/leaderboard/$gender"
 							params={{ gender: genderStr }}
 							search={{
-								page,
+								page: 1,
 								pageSize,
 								levels: selected
 									? withoutItem(selectedLevels, id)
@@ -143,14 +142,17 @@ function RouteComponent() {
 			</div>
 			<Table aria-label="Teams">
 				<TableHeader>
-					<TableColumn id="finish" allowsSorting>
+					<TableColumn id="rank" allowsSorting>
 						Rank
 					</TableColumn>
-					<TableColumn id="seed" isRowHeader allowsSorting>
+					<TableColumn id="points" isRowHeader allowsSorting>
 						Points
 					</TableColumn>
-					<TableColumn id="pool" isRowHeader>
+					<TableColumn id="player" isRowHeader>
 						Player
+					</TableColumn>
+					<TableColumn id="level" isRowHeader>
+						Level
 					</TableColumn>
 				</TableHeader>
 				<TableBody items={profiles || []}>
@@ -158,9 +160,16 @@ function RouteComponent() {
 						return (
 							<TableRow key={profile.id}>
 								<TableCell>{profile.rank}</TableCell>
-								<TableCell>{profile.ratedPoints}</TableCell>
+								<TableCell>{Math.round(profile.ratedPoints)}</TableCell>
 								<TableCell>
 									<ProfileName {...profile} />
+								</TableCell>
+								<TableCell>
+									{(
+										profile.level?.abbreviated ??
+										profile.level?.name ??
+										""
+									).toUpperCase()}
 								</TableCell>
 							</TableRow>
 						);

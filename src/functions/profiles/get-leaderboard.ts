@@ -7,14 +7,14 @@ import z from "zod";
 
 export const getLeaderboardSchema = z.object({
 	gender: genderSchema.optional(),
-	orderBy: z.array(z.enum(["rank", "points"])).optional(),
+	levels: z.array(z.number()).optional(),
 	page: z.number(),
 	pageSize: z.number(),
 });
 
 export const getLeaderboardFn = createServerFn()
 	.inputValidator(getLeaderboardSchema)
-	.handler(({ data: { gender, page, pageSize } }) => {
+	.handler(({ data: { gender, levels, page, pageSize } }) => {
 		return findPaged(db, "playerProfiles", {
 			paging: {
 				page,
@@ -27,6 +27,12 @@ export const getLeaderboardFn = createServerFn()
 				},
 				where: {
 					gender,
+					levelId:
+						levels && levels.length > 0
+							? {
+									in: levels,
+								}
+							: undefined,
 				},
 				orderBy: (t, { asc }) => [asc(t.rank), asc(t.ratedPoints)],
 			},

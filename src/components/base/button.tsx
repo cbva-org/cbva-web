@@ -71,6 +71,9 @@ export const button = tv({
       variant: ["solid", "icon"],
       color: "default",
       class: [
+        "border",
+        "border-default",
+        "hover:border-default-hover",
         "bg-default",
         "hover:bg-default-hover",
         "text-default-foreground",
@@ -80,6 +83,9 @@ export const button = tv({
       variant: ["solid", "icon"],
       color: "primary",
       class: [
+        "border",
+        "border-primary",
+        "hover:border-primary-hover",
         "bg-primary",
         "hover:bg-primary-hover",
         "text-primary-foreground",
@@ -88,29 +94,45 @@ export const button = tv({
     {
       variant: ["solid", "icon"],
       color: "secondary",
-      class: ["bg-secondary", "text-secondary-foreground"],
+      class: [
+        "border",
+        "border-secondary",
+        "bg-secondary",
+        "text-secondary-foreground",
+      ],
     },
     {
       isHovered: true,
       variant: ["solid", "icon"],
       color: "secondary",
-      class: ["bg-secondary-hover"],
+      class: ["border-secondary-hover", "bg-secondary-hover"],
     },
     {
       variant: ["solid", "icon"],
       color: "alternate",
       class: [
+        "border",
+        "border-alternate",
+        "hover:border-alternate-hover",
         "bg-alternate",
         "hover:bg-alternate-hover",
         "text-alternate-foreground",
         "aria-disabled:bg-default",
+        "aria-disabled:border-default",
         "aria-disabled:cursor-not-allowed",
       ],
     },
     {
       variant: "solid",
       color: "accent",
-      class: ["bg-cyan-300", "hover:bg-cyan-400", "text-default-foreground"],
+      class: [
+        "border",
+        "border-cyan-300",
+        "hover:border-cyan-400",
+        "bg-cyan-300",
+        "hover:bg-cyan-400",
+        "text-default-foreground",
+      ],
     },
     {
       variant: ["outline", "dashed", "link", "text"],
