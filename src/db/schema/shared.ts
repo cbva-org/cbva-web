@@ -67,7 +67,9 @@ export const matchStatusEnum = pgEnum("match_status", [
 	"cancelled",
 ]);
 
-export type MatchStatus = z.infer<typeof matchStatusEnum>;
+export const matchStatusSchema = createSelectSchema(matchStatusEnum);
+
+export type MatchStatus = z.infer<typeof matchStatusSchema>;
 
 export const setStatusEnum = pgEnum("set_status", [
 	"not_started",
