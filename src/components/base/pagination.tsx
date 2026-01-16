@@ -208,6 +208,7 @@ export function Pagination<T extends FileRouteTypes["fullPaths"]>({
                 variant: "solid",
                 color: page.isCurrent ? "secondary" : "alternate",
                 isDisabled: page.isCurrent,
+                className: page.isCurrent ? undefined : "hidden sm:inline-flex",
               }),
               linkProps,
             }

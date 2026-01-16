@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { DefaultLayout } from "@/layouts/default";
 import { RadioGroup, RadioLink } from "@/components/base/radio-group";
 import { title } from "@/components/base/primitives";
-import { Gender } from "@/db/schema/shared";
+import type { Gender } from "@/db/schema/shared";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
 	Table,
@@ -142,29 +142,31 @@ function RouteComponent() {
 			</div>
 			<Table aria-label="Teams">
 				<TableHeader>
-					<TableColumn id="rank" allowsSorting>
+					<TableColumn id="rank" width={1}>
 						Rank
 					</TableColumn>
-					<TableColumn id="points" isRowHeader allowsSorting>
+					<TableColumn id="points" width={1} isRowHeader>
 						Points
 					</TableColumn>
 					<TableColumn id="player" isRowHeader>
 						Player
 					</TableColumn>
-					<TableColumn id="level" isRowHeader>
-						Level
-					</TableColumn>
+					<TableColumn id="level" width={1} isRowHeader />
 				</TableHeader>
 				<TableBody items={profiles || []}>
 					{(profile) => {
 						return (
 							<TableRow key={profile.id}>
-								<TableCell>{profile.rank}</TableCell>
-								<TableCell>{Math.round(profile.ratedPoints)}</TableCell>
+								<TableCell className="whitespace-nowrap">
+									{profile.rank}
+								</TableCell>
+								<TableCell className="whitespace-nowrap">
+									{Math.round(profile.ratedPoints)}
+								</TableCell>
 								<TableCell>
 									<ProfileName {...profile} />
 								</TableCell>
-								<TableCell>
+								<TableCell className="whitespace-nowrap">
 									{(
 										profile.level?.abbreviated ??
 										profile.level?.name ??
