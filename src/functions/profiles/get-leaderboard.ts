@@ -7,6 +7,7 @@ import z from "zod";
 
 export const getLeaderboardSchema = z.object({
 	gender: genderSchema.optional(),
+	query: z.string().optional(),
 	levels: z.array(z.number()).optional(),
 	page: z.number(),
 	pageSize: z.number(),

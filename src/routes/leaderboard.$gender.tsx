@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { DefaultLayout } from "@/layouts/default";
 import { RadioGroup, RadioLink } from "@/components/base/radio-group";
 import { title } from "@/components/base/primitives";
@@ -21,6 +21,8 @@ import { levelsQueryOptions } from "@/data/levels";
 import { ToggleButtonGroup } from "@/components/base/toggle-button-group";
 import { ToggleButtonLink } from "@/components/base/toggle-button";
 import { withoutItem } from "@/lib/array";
+import { SearchField } from "@/components/base/search-field";
+import { Suspense } from "react";
 
 function displayToGender(display: string): Gender | null {
 	const gender: Gender | null =
@@ -33,6 +35,7 @@ export const Route = createFileRoute("/leaderboard/$gender")({
 	validateSearch: zodValidator(
 		z.object({
 			levels: z.array(z.number()).default([]),
+			// query: z.string().default(""),
 			page: z.number().default(1),
 			pageSize: z.number().default(25),
 		}),
@@ -40,7 +43,12 @@ export const Route = createFileRoute("/leaderboard/$gender")({
 	loaderDeps: ({ search }) => search,
 	loader: async ({
 		params: { gender: genderStr },
-		deps: { page, pageSize, levels },
+		deps: {
+			page,
+			pageSize,
+			// query,
+			levels,
+		},
 		context: { queryClient },
 	}) => {
 		const gender = displayToGender(genderStr);
@@ -53,6 +61,7 @@ export const Route = createFileRoute("/leaderboard/$gender")({
 
 		const profiles = await queryClient.ensureQueryData(
 			getLeaderboardQueryOptions({
+				// query,
 				gender,
 				levels,
 				page,
@@ -67,15 +76,23 @@ export const Route = createFileRoute("/leaderboard/$gender")({
 
 function RouteComponent() {
 	const { gender: genderStr } = Route.useParams();
-	const { levels: selectedLevels, page, pageSize } = Route.useLoaderDeps();
+	const {
+		levels: selectedLevels,
+		// query,
+		page,
+		pageSize,
+	} = Route.useSearch();
 
 	const gender = displayToGender(genderStr) as Gender;
+
+	// const navigate = useNavigate();
 
 	const {
 		data: { data: profiles, pageInfo },
 	} = useSuspenseQuery(
 		getLeaderboardQueryOptions({
 			gender,
+			// query,
 			levels: selectedLevels,
 			page,
 			pageSize,
@@ -139,45 +156,58 @@ function RouteComponent() {
 						</ToggleButtonLink>
 					))}
 				</ToggleButtonGroup>
+				{/* <SearchField */}
+				{/* 	value={query} */}
+				{/* 	onChange={(value) => { */}
+				{/* 		navigate({ */}
+				{/* 			replace: true, */}
+				{/* 			search: { */}
+				{/* 				query: value, */}
+				{/* 			}, */}
+				{/* 		}); */}
+				{/* 	}} */}
+				{/* /> */}
 			</div>
-			<Table aria-label="Teams">
-				<TableHeader>
-					<TableColumn id="rank" width={1}>
-						Rank
-					</TableColumn>
-					<TableColumn id="points" width={1} isRowHeader>
-						Points
-					</TableColumn>
-					<TableColumn id="player" isRowHeader>
-						Player
-					</TableColumn>
-					<TableColumn id="level" width={1} isRowHeader />
-				</TableHeader>
-				<TableBody items={profiles || []}>
-					{(profile) => {
-						return (
-							<TableRow key={profile.id}>
-								<TableCell className="whitespace-nowrap">
-									{profile.rank}
-								</TableCell>
-								<TableCell className="whitespace-nowrap">
-									{Math.round(profile.ratedPoints)}
-								</TableCell>
-								<TableCell>
-									<ProfileName {...profile} />
-								</TableCell>
-								<TableCell className="whitespace-nowrap">
-									{(
-										profile.level?.abbreviated ??
-										profile.level?.name ??
-										""
-									).toUpperCase()}
-								</TableCell>
-							</TableRow>
-						);
-					}}
-				</TableBody>
-			</Table>
+			<Suspense>
+				<Table aria-label="Teams">
+					<TableHeader>
+						<TableColumn id="rank" width={1}>
+							Rank
+						</TableColumn>
+						<TableColumn id="points" width={1} isRowHeader>
+							Points
+						</TableColumn>
+						<TableColumn id="player" isRowHeader>
+							Player
+						</TableColumn>
+						<TableColumn id="level" width={1} isRowHeader />
+					</TableHeader>
+					<TableBody items={profiles || []}>
+						{(profile) => {
+							return (
+								<TableRow key={profile.id}>
+									<TableCell className="whitespace-nowrap">
+										{profile.rank}
+									</TableCell>
+									<TableCell className="whitespace-nowrap">
+										{Math.round(profile.ratedPoints)}
+									</TableCell>
+									<TableCell>
+										<ProfileName {...profile} />
+									</TableCell>
+									<TableCell className="whitespace-nowrap">
+										{(
+											profile.level?.abbreviated ??
+											profile.level?.name ??
+											""
+										).toUpperCase()}
+									</TableCell>
+								</TableRow>
+							);
+						}}
+					</TableBody>
+				</Table>
+			</Suspense>
 			<Pagination
 				to="/leaderboard/$gender"
 				page={page}
