@@ -26,7 +26,6 @@ import { Route as AccountIndexRouteImport } from './routes/account/index'
 import { Route as VenuesVenueIdRouteImport } from './routes/venues/$venueId'
 import { Route as TournamentsCreateRouteImport } from './routes/tournaments/create'
 import { Route as LeaderboardChar123GenderChar125RouteImport } from './routes/leaderboard.{-$gender}'
-import { Route as JuniorsLeaderboardRouteImport } from './routes/juniors/leaderboard'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
@@ -39,6 +38,7 @@ import { Route as ProfileProfileIdIndexRouteImport } from './routes/profile/$pro
 import { Route as AccountVerifyIndexRouteImport } from './routes/account/verify/index'
 import { Route as TournamentsTournamentIdEditRouteImport } from './routes/tournaments/$tournamentId/edit'
 import { Route as ProfileProfileIdEditRouteImport } from './routes/profile/$profileId/edit'
+import { Route as JuniorsLeaderboardChar123GenderChar125RouteImport } from './routes/juniors/leaderboard.{-$gender}'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AccountVerifySuccessRouteImport } from './routes/account/verify/success'
 import { Route as MatchesPoolMatchIdIndexRouteImport } from './routes/matches/pool/$matchId/index'
@@ -132,11 +132,6 @@ const LeaderboardChar123GenderChar125Route =
     path: '/leaderboard/{-$gender}',
     getParentRoute: () => rootRouteImport,
   } as any)
-const JuniorsLeaderboardRoute = JuniorsLeaderboardRouteImport.update({
-  id: '/juniors/leaderboard',
-  path: '/juniors/leaderboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPingRoute = ApiPingRouteImport.update({
   id: '/api/ping',
   path: '/api/ping',
@@ -199,6 +194,12 @@ const ProfileProfileIdEditRoute = ProfileProfileIdEditRouteImport.update({
   path: '/profile/$profileId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JuniorsLeaderboardChar123GenderChar125Route =
+  JuniorsLeaderboardChar123GenderChar125RouteImport.update({
+    id: '/juniors/leaderboard/{-$gender}',
+    path: '/juniors/leaderboard/{-$gender}',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -249,7 +250,6 @@ export interface FileRoutesByFullPath {
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
-  '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
@@ -260,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/tournaments': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
   '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/tournaments/$tournamentId/edit': typeof TournamentsTournamentIdEditRoute
   '/account/verify': typeof AccountVerifyIndexRoute
@@ -287,7 +288,6 @@ export interface FileRoutesByTo {
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
-  '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
@@ -298,6 +298,7 @@ export interface FileRoutesByTo {
   '/tournaments': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
   '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/tournaments/$tournamentId/edit': typeof TournamentsTournamentIdEditRoute
   '/account/verify': typeof AccountVerifyIndexRoute
@@ -326,7 +327,6 @@ export interface FileRoutesById {
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
-  '/juniors/leaderboard': typeof JuniorsLeaderboardRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
   '/tournaments/create': typeof TournamentsCreateRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
@@ -337,6 +337,7 @@ export interface FileRoutesById {
   '/tournaments/': typeof TournamentsIndexRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
   '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/tournaments/$tournamentId/edit': typeof TournamentsTournamentIdEditRoute
   '/account/verify/': typeof AccountVerifyIndexRoute
@@ -366,7 +367,6 @@ export interface FileRouteTypes {
     | '/admin/schedule'
     | '/admin/users'
     | '/api/ping'
-    | '/juniors/leaderboard'
     | '/leaderboard/{-$gender}'
     | '/tournaments/create'
     | '/venues/$venueId'
@@ -377,6 +377,7 @@ export interface FileRouteTypes {
     | '/tournaments'
     | '/account/verify/success'
     | '/api/auth/$'
+    | '/juniors/leaderboard/{-$gender}'
     | '/profile/$profileId/edit'
     | '/tournaments/$tournamentId/edit'
     | '/account/verify'
@@ -404,7 +405,6 @@ export interface FileRouteTypes {
     | '/admin/schedule'
     | '/admin/users'
     | '/api/ping'
-    | '/juniors/leaderboard'
     | '/leaderboard/{-$gender}'
     | '/tournaments/create'
     | '/venues/$venueId'
@@ -415,6 +415,7 @@ export interface FileRouteTypes {
     | '/tournaments'
     | '/account/verify/success'
     | '/api/auth/$'
+    | '/juniors/leaderboard/{-$gender}'
     | '/profile/$profileId/edit'
     | '/tournaments/$tournamentId/edit'
     | '/account/verify'
@@ -442,7 +443,6 @@ export interface FileRouteTypes {
     | '/admin/schedule'
     | '/admin/users'
     | '/api/ping'
-    | '/juniors/leaderboard'
     | '/leaderboard/{-$gender}'
     | '/tournaments/create'
     | '/venues/$venueId'
@@ -453,6 +453,7 @@ export interface FileRouteTypes {
     | '/tournaments/'
     | '/account/verify/success'
     | '/api/auth/$'
+    | '/juniors/leaderboard/{-$gender}'
     | '/profile/$profileId/edit'
     | '/tournaments/$tournamentId/edit'
     | '/account/verify/'
@@ -481,7 +482,6 @@ export interface RootRouteChildren {
   AdminScheduleRoute: typeof AdminScheduleRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ApiPingRoute: typeof ApiPingRoute
-  JuniorsLeaderboardRoute: typeof JuniorsLeaderboardRoute
   LeaderboardChar123GenderChar125Route: typeof LeaderboardChar123GenderChar125Route
   TournamentsCreateRoute: typeof TournamentsCreateRoute
   VenuesVenueIdRoute: typeof VenuesVenueIdRoute
@@ -492,6 +492,7 @@ export interface RootRouteChildren {
   TournamentsIndexRoute: typeof TournamentsIndexRoute
   AccountVerifySuccessRoute: typeof AccountVerifySuccessRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  JuniorsLeaderboardChar123GenderChar125Route: typeof JuniorsLeaderboardChar123GenderChar125Route
   ProfileProfileIdEditRoute: typeof ProfileProfileIdEditRoute
   TournamentsTournamentIdEditRoute: typeof TournamentsTournamentIdEditRoute
   AccountVerifyIndexRoute: typeof AccountVerifyIndexRoute
@@ -624,13 +625,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeaderboardChar123GenderChar125RouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/juniors/leaderboard': {
-      id: '/juniors/leaderboard'
-      path: '/juniors/leaderboard'
-      fullPath: '/juniors/leaderboard'
-      preLoaderRoute: typeof JuniorsLeaderboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/ping': {
       id: '/api/ping'
       path: '/api/ping'
@@ -715,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileProfileIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/juniors/leaderboard/{-$gender}': {
+      id: '/juniors/leaderboard/{-$gender}'
+      path: '/juniors/leaderboard/{-$gender}'
+      fullPath: '/juniors/leaderboard/{-$gender}'
+      preLoaderRoute: typeof JuniorsLeaderboardChar123GenderChar125RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -777,7 +778,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminScheduleRoute: AdminScheduleRoute,
   AdminUsersRoute: AdminUsersRoute,
   ApiPingRoute: ApiPingRoute,
-  JuniorsLeaderboardRoute: JuniorsLeaderboardRoute,
   LeaderboardChar123GenderChar125Route: LeaderboardChar123GenderChar125Route,
   TournamentsCreateRoute: TournamentsCreateRoute,
   VenuesVenueIdRoute: VenuesVenueIdRoute,
@@ -788,6 +788,8 @@ const rootRouteChildren: RootRouteChildren = {
   TournamentsIndexRoute: TournamentsIndexRoute,
   AccountVerifySuccessRoute: AccountVerifySuccessRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  JuniorsLeaderboardChar123GenderChar125Route:
+    JuniorsLeaderboardChar123GenderChar125Route,
   ProfileProfileIdEditRoute: ProfileProfileIdEditRoute,
   TournamentsTournamentIdEditRoute: TournamentsTournamentIdEditRoute,
   AccountVerifyIndexRoute: AccountVerifyIndexRoute,
