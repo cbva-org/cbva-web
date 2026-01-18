@@ -29,7 +29,7 @@ import { Information } from "@/components/base/information";
 
 function displayToGender(display: string): Gender | null {
 	const gender: Gender | null =
-		display === "mens" ? "male" : display === "womens" ? "female" : null;
+		display === "boys" ? "male" : display === "girls" ? "female" : null;
 
 	return gender;
 }
@@ -53,7 +53,7 @@ export const Route = createFileRoute("/juniors/leaderboard/{-$gender}")({
 			throw redirect({
 				to: "/juniors/leaderboard/{-$gender}",
 				params: {
-					gender: "womens",
+					gender: "girls",
 				},
 			});
 		}
@@ -151,7 +151,12 @@ function RouteComponent() {
 								search={(prev) => ({
 									...prev,
 									page: 1,
-									division: division === value ? undefined : value,
+									division:
+										division === value
+											? value === 12
+												? undefined
+												: value - 2
+											: value,
 								})}
 								isSelected={division === true ? true : division >= value}
 							>

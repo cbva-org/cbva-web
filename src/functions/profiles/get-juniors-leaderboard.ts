@@ -6,20 +6,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { and, asc, count, eq, gte, ilike, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
-// Divisions go by high school graduation year and update 9/1. Until 9/1/26, they are:
-//
-// 12u: 2032 or after
-// 14u: 2030 or after
-// 16u: 2028 or after
-// 18u: 2026 or after
+// Divisions go by high school graduation year and update 9/1 each year.
+// Base year is current year, or next year if we're on/after September 1st.
+// 18U = base, 16U = base + 2, 14U = base + 4, 12U = base + 6
+function getMinGraduationYear(division: 12 | 14 | 16 | 18 | true): number {
+	const now = new Date();
+	const baseYear = now.getFullYear() + (now.getMonth() >= 8 ? 1 : 0);
 
-const juniorsGraduationYear: Record<string, number> = {
-	true: 2026,
-	"12": 2032,
-	"14": 2030,
-	"16": 2028,
-	"18": 2026,
-};
+	if (division === true || division === 18) return baseYear;
+	if (division === 16) return baseYear + 2;
+	if (division === 14) return baseYear + 4;
+	return baseYear + 6; // 12U
+}
 
 export const getJuniorsLeaderboardSchema = z.object({
 	gender: genderSchema.optional(),
@@ -42,8 +40,7 @@ export const getJuniorsLeaderboardFn = createServerFn()
 		async ({
 			data: { query, gender, levels: levelIds, juniors, page, pageSize },
 		}) => {
-			const minGraduationYear =
-				juniorsGraduationYear[juniors === true ? "true" : juniors];
+			const minGraduationYear = getMinGraduationYear(juniors);
 
 			// Calculate rank based on division (graduation year) and gender,
 			// not affected by other filters like levels or search query
