@@ -90,6 +90,7 @@ export function MatchNode({
 		winnerId,
 		roundIdx,
 		matchNumber,
+		status,
 		teamAPreviousMatchId,
 		teamBPreviousMatchId,
 		refetch,
@@ -180,7 +181,7 @@ export function MatchNode({
 							<span className="whitespace-nowrap text-ellipsis">{name}</span>
 						</Link>
 
-						{tournament && (
+						{tournament && status !== "completed" && (
 							<SetCourtForm
 								tournamentId={tournament?.id}
 								tournamentDivisionId={tournamentDivisionId}
