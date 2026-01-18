@@ -25,7 +25,7 @@ export function ProfileSearch() {
 	});
 
 	const profiles = useDebounce(data, {
-		wait: data?.length === 0 ? 0 : 250,
+		wait: data?.length === 0 ? 0 : 200,
 	});
 
 	return (

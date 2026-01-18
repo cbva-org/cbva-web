@@ -22,6 +22,8 @@ import { ToggleButtonGroup } from "@/components/base/toggle-button-group";
 import { ToggleButtonLink } from "@/components/base/toggle-button";
 import { withoutItem } from "@/lib/array";
 import { SearchField } from "@/components/base/search-field";
+import { assert } from "@/utils/assert";
+import { useDebounce } from "ahooks";
 
 function displayToGender(display: string): Gender | null {
 	const gender: Gender | null =
@@ -30,7 +32,7 @@ function displayToGender(display: string): Gender | null {
 	return gender;
 }
 
-export const Route = createFileRoute("/leaderboard/$gender")({
+export const Route = createFileRoute("/leaderboard/{-$gender}")({
 	validateSearch: zodValidator(
 		z.object({
 			levels: z.array(z.number()).default([]),
@@ -45,6 +47,15 @@ export const Route = createFileRoute("/leaderboard/$gender")({
 		deps: { page, pageSize, query, levels },
 		context: { queryClient },
 	}) => {
+		if (!genderStr) {
+			throw redirect({
+				to: "/leaderboard/{-$gender}",
+				params: {
+					gender: "womens",
+				},
+			});
+		}
+
 		const gender = displayToGender(genderStr);
 
 		if (!gender) {
@@ -72,6 +83,8 @@ function RouteComponent() {
 	const { gender: genderStr } = Route.useParams();
 	const { levels: selectedLevels, query, page, pageSize } = Route.useSearch();
 
+	assert(genderStr, "expected gender param");
+
 	const gender = displayToGender(genderStr) as Gender;
 
 	const navigate = useNavigate();
@@ -86,7 +99,10 @@ function RouteComponent() {
 		}),
 	);
 
-	const profiles = data?.data ?? [];
+	const profiles = useDebounce(data?.data, {
+		wait: data?.data.length === 0 ? 0 : 250,
+	});
+
 	const pageInfo = data?.pageInfo ?? { totalItems: 0, totalPages: 0 };
 
 	const { data: levels } = useQuery({
@@ -112,14 +128,14 @@ function RouteComponent() {
 			<div className="flex flex-col items-center space-y-3">
 				<RadioGroup defaultValue={gender} orientation="horizontal">
 					<RadioLink
-						to="/leaderboard/$gender"
+						to="/leaderboard/{-$gender}"
 						params={{ gender: "mens" }}
 						value="male"
 					>
 						Men's
 					</RadioLink>
 					<RadioLink
-						to="/leaderboard/$gender"
+						to="/leaderboard/{-$gender}"
 						params={{ gender: "womens" }}
 						value="female"
 					>
@@ -131,7 +147,7 @@ function RouteComponent() {
 					{levels?.map(({ id, name, abbreviated, selected }) => (
 						<ToggleButtonLink
 							key={id}
-							to="/leaderboard/$gender"
+							to="/leaderboard/{-$gender}"
 							params={{ gender: genderStr }}
 							search={{
 								page: 1,
@@ -206,7 +222,7 @@ function RouteComponent() {
 				</TableBody>
 			</Table>
 			<Pagination
-				to="/leaderboard/$gender"
+				to="/leaderboard/{-$gender}"
 				page={page}
 				pageSize={pageSize}
 				pageInfo={pageInfo}
