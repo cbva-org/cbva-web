@@ -5,11 +5,28 @@ import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
+export const juniorsDivisionSchema = z.xor([
+	z.literal(12),
+	z.literal(14),
+	z.literal(16),
+	z.literal(18),
+	z.literal(true),
+]);
+
 export const getLeaderboardSchema = z.object({
 	gender: genderSchema.optional(),
 	query: z.string().optional(),
 	levels: z.array(z.number()).optional(),
-	juniors: z.enum(["true", "12", "14", "16", "18"]).optional(),
+	// juniors: z.enum(["12", "14", "16", "18"]).optional(),
+	juniors: z
+		.xor([
+			z.literal(12),
+			z.literal(14),
+			z.literal(16),
+			z.literal(18),
+			z.literal(true),
+		])
+		.optional(),
 	page: z.number(),
 	pageSize: z.number(),
 });
@@ -21,9 +38,21 @@ export const getLeaderboardSchema = z.object({
 // 16u: 2028 or after
 // 18u: 2026 or after
 
+const juniorsGraduationYear: Record<string, number> = {
+	true: 2026,
+	"12": 2032,
+	"14": 2030,
+	"16": 2028,
+	"18": 2026,
+};
+
 export const getLeaderboardFn = createServerFn()
 	.inputValidator(getLeaderboardSchema)
 	.handler(({ data: { query, gender, levels, juniors, page, pageSize } }) => {
+		const minGraduationYear = juniors
+			? juniorsGraduationYear[juniors === true ? "true" : juniors]
+			: undefined;
+
 		return findPaged(db, "playerProfiles", {
 			paging: {
 				page,
@@ -42,6 +71,9 @@ export const getLeaderboardFn = createServerFn()
 									in: levels,
 								}
 							: undefined,
+					highSchoolGraduationYear: minGraduationYear
+						? { gte: minGraduationYear }
+						: undefined,
 					RAW: query
 						? (t, { sql, ilike }) =>
 								ilike(

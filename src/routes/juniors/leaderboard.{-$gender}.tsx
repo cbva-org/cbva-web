@@ -13,14 +13,15 @@ import {
 	TableRow,
 } from "@/components/base/table";
 import { ProfileName } from "@/components/profiles/name";
-import { getLeaderboardQueryOptions } from "@/functions/profiles/get-leaderboard";
+import {
+	getLeaderboardQueryOptions,
+	juniorsDivisionSchema,
+} from "@/functions/profiles/get-leaderboard";
 import { zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import { Pagination } from "@/components/base/pagination";
-import { levelsQueryOptions } from "@/data/levels";
 import { ToggleButtonGroup } from "@/components/base/toggle-button-group";
 import { ToggleButtonLink } from "@/components/base/toggle-button";
-import { withoutItem } from "@/lib/array";
 import { SearchField } from "@/components/base/search-field";
 import { assert } from "@/utils/assert";
 import { useDebounce } from "ahooks";
@@ -35,8 +36,8 @@ function displayToGender(display: string): Gender | null {
 export const Route = createFileRoute("/juniors/leaderboard/{-$gender}")({
 	validateSearch: zodValidator(
 		z.object({
-			levels: z.array(z.number()).default([]),
 			query: z.string().default(""),
+			division: juniorsDivisionSchema.default(true),
 			page: z.number().default(1),
 			pageSize: z.number().default(25),
 		}),
@@ -44,16 +45,16 @@ export const Route = createFileRoute("/juniors/leaderboard/{-$gender}")({
 	loaderDeps: ({ search }) => search,
 	loader: async ({
 		params: { gender: genderStr },
-		deps: { page, pageSize, query, levels },
+		deps: { page, pageSize, query, division },
 		context: { queryClient },
 	}) => {
 		if (!genderStr) {
 			throw redirect({
-				to: "/leaderboard/{-$gender}",
+				to: "/juniors/leaderboard/{-$gender}",
 				params: {
 					gender: "womens",
 				},
-			})
+			});
 		}
 
 		const gender = displayToGender(genderStr);
@@ -61,27 +62,34 @@ export const Route = createFileRoute("/juniors/leaderboard/{-$gender}")({
 		if (!gender) {
 			throw redirect({
 				to: "/not-found",
-			})
+			});
 		}
 
 		const profiles = await queryClient.ensureQueryData(
 			getLeaderboardQueryOptions({
 				query,
 				gender,
-				levels,
+				juniors: division,
 				page,
 				pageSize,
 			}),
-		)
+		);
 
 		return profiles;
 	},
 	component: RouteComponent,
 });
 
+const divisions = [
+	{ value: 12, label: "12U" },
+	{ value: 14, label: "14U" },
+	{ value: 16, label: "16U" },
+	{ value: 18, label: "18U" },
+] as const;
+
 function RouteComponent() {
 	const { gender: genderStr } = Route.useParams();
-	const { levels: selectedLevels, query, page, pageSize } = Route.useSearch();
+	const { query, division, page, pageSize } = Route.useSearch();
 
 	assert(genderStr, "expected gender param");
 
@@ -93,28 +101,17 @@ function RouteComponent() {
 		getLeaderboardQueryOptions({
 			gender,
 			query,
-			levels: selectedLevels,
+			juniors: division,
 			page,
 			pageSize,
 		}),
-	)
+	);
 
 	const profiles = useDebounce(data?.data, {
 		wait: data?.data.length === 0 ? 0 : 250,
-	})
+	});
 
 	const pageInfo = data?.pageInfo ?? { totalItems: 0, totalPages: 0 };
-
-	const { data: levels } = useQuery({
-		...levelsQueryOptions(),
-		select: (data) =>
-			data
-				.filter(({ order }) => order > 0)
-				.map((level) => ({
-					...level,
-					selected: selectedLevels.includes(level.id),
-				})),
-	})
 
 	return (
 		<DefaultLayout
@@ -123,45 +120,44 @@ function RouteComponent() {
 					"w-full max-w-lg mx-auto py-12 px-3 flex flex-col items-center space-y-6",
 			}}
 		>
-			<h1 className={title()}>Rated Leaderboard</h1>
+			<h1 className={title()}>Juniors Leaderboard</h1>
 
 			<div className="flex flex-col items-center space-y-3">
 				<RadioGroup defaultValue={gender} orientation="horizontal">
 					<RadioLink
-						to="/leaderboard/{-$gender}"
+						to="/juniors/leaderboard/{-$gender}"
 						params={{ gender: "mens" }}
 						value="male"
 					>
-						Men's
+						Boys
 					</RadioLink>
 					<RadioLink
-						to="/leaderboard/{-$gender}"
+						to="/juniors/leaderboard/{-$gender}"
 						params={{ gender: "womens" }}
 						value="female"
 					>
-						Women's
+						Girls
 					</RadioLink>
 				</RadioGroup>
 
 				<ToggleButtonGroup>
-					{levels?.map(({ id, name, abbreviated, selected }) => (
+					{divisions.map(({ value, label }) => (
 						<ToggleButtonLink
-							key={id}
-							to="/leaderboard/{-$gender}"
+							key={value}
+							to="/juniors/leaderboard/{-$gender}"
 							params={{ gender: genderStr }}
-							search={{
+							search={(prev) => ({
+								...prev,
 								page: 1,
-								pageSize,
-								levels: selected
-									? withoutItem(selectedLevels, id)
-									: selectedLevels.concat(id),
-							}}
-							isSelected={selected}
+								division: division === value ? undefined : value,
+							})}
+							isSelected={division === value}
 						>
-							{(abbreviated ?? name).toUpperCase()}
+							{label}
 						</ToggleButtonLink>
 					))}
 				</ToggleButtonGroup>
+
 				<SearchField
 					value={query}
 					onChange={(value) => {
@@ -172,7 +168,7 @@ function RouteComponent() {
 								page: 1,
 								query: value,
 							}),
-						})
+						});
 					}}
 				/>
 			</div>
@@ -187,7 +183,9 @@ function RouteComponent() {
 					<TableColumn id="player" isRowHeader>
 						Player
 					</TableColumn>
-					<TableColumn id="level" width={1} isRowHeader />
+					<TableColumn id="hsgy" width={1} isRowHeader>
+						Year
+					</TableColumn>
 				</TableHeader>
 				<TableBody
 					items={profiles || []}
@@ -197,36 +195,41 @@ function RouteComponent() {
 						</div>
 					)}
 				>
-					{(profile) => {
-						return (
-							<TableRow key={profile.id}>
-								<TableCell className="whitespace-nowrap">
-									{profile.rank}
-								</TableCell>
-								<TableCell className="whitespace-nowrap">
-									{Math.round(profile.ratedPoints)}
-								</TableCell>
-								<TableCell>
+					{(profile) => (
+						<TableRow key={profile.id}>
+							<TableCell className="whitespace-nowrap">
+								{profile.rank}
+							</TableCell>
+							<TableCell className="whitespace-nowrap">
+								{Math.round(profile.juniorsPoints)}
+							</TableCell>
+							<TableCell>
+								<span className="mr-2">
 									<ProfileName {...profile} />
-								</TableCell>
-								<TableCell className="whitespace-nowrap">
+								</span>
+								<span>
+									(
 									{(
 										profile.level?.abbreviated ??
 										profile.level?.name ??
 										""
 									).toUpperCase()}
-								</TableCell>
-							</TableRow>
-						)
-					}}
+									)
+								</span>
+							</TableCell>
+							<TableCell className="whitespace-nowrap">
+								{profile.highSchoolGraduationYear}
+							</TableCell>
+						</TableRow>
+					)}
 				</TableBody>
 			</Table>
 			<Pagination
-				to="/leaderboard/{-$gender}"
+				to="/juniors/leaderboard/{-$gender}"
 				page={page}
 				pageSize={pageSize}
 				pageInfo={pageInfo}
 			/>
 		</DefaultLayout>
-	)
+	);
 }
