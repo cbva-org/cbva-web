@@ -1,6 +1,6 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
 import clsx from "clsx";
-import { MenuIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, MenuIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import {
 	Button,
@@ -20,6 +20,7 @@ type NavbarItem = {
 	className?: string;
 	subMenuClassName?: string;
 	to: LinkProps["to"];
+	params?: LinkProps["params"];
 	label: ReactNode;
 	visible?: (viewer?: Viewer["id"] | null) => boolean;
 };
@@ -53,6 +54,7 @@ const links: (NavbarItem | NavbarGroupItem)[] = [
 			{
 				kind: "item",
 				to: "/juniors/leaderboard/{-$gender}",
+				params: { gender: "girls" },
 				label: "Leaderboard",
 			},
 		],
@@ -75,6 +77,7 @@ const links: (NavbarItem | NavbarGroupItem)[] = [
 			{
 				kind: "item",
 				to: "/leaderboard/{-$gender}",
+				params: { gender: "womens" },
 				label: "Leaderboard",
 			},
 		],
@@ -121,7 +124,7 @@ export function Navbar() {
 				aria-label="Navigation Menu"
 				className="flex-1 w-full flex flex-row items-center justify-between lg:justify-center gap-3"
 			>
-				<MenuSection className="flex-1 gap-3 justify-end hidden lg:flex">
+				<MenuSection className="flex-1 gap-3 items-center justify-end hidden lg:flex">
 					{visibleLinks.slice(0, 3).map(({ label, className, ...rest }) =>
 						rest.kind === "item" ? (
 							<MenuItem key={rest.to} className="rounded-full outline-none">
@@ -137,15 +140,20 @@ export function Navbar() {
 								<MenuItem id={rest.key} className="outline-none rounded-full">
 									<Text
 										slot="label"
-										className={clsx(linkClassName, "rounded-full", className)}
+										className={clsx(
+											linkClassName,
+											"rounded-full cursor-pointer flex flex-row",
+											className,
+										)}
 									>
 										{label}
+										<ChevronDownIcon className="ml-2" />
 									</Text>
 								</MenuItem>
-								<Popover>
+								<Popover placement="bottom">
 									<Menu className="bg-navbar-background border border-navbar-border p-2 flex flex-col gap-2 rounded-lg">
 										{rest.children.map(
-											({ to, label, className, subMenuClassName }) => (
+											({ to, params, label, className, subMenuClassName }) => (
 												<MenuItem
 													key={to}
 													className={clsx(
@@ -155,6 +163,7 @@ export function Navbar() {
 												>
 													<Link
 														to={to}
+														params={params}
 														className={clsx(
 															linkClassName,
 															"rounded-lg w-full inline-block",
@@ -178,16 +187,61 @@ export function Navbar() {
 					</Link>
 				</MenuItem>
 				<MenuSection className="flex-1 justify-end lg:justify-start hidden md:flex gap-3">
-					{visibleLinks.slice(3).map(({ to, label, className }) => (
-						<MenuItem key={to} className="rounded-full outline-none">
-							<Link
-								to={to}
-								className={clsx(linkClassName, "rounded-full", className)}
-							>
-								{label}
-							</Link>
-						</MenuItem>
-					))}
+					{visibleLinks.slice(3).map(({ label, className, ...rest }) =>
+						rest.kind === "item" ? (
+							<MenuItem key={rest.to} className="rounded-full outline-none">
+								<Link
+									to={rest.to}
+									className={clsx(linkClassName, "rounded-full", className)}
+								>
+									{label}
+								</Link>
+							</MenuItem>
+						) : (
+							<SubmenuTrigger key={rest.key}>
+								<MenuItem id={rest.key} className="outline-none rounded-full">
+									<Text
+										slot="label"
+										className={clsx(
+											linkClassName,
+											"rounded-full flex flex-row cursor-pointer",
+											className,
+										)}
+									>
+										{label}
+										<ChevronDownIcon className="ml-2" />
+									</Text>
+								</MenuItem>
+								<Popover>
+									<Menu className="bg-navbar-background border border-navbar-border p-2 flex flex-col gap-2 rounded-lg">
+										{rest.children.map(
+											({ to, params, label, className, subMenuClassName }) => (
+												<MenuItem
+													key={to}
+													className={clsx(
+														"rounded-lg items-stretch justify-stretch",
+														subMenuClassName,
+													)}
+												>
+													<Link
+														to={to}
+														params={params}
+														className={clsx(
+															linkClassName,
+															"rounded-lg w-full inline-block",
+															className,
+														)}
+													>
+														{label}
+													</Link>
+												</MenuItem>
+											),
+										)}
+									</Menu>
+								</Popover>
+							</SubmenuTrigger>
+						),
+					)}
 				</MenuSection>
 			</Menu>
 			<MenuTrigger trigger="press">
@@ -196,26 +250,84 @@ export function Navbar() {
 				</Button>
 				<Popover>
 					<Menu className="bg-navbar-background border border-navbar-border p-2 flex flex-col gap-2 rounded-lg">
-						{visibleLinks.map(({ to, label, className, subMenuClassName }) => (
-							<MenuItem
-								key={to}
-								className={clsx(
-									"rounded-lg items-stretch justify-stretch",
-									subMenuClassName,
-								)}
-							>
-								<Link
-									to={to}
-									className={clsx(
-										linkClassName,
-										"rounded-lg w-full inline-block",
-										className,
-									)}
-								>
-									{label}
-								</Link>
-							</MenuItem>
-						))}
+						{visibleLinks.map(
+							({ label, className, subMenuClassName, ...rest }) =>
+								rest.kind === "item" ? (
+									<MenuItem
+										key={rest.to}
+										className={clsx(
+											"rounded-lg items-stretch justify-stretch",
+											subMenuClassName,
+										)}
+									>
+										<Link
+											to={rest.to}
+											className={clsx(
+												linkClassName,
+												"rounded-lg w-full inline-block",
+												className,
+											)}
+										>
+											{label}
+										</Link>
+									</MenuItem>
+								) : (
+									<SubmenuTrigger key={rest.key}>
+										<MenuItem
+											id={`mobile-${rest.key}`}
+											className={clsx(
+												"rounded-lg items-stretch justify-stretch outline-none",
+												subMenuClassName,
+											)}
+										>
+											<Text
+												slot="label"
+												className={clsx(
+													linkClassName,
+													"rounded-lg w-full flex flex-row justify-between cursor-pointer",
+													className,
+												)}
+											>
+												{label}
+												<ChevronDownIcon className="ml-2" />
+											</Text>
+										</MenuItem>
+										<Popover>
+											<Menu className="bg-navbar-background border border-navbar-border p-2 flex flex-col gap-2 rounded-lg">
+												{rest.children.map(
+													({
+														to,
+														params,
+														label,
+														className,
+														subMenuClassName,
+													}) => (
+														<MenuItem
+															key={to}
+															className={clsx(
+																"rounded-lg items-stretch justify-stretch",
+																subMenuClassName,
+															)}
+														>
+															<Link
+																to={to}
+																params={params}
+																className={clsx(
+																	linkClassName,
+																	"rounded-lg w-full inline-block",
+																	className,
+																)}
+															>
+																{label}
+															</Link>
+														</MenuItem>
+													),
+												)}
+											</Menu>
+										</Popover>
+									</SubmenuTrigger>
+								),
+						)}
 					</Menu>
 				</Popover>
 			</MenuTrigger>
