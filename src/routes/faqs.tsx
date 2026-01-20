@@ -332,7 +332,7 @@ function DeleteFaqButton({ id, question }: { id: number; question: string }) {
 }
 
 function ReorderFaqsButton() {
-	const [isOpen, setOpen] = useState(false);
+	const [isOpen, setOpen] = useState(true);
 
 	const queryClient = useQueryClient();
 
