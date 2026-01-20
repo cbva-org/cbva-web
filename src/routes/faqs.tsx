@@ -5,7 +5,7 @@ import {
 	useSuspenseQuery,
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { DeleteIcon, EditIcon, PlusIcon } from "lucide-react";
+import { DeleteIcon, EditIcon, ListOrderedIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { DialogTrigger, Heading } from "react-aria-components";
 import { Button } from "@/components/base/button";
@@ -30,6 +30,7 @@ import {
 	updateFaqSchema,
 } from "@/functions/faqs/update-faq";
 import { LexicalState } from "@/db/schema/shared";
+import { OrderingTable } from "@/components/base/ordering-table";
 
 export const Route = createFileRoute("/faqs")({
 	loader: async ({ context: { queryClient } }) => {
@@ -45,13 +46,20 @@ function RouteComponent() {
 		faqs: ["create"],
 	});
 
+	const canUpdate = useViewerHasPermission({
+		faqs: ["update"],
+	});
+
 	return (
 		<DefaultLayout>
 			<div className="max-w-4xl mx-auto py-8 px-4">
 				<div className="flex justify-between items-center mb-12">
 					<h1 className={title()}>Frequently Asked Questions</h1>
 
-					{canCreate && <CreateFaqButton />}
+					<div className="flex flex-row gap-2">
+						{canUpdate && <ReorderFaqsButton />}
+						{canCreate && <CreateFaqButton />}
+					</div>
 				</div>
 
 				{faqs && faqs.length === 0 && <p>No FAQs yet...</p>}
@@ -190,8 +198,6 @@ function EditFaqButton({ id }: { id: number }) {
 		select: (data) => data.find((v) => v.id === id),
 	});
 
-	console.log("->", data);
-
 	const form = useAppForm({
 		defaultValues: {
 			question: data?.question ?? "",
@@ -314,6 +320,71 @@ function DeleteFaqButton({ id, question }: { id: number; question: string }) {
 
 								<form.SubmitButton requireChange={false}>
 									Delete
+								</form.SubmitButton>
+							</form.Footer>
+						</form.AppForm>
+					</form>
+				</div>
+			</Modal>
+		</DialogTrigger>
+	);
+}
+
+function ReorderFaqsButton() {
+	const [isOpen, setOpen] = useState(false);
+
+	const queryClient = useQueryClient();
+
+	const { mutateAsync: deleteFaq } = useMutation({
+		...deleteFaqMutationOptions(),
+		onSuccess: () => {
+			queryClient.invalidateQueries(getFaqsQueryOptions());
+		},
+	});
+
+	const { data: faqs } = useQuery({
+		...getFaqsQueryOptions(),
+		select: (data) => data.find((v) => v.id === id),
+	});
+
+	const form = useAppForm({
+		onSubmit: async ({ value, formApi }) => {
+			console.log(value);
+
+			// await deleteFaq({ id });
+			formApi.reset();
+			setOpen(false);
+		},
+	});
+
+	return (
+		<DialogTrigger isOpen={isOpen} onOpenChange={setOpen}>
+			<Button variant="icon" color="secondary" tooltip="Reorder FAQs">
+				<ListOrderedIcon size={16} />
+			</Button>
+
+			<Modal size="md" isDismissable isOpen={isOpen} onOpenChange={setOpen}>
+				<div className="p-4 flex flex-col space-y-4">
+					<Heading className={title({ size: "sm" })} slot="title">
+						Reorder FAQs?
+					</Heading>
+
+					<form
+						className="flex-col space-y-4"
+						onSubmit={(e) => {
+							e.preventDefault();
+							form.handleSubmit();
+						}}
+					>
+						<form.AppField name="order">
+							{(field) => <OrderingTable />}
+						</form.AppField>
+						<form.AppForm>
+							<form.Footer>
+								<Button onPress={() => setOpen(false)}>Cancel</Button>
+
+								<form.SubmitButton requireChange={false}>
+									Submit
 								</form.SubmitButton>
 							</form.Footer>
 						</form.AppForm>
