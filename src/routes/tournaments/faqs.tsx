@@ -16,15 +16,17 @@ import { CreateFaqForm } from "@/components/faqs/create-faq-form";
 import { DeleteFaqForm } from "@/components/faqs/delete-faq-form";
 import { UpdateFaqForm } from "@/components/faqs/update-faq-form";
 
-export const Route = createFileRoute("/faqs")({
+export const Route = createFileRoute("/tournaments/faqs")({
 	loader: async ({ context: { queryClient } }) => {
-		return await queryClient.ensureQueryData(getFaqsQueryOptions());
+		return await queryClient.ensureQueryData(
+			getFaqsQueryOptions("tournaments"),
+		);
 	},
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const { data: faqs } = useSuspenseQuery(getFaqsQueryOptions());
+	const { data: faqs } = useSuspenseQuery(getFaqsQueryOptions("tournaments"));
 
 	const canCreate = useViewerHasPermission({
 		faqs: ["create"],
@@ -38,11 +40,11 @@ function RouteComponent() {
 		<DefaultLayout>
 			<div className="max-w-4xl mx-auto py-8 px-4">
 				<div className="flex justify-between items-center mb-12">
-					<h1 className={title()}>Frequently Asked Questions</h1>
+					<h1 className={title()}>Tournament FAQs</h1>
 
 					<div className="flex flex-row gap-2">
-						{canUpdate && <ReorderFaqsForm />}
-						{canCreate && <CreateFaqForm />}
+						{canUpdate && <ReorderFaqsForm groupKey="tournaments" />}
+						{canCreate && <CreateFaqForm groupKey="tournaments" />}
 					</div>
 				</div>
 
@@ -59,8 +61,12 @@ function RouteComponent() {
 									<span>{question}</span>
 
 									<span className="flex flex-row space-x-2 items-center">
-										<UpdateFaqForm id={id} />
-										<DeleteFaqForm id={id} question={question} />
+										<UpdateFaqForm id={id} groupKey="tournaments" />
+										<DeleteFaqForm
+											id={id}
+											question={question}
+											groupKey="tournaments"
+										/>
 									</span>
 								</DisclosureHeader>
 								<DisclosurePanel color="alt">

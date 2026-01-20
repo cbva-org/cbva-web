@@ -4,17 +4,23 @@ import { createFaqSchema, faqs } from "@/db/schema";
 import type { LexicalState } from "@/db/schema/shared";
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { sql } from "drizzle-orm";
+import { eq, isNull, max, sql } from "drizzle-orm";
 import type z from "zod";
 
 export const createFaqFn = createServerFn()
 	.inputValidator(createFaqSchema)
 	.middleware([requirePermissions({ faqs: ["create"] })])
-	.handler(async ({ data: { question, answer } }) => {
+	.handler(async ({ data: { question, answer, key } }) => {
+		const orderQ = db
+			.select({ order: max(faqs.order) })
+			.from(faqs)
+			.where(key ? eq(faqs.key, key) : isNull(faqs.key));
+
 		await db.insert(faqs).values({
+			key,
 			question,
 			answer: answer as LexicalState,
-			order: sql`COALESCE((SELECT MAX(${faqs.order}) FROM ${faqs}), -1) + 1`,
+			order: sql`COALESCE((${orderQ}), -1) + 1`,
 		});
 
 		return {

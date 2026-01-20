@@ -68,8 +68,8 @@ const links: (NavbarItem | NavbarGroupItem)[] = [
 	},
 	{
 		kind: "group",
-		key: "ratings",
-		label: "Ratings",
+		key: "info",
+		label: "Info",
 		topNavItemClassName: "hidden lg:flex",
 		subMenuClassName: "inline-block lg:hidden",
 		children: [
@@ -83,6 +83,11 @@ const links: (NavbarItem | NavbarGroupItem)[] = [
 				to: "/leaderboard/{-$gender}",
 				params: { gender: "womens" },
 				label: "Leaderboard",
+			},
+			{
+				kind: "item",
+				to: "/faqs",
+				label: "FAQs",
 			},
 		],
 	},
