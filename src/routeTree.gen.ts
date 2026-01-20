@@ -25,6 +25,7 @@ import { Route as JuniorsIndexRouteImport } from './routes/juniors/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
 import { Route as VenuesVenueIdRouteImport } from './routes/venues/$venueId'
+import { Route as TournamentsFaqsRouteImport } from './routes/tournaments/faqs'
 import { Route as TournamentsCreateRouteImport } from './routes/tournaments/create'
 import { Route as LeaderboardChar123GenderChar125RouteImport } from './routes/leaderboard.{-$gender}'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
@@ -125,6 +126,11 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
 const VenuesVenueIdRoute = VenuesVenueIdRouteImport.update({
   id: '/venues/$venueId',
   path: '/venues/$venueId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TournamentsFaqsRoute = TournamentsFaqsRouteImport.update({
+  id: '/tournaments/faqs',
+  path: '/tournaments/faqs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TournamentsCreateRoute = TournamentsCreateRouteImport.update({
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/api/ping': typeof ApiPingRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
   '/tournaments/create': typeof TournamentsCreateRoute
+  '/tournaments/faqs': typeof TournamentsFaqsRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account': typeof AccountIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/api/ping': typeof ApiPingRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
   '/tournaments/create': typeof TournamentsCreateRoute
+  '/tournaments/faqs': typeof TournamentsFaqsRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account': typeof AccountIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   '/api/ping': typeof ApiPingRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
   '/tournaments/create': typeof TournamentsCreateRoute
+  '/tournaments/faqs': typeof TournamentsFaqsRoute
   '/venues/$venueId': typeof VenuesVenueIdRoute
   '/account/': typeof AccountIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -379,6 +388,7 @@ export interface FileRouteTypes {
     | '/api/ping'
     | '/leaderboard/{-$gender}'
     | '/tournaments/create'
+    | '/tournaments/faqs'
     | '/venues/$venueId'
     | '/account'
     | '/admin'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/api/ping'
     | '/leaderboard/{-$gender}'
     | '/tournaments/create'
+    | '/tournaments/faqs'
     | '/venues/$venueId'
     | '/account'
     | '/admin'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/api/ping'
     | '/leaderboard/{-$gender}'
     | '/tournaments/create'
+    | '/tournaments/faqs'
     | '/venues/$venueId'
     | '/account/'
     | '/admin/'
@@ -497,6 +509,7 @@ export interface RootRouteChildren {
   ApiPingRoute: typeof ApiPingRoute
   LeaderboardChar123GenderChar125Route: typeof LeaderboardChar123GenderChar125Route
   TournamentsCreateRoute: typeof TournamentsCreateRoute
+  TournamentsFaqsRoute: typeof TournamentsFaqsRoute
   VenuesVenueIdRoute: typeof VenuesVenueIdRoute
   AccountIndexRoute: typeof AccountIndexRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -629,6 +642,13 @@ declare module '@tanstack/react-router' {
       path: '/venues/$venueId'
       fullPath: '/venues/$venueId'
       preLoaderRoute: typeof VenuesVenueIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tournaments/faqs': {
+      id: '/tournaments/faqs'
+      path: '/tournaments/faqs'
+      fullPath: '/tournaments/faqs'
+      preLoaderRoute: typeof TournamentsFaqsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tournaments/create': {
@@ -801,6 +821,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPingRoute: ApiPingRoute,
   LeaderboardChar123GenderChar125Route: LeaderboardChar123GenderChar125Route,
   TournamentsCreateRoute: TournamentsCreateRoute,
+  TournamentsFaqsRoute: TournamentsFaqsRoute,
   VenuesVenueIdRoute: VenuesVenueIdRoute,
   AccountIndexRoute: AccountIndexRoute,
   AdminIndexRoute: AdminIndexRoute,
