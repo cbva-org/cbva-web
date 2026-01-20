@@ -4,6 +4,7 @@ import { createFaqSchema, faqs } from "@/db/schema";
 import type { LexicalState } from "@/db/schema/shared";
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
+import { sql } from "drizzle-orm";
 import type z from "zod";
 
 export const createFaqFn = createServerFn()
@@ -13,6 +14,7 @@ export const createFaqFn = createServerFn()
 		await db.insert(faqs).values({
 			question,
 			answer: answer as LexicalState,
+			order: sql`COALESCE((SELECT MAX(${faqs.order}) FROM ${faqs}), -1) + 1`,
 		});
 
 		return {

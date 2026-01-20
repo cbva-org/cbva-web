@@ -22,6 +22,7 @@ import {
 	DisclosurePanel,
 } from "@/components/base/disclosure";
 import { RichTextDisplay } from "@/components/base/rich-text-editor/display";
+import { useViewerHasPermission } from "@/auth/shared";
 
 export const Route = createFileRoute("/faqs")({
 	component: RouteComponent,
@@ -30,20 +31,28 @@ export const Route = createFileRoute("/faqs")({
 function RouteComponent() {
 	const { data: faqs } = useSuspenseQuery(getFaqsQueryOptions());
 
+	const canCreate = useViewerHasPermission({
+		faqs: ["create"],
+	});
+
 	return (
 		<DefaultLayout>
 			<div className="max-w-4xl mx-auto py-8 px-4">
-				<div className="flex justify-between items-center mb-6">
-					<h1 className={title()}>FAQs</h1>
+				<div className="flex justify-between items-center mb-12">
+					<h1 className={title()}>Frequently Asked Questions</h1>
 
-					<CreateFaqButton />
+					{canCreate && <CreateFaqButton />}
 				</div>
 
+				{faqs && faqs.length === 0 && <p>No FAQs yet...</p>}
+
 				<DisclosureGroup>
-					{faqs.map(({ id, question, answer }) => (
+					{faqs.map(({ id, question, answer, order }) => (
 						<Disclosure key={id}>
-							<DisclosureHeader color="alt">{question}</DisclosureHeader>
-							<DisclosurePanel>
+							<DisclosureHeader color="alt">
+								{question} - {order}
+							</DisclosureHeader>
+							<DisclosurePanel color="alt">
 								<RichTextDisplay
 									name="faq-answer"
 									content={

@@ -27,7 +27,7 @@ const disclosure = tv({
 			false: "",
 		},
 		isInGroup: {
-			true: "border-0 border-b rounded-t-none first:rounded-t-lg last:border-b-0 rounded-b-none last:rounded-b-lg overflow-hidden",
+			true: "border-0 border-b rounded-t-none first:rounded-t-md last:border-b-0 rounded-b-none last:rounded-b-md overflow-hidden",
 		},
 	},
 	defaultVariants: {
@@ -43,7 +43,7 @@ const disclosureButton = tv({
 			true: "text-gray-500 dark:text-zinc-600 forced-colors:text-[GrayText]",
 		},
 		isInGroup: {
-			true: "-outline-offset-2 rounded-none group-first:rounded-t-lg group-last:rounded-b-lg",
+			true: "-outline-offset-2 rounded-none group-first:rounded-t-md group-last:rounded-b-md",
 		},
 		card: {
 			true: "p-2",
@@ -169,11 +169,21 @@ export function DisclosureHeader({
 	);
 }
 
-export interface DisclosurePanelProps extends AriaDisclosurePanelProps {
+const panelStyles = tv({
+	base: "h-(--disclosure-panel-height) motion-safe:transition-[height] overflow-clip",
+	variants: {
+		color: {
+			alt: "bg-white",
+		},
+	},
+});
+
+export type DisclosurePanelProps = {
 	card?: boolean;
 	children: React.ReactNode;
 	contentClassName?: string;
-}
+} & AriaDisclosurePanelProps &
+	VariantProps<typeof headerStyles>;
 
 export function DisclosurePanel({
 	card = true,
@@ -184,10 +194,9 @@ export function DisclosurePanel({
 	return (
 		<AriaDisclosurePanel
 			{...props}
-			className={composeTailwindRenderProps(
-				props.className,
-				"h-(--disclosure-panel-height) motion-safe:transition-[height] overflow-clip",
-			)}
+			className={(renderProps) =>
+				panelStyles({ ...renderProps, color: props.color })
+			}
 		>
 			<div className={clsx("py-2", card ? "px-4" : "", contentClassName)}>
 				{children}
