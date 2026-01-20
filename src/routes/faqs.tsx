@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
@@ -10,21 +10,46 @@ import { title } from "@/components/base/primitives";
 import { createFaqSchema } from "@/db/schema";
 import { createFaqFn } from "@/functions/faqs/create-faq";
 import { DefaultLayout } from "@/layouts/default";
-import { RichTextEditor } from "@/components/base/rich-text-editor/editor";
-import { Label } from "@/components/base/field";
+import { getFaqsQueryOptions } from "@/functions/faqs/get-faqs";
+import {
+	Disclosure,
+	DisclosureGroup,
+	DisclosureHeader,
+	DisclosurePanel,
+} from "@/components/base/disclosure";
+import { RichTextDisplay } from "@/components/base/rich-text-editor/display";
 
 export const Route = createFileRoute("/faqs")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
+	const { data: faqs } = useSuspenseQuery(getFaqsQueryOptions());
+
 	return (
 		<DefaultLayout>
 			<div className="max-w-4xl mx-auto py-8 px-4">
 				<div className="flex justify-between items-center mb-6">
 					<h1 className={title()}>FAQs</h1>
+
 					<CreateFaqButton />
 				</div>
+
+				<DisclosureGroup>
+					{faqs.map(({ id, question, answer }) => (
+						<Disclosure key={id}>
+							<DisclosureHeader>{question}</DisclosureHeader>
+							<DisclosurePanel>
+								<RichTextDisplay
+									name="faq-answer"
+									content={
+										typeof answer === "string" ? JSON.parse(answer) : answer
+									}
+								/>
+							</DisclosurePanel>
+						</Disclosure>
+					))}
+				</DisclosureGroup>
 			</div>
 		</DefaultLayout>
 	);
@@ -47,9 +72,10 @@ function CreateFaqButton() {
 			onChange: createFaqSchema,
 		},
 		onSubmit: async ({ value, formApi }) => {
-			await createFaq({ data: value });
-			formApi.reset();
-			setOpen(false);
+			console.log(value);
+			// await createFaq({ data: value });
+			// formApi.reset();
+			// setOpen(false);
 		},
 	});
 
@@ -76,28 +102,23 @@ function CreateFaqButton() {
 							{(field) => (
 								<field.Text
 									field={field}
+									isRequired={true}
 									label="Question"
 									placeholder="Enter the question..."
 								/>
 							)}
 						</form.AppField>
 
-						<div>
-							<Label>Answer</Label>
-
-							<form.AppField name="answer">
-								{(field) => (
-									<RichTextEditor
-										name="createFaq"
-										placeholder="Enter the answer..."
-										initialValue={field.state.value}
-										onChange={(state) => {
-											console.log("cancel");
-										}}
-									/>
-								)}
-							</form.AppField>
-						</div>
+						<form.AppField name="answer">
+							{(field) => (
+								<field.RichText
+									field={field}
+									isRequired={true}
+									label="Answer"
+									placeholder="Enter the answer..."
+								/>
+							)}
+						</form.AppField>
 
 						<form.AppForm>
 							<form.Footer>
