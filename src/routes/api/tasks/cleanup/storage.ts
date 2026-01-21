@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requirePermissions, requireRole } from "@/auth/shared";
+import { requireRole } from "@/auth/shared";
 import { db } from "@/db/connection";
 import { internalServerError } from "@/lib/responses";
 import { getSupabaseServerClient } from "@/supabase/server";
@@ -44,6 +44,8 @@ type BucketLookupColumns = {
 
 const bucketLookupColumns = {
 	venues: ["headerImageSource", "thumbnailImageSource"],
+	blogs: ["imageSource"],
+	playerProfiles: ["imageSource"],
 } as const satisfies BucketLookupColumns;
 
 type ConfiguredBuckets = keyof typeof bucketLookupColumns;
@@ -72,6 +74,11 @@ async function cleanupBucket<TTableName extends ConfiguredBuckets>(
 
 			return or(...filters);
 		},
+		// where: {
+		// 	OR: lookupColumns.map((key) => ({
+		// 		[key]: { in: storagePaths },
+		// 	})),
+		// },
 	});
 
 	const activePaths = new Set(result.flatMap((row) => Object.values(row)));
