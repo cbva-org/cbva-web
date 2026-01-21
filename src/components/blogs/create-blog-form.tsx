@@ -30,7 +30,7 @@ export function CreateBlogForm({ tag }: CreateBlogFormProps) {
 
 	const form = useAppForm({
 		defaultValues: {
-			imageSource: "",
+			imageSource: null as string | null,
 			link: "",
 			title: "",
 			summary: "",
@@ -89,11 +89,12 @@ export function CreateBlogForm({ tag }: CreateBlogFormProps) {
 
 						<form.AppField name="imageSource">
 							{(field) => (
-								<field.Text
+								<field.ImageUpload
 									field={field}
 									isRequired={false}
-									label="Image Source"
-									placeholder="Enter the image URL..."
+									label="Image"
+									bucket="blogs"
+									prefix={tag}
 								/>
 							)}
 						</form.AppField>
@@ -105,12 +106,12 @@ export function CreateBlogForm({ tag }: CreateBlogFormProps) {
 									isRequired={true}
 									label="Summary"
 									placeholder="Enter the summary..."
+									height="xs"
 								/>
 							)}
 						</form.AppField>
 
 						<form.AppForm>
-							<form.StateDebugger />
 							<form.Footer>
 								<Button onPress={() => setOpen(false)}>Cancel</Button>
 

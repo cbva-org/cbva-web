@@ -38,7 +38,7 @@ export function UpdateBlogForm({
 
 	const form = useAppForm({
 		defaultValues: {
-			imageSource: data?.imageSource ?? "",
+			imageSource: data?.imageSource ?? null,
 			link: data?.link ?? "",
 			title: data?.title ?? "",
 			summary: data?.summary ?? ({ root: undefined } as unknown as LexicalState),
@@ -97,11 +97,12 @@ export function UpdateBlogForm({
 
 						<form.AppField name="imageSource">
 							{(field) => (
-								<field.Text
+								<field.ImageUpload
 									field={field}
 									isRequired={false}
-									label="Image Source"
-									placeholder="Enter the image URL..."
+									label="Image"
+									bucket="blogs"
+									prefix={tag}
 								/>
 							)}
 						</form.AppField>

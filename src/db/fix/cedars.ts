@@ -1,9 +1,15 @@
 import "dotenv/config";
 
+import { createClient } from "@supabase/supabase-js";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { v4 as uuidv4 } from "uuid";
 import { blogs, CreateBlog } from "../schema";
 import { db } from "../connection";
 import { LexicalEditorService } from "../seed/lexical";
 import { marked } from "marked";
+
+const STORAGE_URL = `${process.env.VITE_SUPABASE_URL}/storage/v1/object/public`;
 
 const BLOGS: [string, string, string, string][] = [
 	[
@@ -152,14 +158,68 @@ const BLOGS: [string, string, string, string][] = [
 	],
 ];
 
+function getContentType(filePath: string): string {
+	const ext = filePath.split(".").pop()?.toLowerCase();
+
+	switch (ext) {
+		case "png":
+			return "image/png";
+		case "jpg":
+		case "jpeg":
+			return "image/jpeg";
+		case "gif":
+			return "image/gif";
+		case "webp":
+			return "image/webp";
+		default:
+			return "application/octet-stream";
+	}
+}
+
 async function main() {
 	const editor = new LexicalEditorService();
 
+	const supabase = createClient(
+		process.env.VITE_SUPABASE_URL!,
+		process.env.SUPABASE_SERVICE_ROLE_KEY!,
+	);
+
+	const timestamp = Date.now();
 	const entries: CreateBlog[] = [];
 
-	for (const [i, [title, summary, imageSource, link]] of BLOGS.entries()) {
+	for (const [i, [title, summary, localImagePath, link]] of BLOGS.entries()) {
 		await editor.injectHTML(await Promise.resolve(marked.parse(summary)));
 		const summaryState = editor.getEditorStateJSON();
+
+		// Read local image file and upload to Supabase
+		const publicDir = join(process.cwd(), "public");
+		const fullPath = join(publicDir, localImagePath);
+
+		let imageSource: string | null = null;
+
+		try {
+			const fileBuffer = await readFile(fullPath);
+			const contentType = getContentType(localImagePath);
+			const ext = localImagePath.split(".").pop();
+			const uniqueId = uuidv4();
+			const fileName = `${uniqueId}-${timestamp}.${ext}`;
+			const storagePath = `cedars/${fileName}`;
+
+			const { error } = await supabase.storage
+				.from("blogs")
+				.upload(storagePath, fileBuffer, {
+					contentType,
+				});
+
+			if (error) {
+				console.error(`Failed to upload ${localImagePath}:`, error.message);
+			} else {
+				imageSource = `${STORAGE_URL}/blogs/${storagePath}`;
+				console.log(`Uploaded: ${localImagePath} -> ${imageSource}`);
+			}
+		} catch (err) {
+			console.error(`Failed to read file ${fullPath}:`, (err as Error).message);
+		}
 
 		entries.push({
 			title,
@@ -173,6 +233,7 @@ async function main() {
 
 	await db.insert(blogs).values(entries);
 
+	console.log(`Inserted ${entries.length} blog entries`);
 	process.exit(0);
 }
 
