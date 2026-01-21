@@ -177,6 +177,8 @@ function getContentType(filePath: string): string {
 }
 
 async function main() {
+	// await db.delete(blogs);
+
 	const editor = new LexicalEditorService();
 
 	const supabase = createClient(
