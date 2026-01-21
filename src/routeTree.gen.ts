@@ -17,7 +17,6 @@ import { Route as NotFoundRouteImport } from './routes/not-found'
 import { Route as LogOutRouteImport } from './routes/log-out'
 import { Route as LogInRouteImport } from './routes/log-in'
 import { Route as HealthRouteImport } from './routes/health'
-import { Route as FaqsRouteImport } from './routes/faqs'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TournamentsIndexRouteImport } from './routes/tournaments/index'
 import { Route as TdIndexRouteImport } from './routes/td/index'
@@ -30,6 +29,7 @@ import { Route as TournamentsCreateRouteImport } from './routes/tournaments/crea
 import { Route as LeaderboardChar123GenderChar125RouteImport } from './routes/leaderboard.{-$gender}'
 import { Route as JuniorsCalCupRouteImport } from './routes/juniors/cal-cup'
 import { Route as InfoCedarsRouteImport } from './routes/info/cedars'
+import { Route as FaqsChar123SubjectChar125RouteImport } from './routes/faqs.{-$subject}'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
@@ -88,11 +88,6 @@ const LogInRoute = LogInRouteImport.update({
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqsRoute = FaqsRouteImport.update({
-  id: '/faqs',
-  path: '/faqs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -156,6 +151,12 @@ const InfoCedarsRoute = InfoCedarsRouteImport.update({
   path: '/info/cedars',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FaqsChar123SubjectChar125Route =
+  FaqsChar123SubjectChar125RouteImport.update({
+    id: '/faqs/{-$subject}',
+    path: '/faqs/{-$subject}',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPingRoute = ApiPingRouteImport.update({
   id: '/api/ping',
   path: '/api/ping',
@@ -259,7 +260,6 @@ const ApiTasksCleanupStorageRoute = ApiTasksCleanupStorageRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/faqs': typeof FaqsRoute
   '/health': typeof HealthRoute
   '/log-in': typeof LogInRoute
   '/log-out': typeof LogOutRoute
@@ -275,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
+  '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
   '/info/cedars': typeof InfoCedarsRoute
   '/juniors/cal-cup': typeof JuniorsCalCupRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
@@ -301,7 +302,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/faqs': typeof FaqsRoute
   '/health': typeof HealthRoute
   '/log-in': typeof LogInRoute
   '/log-out': typeof LogOutRoute
@@ -317,6 +317,7 @@ export interface FileRoutesByTo {
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
+  '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
   '/info/cedars': typeof InfoCedarsRoute
   '/juniors/cal-cup': typeof JuniorsCalCupRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
@@ -344,7 +345,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/faqs': typeof FaqsRoute
   '/health': typeof HealthRoute
   '/log-in': typeof LogInRoute
   '/log-out': typeof LogOutRoute
@@ -360,6 +360,7 @@ export interface FileRoutesById {
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
+  '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
   '/info/cedars': typeof InfoCedarsRoute
   '/juniors/cal-cup': typeof JuniorsCalCupRoute
   '/leaderboard/{-$gender}': typeof LeaderboardChar123GenderChar125Route
@@ -388,7 +389,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/faqs'
     | '/health'
     | '/log-in'
     | '/log-out'
@@ -404,6 +404,7 @@ export interface FileRouteTypes {
     | '/admin/schedule'
     | '/admin/users'
     | '/api/ping'
+    | '/faqs/{-$subject}'
     | '/info/cedars'
     | '/juniors/cal-cup'
     | '/leaderboard/{-$gender}'
@@ -430,7 +431,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/faqs'
     | '/health'
     | '/log-in'
     | '/log-out'
@@ -446,6 +446,7 @@ export interface FileRouteTypes {
     | '/admin/schedule'
     | '/admin/users'
     | '/api/ping'
+    | '/faqs/{-$subject}'
     | '/info/cedars'
     | '/juniors/cal-cup'
     | '/leaderboard/{-$gender}'
@@ -472,7 +473,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/faqs'
     | '/health'
     | '/log-in'
     | '/log-out'
@@ -488,6 +488,7 @@ export interface FileRouteTypes {
     | '/admin/schedule'
     | '/admin/users'
     | '/api/ping'
+    | '/faqs/{-$subject}'
     | '/info/cedars'
     | '/juniors/cal-cup'
     | '/leaderboard/{-$gender}'
@@ -515,7 +516,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  FaqsRoute: typeof FaqsRoute
   HealthRoute: typeof HealthRoute
   LogInRoute: typeof LogInRoute
   LogOutRoute: typeof LogOutRoute
@@ -531,6 +531,7 @@ export interface RootRouteChildren {
   AdminScheduleRoute: typeof AdminScheduleRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ApiPingRoute: typeof ApiPingRoute
+  FaqsChar123SubjectChar125Route: typeof FaqsChar123SubjectChar125Route
   InfoCedarsRoute: typeof InfoCedarsRoute
   JuniorsCalCupRoute: typeof JuniorsCalCupRoute
   LeaderboardChar123GenderChar125Route: typeof LeaderboardChar123GenderChar125Route
@@ -612,13 +613,6 @@ declare module '@tanstack/react-router' {
       path: '/health'
       fullPath: '/health'
       preLoaderRoute: typeof HealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faqs': {
-      id: '/faqs'
-      path: '/faqs'
-      fullPath: '/faqs'
-      preLoaderRoute: typeof FaqsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -703,6 +697,13 @@ declare module '@tanstack/react-router' {
       path: '/info/cedars'
       fullPath: '/info/cedars'
       preLoaderRoute: typeof InfoCedarsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faqs/{-$subject}': {
+      id: '/faqs/{-$subject}'
+      path: '/faqs/{-$subject}'
+      fullPath: '/faqs/{-$subject}'
+      preLoaderRoute: typeof FaqsChar123SubjectChar125RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ping': {
@@ -843,7 +844,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  FaqsRoute: FaqsRoute,
   HealthRoute: HealthRoute,
   LogInRoute: LogInRoute,
   LogOutRoute: LogOutRoute,
@@ -859,6 +859,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminScheduleRoute: AdminScheduleRoute,
   AdminUsersRoute: AdminUsersRoute,
   ApiPingRoute: ApiPingRoute,
+  FaqsChar123SubjectChar125Route: FaqsChar123SubjectChar125Route,
   InfoCedarsRoute: InfoCedarsRoute,
   JuniorsCalCupRoute: JuniorsCalCupRoute,
   LeaderboardChar123GenderChar125Route: LeaderboardChar123GenderChar125Route,

@@ -6,6 +6,7 @@ export const Route = createFileRoute("/info/cedars")({
 	component: RouteComponent,
 });
 
+// TODO: make a blog link table in the db
 const BLOGS: [string, string, string, string][] = [
 	[
 		"Should Athletes Play through Pain?",

@@ -9,65 +9,53 @@ import {
 	DisclosureHeader,
 	DisclosurePanel,
 } from "@/components/base/disclosure";
-// import { RichTextDisplay } from "@/components/base/rich-text-editor/display";
+import { RichTextDisplay } from "@/components/base/rich-text-editor/display";
 import { useViewerHasPermission } from "@/auth/shared";
 import { ReorderFaqsForm } from "@/components/faqs/reorder-faqs-form";
-// import { CreateFaqForm } from "@/components/faqs/create-faq-form";
+import { CreateFaqForm } from "@/components/faqs/create-faq-form";
 import { DeleteFaqForm } from "@/components/faqs/delete-faq-form";
-// import { UpdateFaqForm } from "@/components/faqs/update-faq-form";
-import { lazy } from "react";
+import { UpdateFaqForm } from "@/components/faqs/update-faq-form";
 
-const CreateFaqForm = lazy(async () => {
-	const mod = await import("@/components/faqs/create-faq-form");
+const titles: { [key: string]: string } = {
+	tournaments: "Tournament",
+	waitlist: "Waitlist",
+};
 
-	return {
-		default: mod.CreateFaqForm,
-	};
-});
-
-const UpdateFaqForm = lazy(async () => {
-	const mod = await import("@/components/faqs/update-faq-form");
-
-	return {
-		default: mod.UpdateFaqForm,
-	};
-});
-
-const RichTextDisplay = lazy(async () => {
-	const mod = await import("@/components/base/rich-text-editor/display");
-
-	return {
-		default: mod.RichTextDisplay,
-	};
-});
-
-export const Route = createFileRoute("/faqs")({
-	loader: async ({ context: { queryClient } }) => {
-		return await queryClient.ensureQueryData(getFaqsQueryOptions());
+export const Route = createFileRoute("/faqs/{-$subject}")({
+	loader: async ({ params: { subject = null }, context: { queryClient } }) => {
+		return await queryClient.ensureQueryData(getFaqsQueryOptions(subject));
 	},
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const { data: faqs } = useSuspenseQuery(getFaqsQueryOptions());
+	const { subject } = Route.useParams();
+
+	const { data: faqs } = useSuspenseQuery(getFaqsQueryOptions(subject));
 
 	const canCreate = useViewerHasPermission({
 		faqs: ["create"],
-	});
+	})
 
 	const canUpdate = useViewerHasPermission({
 		faqs: ["update"],
-	});
+	})
 
 	return (
 		<DefaultLayout>
 			<div className="max-w-4xl mx-auto py-8 px-4">
 				<div className="flex justify-between items-center mb-12">
-					<h1 className={title()}>Frequently Asked Questions</h1>
+					<h1 className={title()}>
+						{subject && titles[subject] ? (
+							<>{titles[subject]} FAQs</>
+						) : (
+							<>Frequently Asked Questions</>
+						)}
+					</h1>
 
 					<div className="flex flex-row gap-2">
-						{canUpdate && <ReorderFaqsForm />}
-						{canCreate && <CreateFaqForm />}
+						{canUpdate && <ReorderFaqsForm groupKey={subject} />}
+						{canCreate && <CreateFaqForm groupKey={subject} />}
 					</div>
 				</div>
 
@@ -85,8 +73,12 @@ function RouteComponent() {
 
 									{canUpdate && (
 										<span className="flex flex-row space-x-2 items-center">
-											<UpdateFaqForm id={id} />
-											<DeleteFaqForm id={id} question={question} />
+											<UpdateFaqForm id={id} groupKey={subject} />
+											<DeleteFaqForm
+												id={id}
+												question={question}
+												groupKey={subject}
+											/>
 										</span>
 									)}
 								</DisclosureHeader>
@@ -104,5 +96,5 @@ function RouteComponent() {
 				)}
 			</div>
 		</DefaultLayout>
-	);
+	)
 }
