@@ -1,4 +1,4 @@
-import { defineRelations } from "drizzle-orm";
+import { defineRelations, sql } from "drizzle-orm";
 import { tables } from "./tables";
 
 export const relations = defineRelations(tables, (r) => ({
@@ -10,6 +10,25 @@ export const relations = defineRelations(tables, (r) => ({
 		level: r.one.levels({
 			from: r.playerProfiles.levelId,
 			to: r.levels.id,
+		}),
+		memberships: r.many.memberships(),
+		activeMembership: r.one.memberships({
+			where: {
+				validUntil: {
+					gte: "now()",
+				},
+				// RAW: sql`${tables.memberships.validUntil} >= now()`,
+			},
+		}),
+	},
+	memberships: {
+		profile: r.one.playerProfiles({
+			from: r.memberships.profileId,
+			to: r.playerProfiles.id,
+		}),
+		purchaser: r.one.users({
+			from: r.memberships.purchaserId,
+			to: r.users.id,
 		}),
 	},
 	pools: {
