@@ -4,6 +4,11 @@ import { subtitle, title } from "@/components/base/primitives";
 import { getBlogsQueryOptions } from "@/functions/blogs/get-blogs";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { RichTextDisplay } from "@/components/base/rich-text-editor/display";
+import { useViewerHasPermission } from "@/auth/shared";
+import { CreateBlogForm } from "@/components/blogs/create-blog-form";
+import { UpdateBlogForm } from "@/components/blogs/update-blog-form";
+import { DeleteBlogForm } from "@/components/blogs/delete-blog-form";
+import { ReorderBlogsForm } from "@/components/blogs/reorder-blog-form";
 
 export const Route = createFileRoute("/info/cedars")({
 	loader: ({ context: { queryClient } }) => {
@@ -15,6 +20,14 @@ export const Route = createFileRoute("/info/cedars")({
 function RouteComponent() {
 	const { data: blogs } = useSuspenseQuery(getBlogsQueryOptions("cedars"));
 
+	const canCreate = useViewerHasPermission({
+		blogs: ["create"],
+	});
+
+	const canUpdate = useViewerHasPermission({
+		blogs: ["update"],
+	});
+
 	return (
 		<DefaultLayout
 			classNames={{
@@ -22,7 +35,11 @@ function RouteComponent() {
 			}}
 		>
 			<div className="flex flex-col space-y-6 text-center">
-				<h1 className={title()}>Injury Prevention and Wellness</h1>
+				<div className="flex justify-center items-center gap-2">
+					<h1 className={title()}>Injury Prevention and Wellness</h1>
+					{canUpdate && <ReorderBlogsForm tag="cedars" />}
+					{canCreate && <CreateBlogForm tag="cedars" />}
+				</div>
 				<p className={subtitle()}>Sponsored Content From</p>
 				<a
 					className="mx-auto"
@@ -39,9 +56,9 @@ function RouteComponent() {
 			</div>
 			<div className="flex bg-sand max-w-[500px] mx-auto items-center justify-center">
 				<ul>
-					{blogs?.map(({ title, summary, imageSource, link }) => (
+					{blogs?.map(({ id, title, summary, imageSource, link }) => (
 						<li
-							key={title}
+							key={id}
 							className="bg-white my-8 mx-6 rounded-xl overflow-hidden group"
 						>
 							<a href={link} target="_blank" rel="noreferrer">
@@ -63,6 +80,12 @@ function RouteComponent() {
 									<p className="underline">Read More</p>
 								</div>
 							</a>
+							{canUpdate && (
+								<div className="flex justify-end gap-2 p-2 border-t">
+									<UpdateBlogForm id={id} tag="cedars" />
+									<DeleteBlogForm id={id} blogTitle={title} tag="cedars" />
+								</div>
+							)}
 						</li>
 					))}
 				</ul>
