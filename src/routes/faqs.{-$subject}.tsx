@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { title } from "@/components/base/primitives";
 import { DefaultLayout } from "@/layouts/default";
 import { getFaqsQueryOptions } from "@/functions/faqs/get-faqs";
@@ -23,6 +23,10 @@ const titles: { [key: string]: string } = {
 
 export const Route = createFileRoute("/faqs/{-$subject}")({
 	loader: async ({ params: { subject = null }, context: { queryClient } }) => {
+		if (subject !== null && !["tournaments", "waitlist"].includes(subject)) {
+			throw notFound();
+		}
+
 		return await queryClient.ensureQueryData(getFaqsQueryOptions(subject));
 	},
 	component: RouteComponent,
@@ -35,11 +39,11 @@ function RouteComponent() {
 
 	const canCreate = useViewerHasPermission({
 		faqs: ["create"],
-	})
+	});
 
 	const canUpdate = useViewerHasPermission({
 		faqs: ["update"],
-	})
+	});
 
 	return (
 		<DefaultLayout>
@@ -96,5 +100,5 @@ function RouteComponent() {
 				)}
 			</div>
 		</DefaultLayout>
-	)
+	);
 }
