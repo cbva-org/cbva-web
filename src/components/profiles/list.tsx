@@ -1,15 +1,16 @@
 import { Link } from "@tanstack/react-router";
-import { EditIcon, UserCircleIcon } from "lucide-react";
-import type { PlayerProfile } from "@/db/schema";
+import { CheckIcon, EditIcon, UserCircleIcon } from "lucide-react";
+import type { Membership, PlayerProfile } from "@/db/schema";
 import { button } from "../base/button";
 import { ProfileName } from "./name";
+import { tagStyles } from "../base/tag-group";
 
 export type ProfileListProps = {
 	className?: string;
-	profiles: Pick<
+	profiles: (Pick<
 		PlayerProfile,
 		"id" | "firstName" | "preferredName" | "lastName" | "imageSource"
-	>[];
+	> & { activeMembership: Pick<Membership, "id"> | null })[];
 	linkNames?: boolean;
 };
 
@@ -27,6 +28,7 @@ export function ProfileList({
 					preferredName,
 					lastName,
 					imageSource = undefined,
+					activeMembership,
 				}) => (
 					<li
 						key={id}
@@ -53,10 +55,22 @@ export function ProfileList({
 							/>
 						</span>
 
-						<div className="flex flex-row gap-x-2 items-center">
-							<span className="py px-2 rounded-md border border-red-400 bg-red-200">
-								Inactive
-							</span>
+						<div className="flex flex-row gap-x-4 items-center">
+							{activeMembership ? (
+								<span className={tagStyles({ color: "green" })}>
+									<CheckIcon size={12} /> Active
+								</span>
+							) : (
+								<Link
+									className={tagStyles({ color: "red" })}
+									to="/account/registrations"
+									search={{
+										memberships: [id],
+									}}
+								>
+									Inactive
+								</Link>
+							)}
 
 							<Link
 								to="/profile/$profileId/edit"

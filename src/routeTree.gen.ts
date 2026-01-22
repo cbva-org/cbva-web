@@ -35,13 +35,12 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
 import { Route as AccountSetupRouteImport } from './routes/account/setup'
 import { Route as AccountResetPasswordRouteImport } from './routes/account/reset-password'
-import { Route as AccountRegistrationsRouteImport } from './routes/account/registrations'
 import { Route as AccountForgotPasswordRouteImport } from './routes/account/forgot-password'
 import { Route as AccountChangePasswordRouteImport } from './routes/account/change-password'
 import { Route as TournamentsTournamentIdIndexRouteImport } from './routes/tournaments/$tournamentId/index'
 import { Route as ProfileProfileIdIndexRouteImport } from './routes/profile/$profileId/index'
 import { Route as AccountVerifyIndexRouteImport } from './routes/account/verify/index'
-import { Route as AccountRegistrationIndexRouteImport } from './routes/account/registration/index'
+import { Route as AccountRegistrationsIndexRouteImport } from './routes/account/registrations/index'
 import { Route as TournamentsTournamentIdEditRouteImport } from './routes/tournaments/$tournamentId/edit'
 import { Route as ProfileProfileIdEditRouteImport } from './routes/profile/$profileId/edit'
 import { Route as JuniorsLeaderboardChar123GenderChar125RouteImport } from './routes/juniors/leaderboard.{-$gender}'
@@ -184,11 +183,6 @@ const AccountResetPasswordRoute = AccountResetPasswordRouteImport.update({
   path: '/account/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccountRegistrationsRoute = AccountRegistrationsRouteImport.update({
-  id: '/account/registrations',
-  path: '/account/registrations',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AccountForgotPasswordRoute = AccountForgotPasswordRouteImport.update({
   id: '/account/forgot-password',
   path: '/account/forgot-password',
@@ -215,10 +209,10 @@ const AccountVerifyIndexRoute = AccountVerifyIndexRouteImport.update({
   path: '/account/verify/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccountRegistrationIndexRoute =
-  AccountRegistrationIndexRouteImport.update({
-    id: '/account/registration/',
-    path: '/account/registration/',
+const AccountRegistrationsIndexRoute =
+  AccountRegistrationsIndexRouteImport.update({
+    id: '/account/registrations/',
+    path: '/account/registrations/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const TournamentsTournamentIdEditRoute =
@@ -283,7 +277,6 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof SignUpRoute
   '/account/change-password': typeof AccountChangePasswordRoute
   '/account/forgot-password': typeof AccountForgotPasswordRoute
-  '/account/registrations': typeof AccountRegistrationsRoute
   '/account/reset-password': typeof AccountResetPasswordRoute
   '/account/setup': typeof AccountSetupRoute
   '/admin/schedule': typeof AdminScheduleRoute
@@ -306,7 +299,7 @@ export interface FileRoutesByFullPath {
   '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
   '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/tournaments/$tournamentId/edit': typeof TournamentsTournamentIdEditRoute
-  '/account/registration': typeof AccountRegistrationIndexRoute
+  '/account/registrations': typeof AccountRegistrationsIndexRoute
   '/account/verify': typeof AccountVerifyIndexRoute
   '/profile/$profileId': typeof ProfileProfileIdIndexRoute
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdIndexRoute
@@ -327,7 +320,6 @@ export interface FileRoutesByTo {
   '/sign-up': typeof SignUpRoute
   '/account/change-password': typeof AccountChangePasswordRoute
   '/account/forgot-password': typeof AccountForgotPasswordRoute
-  '/account/registrations': typeof AccountRegistrationsRoute
   '/account/reset-password': typeof AccountResetPasswordRoute
   '/account/setup': typeof AccountSetupRoute
   '/admin/schedule': typeof AdminScheduleRoute
@@ -350,7 +342,7 @@ export interface FileRoutesByTo {
   '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
   '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/tournaments/$tournamentId/edit': typeof TournamentsTournamentIdEditRoute
-  '/account/registration': typeof AccountRegistrationIndexRoute
+  '/account/registrations': typeof AccountRegistrationsIndexRoute
   '/account/verify': typeof AccountVerifyIndexRoute
   '/profile/$profileId': typeof ProfileProfileIdIndexRoute
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdIndexRoute
@@ -372,7 +364,6 @@ export interface FileRoutesById {
   '/sign-up': typeof SignUpRoute
   '/account/change-password': typeof AccountChangePasswordRoute
   '/account/forgot-password': typeof AccountForgotPasswordRoute
-  '/account/registrations': typeof AccountRegistrationsRoute
   '/account/reset-password': typeof AccountResetPasswordRoute
   '/account/setup': typeof AccountSetupRoute
   '/admin/schedule': typeof AdminScheduleRoute
@@ -395,7 +386,7 @@ export interface FileRoutesById {
   '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
   '/profile/$profileId/edit': typeof ProfileProfileIdEditRoute
   '/tournaments/$tournamentId/edit': typeof TournamentsTournamentIdEditRoute
-  '/account/registration/': typeof AccountRegistrationIndexRoute
+  '/account/registrations/': typeof AccountRegistrationsIndexRoute
   '/account/verify/': typeof AccountVerifyIndexRoute
   '/profile/$profileId/': typeof ProfileProfileIdIndexRoute
   '/tournaments/$tournamentId/': typeof TournamentsTournamentIdIndexRoute
@@ -418,7 +409,6 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/account/change-password'
     | '/account/forgot-password'
-    | '/account/registrations'
     | '/account/reset-password'
     | '/account/setup'
     | '/admin/schedule'
@@ -441,7 +431,7 @@ export interface FileRouteTypes {
     | '/juniors/leaderboard/{-$gender}'
     | '/profile/$profileId/edit'
     | '/tournaments/$tournamentId/edit'
-    | '/account/registration'
+    | '/account/registrations'
     | '/account/verify'
     | '/profile/$profileId'
     | '/tournaments/$tournamentId'
@@ -462,7 +452,6 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/account/change-password'
     | '/account/forgot-password'
-    | '/account/registrations'
     | '/account/reset-password'
     | '/account/setup'
     | '/admin/schedule'
@@ -485,7 +474,7 @@ export interface FileRouteTypes {
     | '/juniors/leaderboard/{-$gender}'
     | '/profile/$profileId/edit'
     | '/tournaments/$tournamentId/edit'
-    | '/account/registration'
+    | '/account/registrations'
     | '/account/verify'
     | '/profile/$profileId'
     | '/tournaments/$tournamentId'
@@ -506,7 +495,6 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/account/change-password'
     | '/account/forgot-password'
-    | '/account/registrations'
     | '/account/reset-password'
     | '/account/setup'
     | '/admin/schedule'
@@ -529,7 +517,7 @@ export interface FileRouteTypes {
     | '/juniors/leaderboard/{-$gender}'
     | '/profile/$profileId/edit'
     | '/tournaments/$tournamentId/edit'
-    | '/account/registration/'
+    | '/account/registrations/'
     | '/account/verify/'
     | '/profile/$profileId/'
     | '/tournaments/$tournamentId/'
@@ -551,7 +539,6 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   AccountChangePasswordRoute: typeof AccountChangePasswordRoute
   AccountForgotPasswordRoute: typeof AccountForgotPasswordRoute
-  AccountRegistrationsRoute: typeof AccountRegistrationsRoute
   AccountResetPasswordRoute: typeof AccountResetPasswordRoute
   AccountSetupRoute: typeof AccountSetupRoute
   AdminScheduleRoute: typeof AdminScheduleRoute
@@ -574,7 +561,7 @@ export interface RootRouteChildren {
   JuniorsLeaderboardChar123GenderChar125Route: typeof JuniorsLeaderboardChar123GenderChar125Route
   ProfileProfileIdEditRoute: typeof ProfileProfileIdEditRoute
   TournamentsTournamentIdEditRoute: typeof TournamentsTournamentIdEditRoute
-  AccountRegistrationIndexRoute: typeof AccountRegistrationIndexRoute
+  AccountRegistrationsIndexRoute: typeof AccountRegistrationsIndexRoute
   AccountVerifyIndexRoute: typeof AccountVerifyIndexRoute
   ProfileProfileIdIndexRoute: typeof ProfileProfileIdIndexRoute
   TournamentsTournamentIdIndexRoute: typeof TournamentsTournamentIdIndexRoute
@@ -768,13 +755,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/account/registrations': {
-      id: '/account/registrations'
-      path: '/account/registrations'
-      fullPath: '/account/registrations'
-      preLoaderRoute: typeof AccountRegistrationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/account/forgot-password': {
       id: '/account/forgot-password'
       path: '/account/forgot-password'
@@ -810,11 +790,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountVerifyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/account/registration/': {
-      id: '/account/registration/'
-      path: '/account/registration'
-      fullPath: '/account/registration'
-      preLoaderRoute: typeof AccountRegistrationIndexRouteImport
+    '/account/registrations/': {
+      id: '/account/registrations/'
+      path: '/account/registrations'
+      fullPath: '/account/registrations'
+      preLoaderRoute: typeof AccountRegistrationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tournaments/$tournamentId/edit': {
@@ -895,7 +875,6 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   AccountChangePasswordRoute: AccountChangePasswordRoute,
   AccountForgotPasswordRoute: AccountForgotPasswordRoute,
-  AccountRegistrationsRoute: AccountRegistrationsRoute,
   AccountResetPasswordRoute: AccountResetPasswordRoute,
   AccountSetupRoute: AccountSetupRoute,
   AdminScheduleRoute: AdminScheduleRoute,
@@ -919,7 +898,7 @@ const rootRouteChildren: RootRouteChildren = {
     JuniorsLeaderboardChar123GenderChar125Route,
   ProfileProfileIdEditRoute: ProfileProfileIdEditRoute,
   TournamentsTournamentIdEditRoute: TournamentsTournamentIdEditRoute,
-  AccountRegistrationIndexRoute: AccountRegistrationIndexRoute,
+  AccountRegistrationsIndexRoute: AccountRegistrationsIndexRoute,
   AccountVerifyIndexRoute: AccountVerifyIndexRoute,
   ProfileProfileIdIndexRoute: ProfileProfileIdIndexRoute,
   TournamentsTournamentIdIndexRoute: TournamentsTournamentIdIndexRoute,

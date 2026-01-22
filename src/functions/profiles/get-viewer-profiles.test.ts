@@ -16,20 +16,27 @@ describe("getViewerProfiles", () => {
 
 		assert(profiles.every(({ activeMembership }) => activeMembership === null));
 
-		await db.insert(memberships).values({
-			transactionKey: "test",
-			purchaserId: user.id,
-			profileId: profiles[0].id,
-			validUntil: today(getDefaultTimeZone())
-				.add({
-					years: 1,
-				})
-				.toString(),
-		});
+		const [{ id: membershipId }] = await db
+			.insert(memberships)
+			.values({
+				transactionKey: "test",
+				purchaserId: user.id,
+				profileId: profiles[0].id,
+				validUntil: today(getDefaultTimeZone())
+					.add({
+						years: 1,
+					})
+					.toString(),
+			})
+			.returning({
+				id: memberships.id,
+			});
 
 		const [active, inactive] = await getViewerProfilesHandler(user.id);
 
-		expect(active.activeMembership).not.toBeNull();
+		expect(active.activeMembership).toStrictEqual({
+			id: membershipId,
+		});
 		expect(inactive.activeMembership).toBeNull();
 	});
 });

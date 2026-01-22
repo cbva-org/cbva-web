@@ -9,7 +9,11 @@ export const getViewerProfilesHandler = createServerOnlyFn(
 	async (viewerId: Viewer["id"]) => {
 		return await db.query.playerProfiles.findMany({
 			with: {
-				activeMembership: true,
+				activeMembership: {
+					columns: {
+						id: true,
+					},
+				},
 			},
 			where: { userId: viewerId },
 			orderBy: {

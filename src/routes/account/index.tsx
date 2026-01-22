@@ -350,7 +350,9 @@ function RouteComponent() {
 
 			<Suspense>
 				<div className="flex flex-col space-y-6">
-					<h2 className={title({ size: "sm" })}>Your profiles</h2>
+					<div className="flex flex-row items-center justify-between">
+						<h2 className={title({ size: "sm" })}>Your profiles</h2>
+					</div>
 
 					{profiles && <ProfileList className={card()} profiles={profiles} />}
 				</div>
