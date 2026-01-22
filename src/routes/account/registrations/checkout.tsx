@@ -10,12 +10,18 @@ import {
 	checkoutSchema,
 } from "@/functions/payments/checkout";
 import { DefaultLayout } from "@/layouts/default";
-import { useMutation } from "@tanstack/react-query";
+import { isServer, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import type z from "zod";
 
 export const Route = createFileRoute("/account/registrations/checkout")({
 	validateSearch: registrationPageSchema,
+	scripts: () => [
+		{
+			src: "https://www.usaepay.com/js/v2/pay.js",
+		},
+	],
 	component: RouteComponent,
 });
 
@@ -23,7 +29,23 @@ const schema = checkoutSchema.omit({
 	cart: true,
 });
 
+const usaepay = window.usaepay;
+
 function RouteComponent() {
+	useEffect(() => {
+		const client = new usaepay.Client("hello");
+
+		let paymentCard = client.createPaymentCardEntry();
+
+		const paymentCardConfig = {
+			//add config here
+		};
+
+		paymentCard.generateHTML(paymentCardConfig);
+
+		paymentCard.addHTML("paymentCardContainer");
+	}, []);
+
 	const cart = useCart(true);
 	const total = useCartTotal(true);
 
@@ -163,6 +185,8 @@ function RouteComponent() {
 						Billing Information
 					</h2>
 
+					<div id="paymentCardErrorContainer" />
+
 					<form.AppField name="paymentInfo.cardNumber">
 						{(field) => (
 							<field.PaymentCard
@@ -214,6 +238,13 @@ function RouteComponent() {
 						Pay ${total}
 					</form.SubmitButton>
 				</form.AppForm>
+			</form>
+
+			<form id="paymentForm" action="/charge" method="post">
+				<label for="paymentCardContainer">Credit/Debit Card</label>
+				<div id="paymentCardContainer" />
+				<div id="paymentCardErrorContainer" />
+				<button>Submit Payment Form</button>
 			</form>
 		</DefaultLayout>
 	);
