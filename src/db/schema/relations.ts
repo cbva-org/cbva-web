@@ -17,7 +17,6 @@ export const relations = defineRelations(tables, (r) => ({
 				validUntil: {
 					gte: "now()",
 				},
-				// RAW: sql`${tables.memberships.validUntil} >= now()`,
 			},
 		}),
 	},
