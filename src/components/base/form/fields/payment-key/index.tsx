@@ -50,17 +50,6 @@ declare global {
 	}
 }
 
-// Test card
-//
-// "creditcard": {
-//     "cardholder": "John Doe",
-//     "number": "4000100011112224",
-//     "expiration": "0919",
-//     "cvc": "123",
-//     "avs_street": "1234 Main",
-//     "avs_zip": "12345"
-// }
-
 const paymentCardConfig = {
 	display_labels: true,
 	labels: {
@@ -165,12 +154,6 @@ export function PaymentKeyField({
 		paymentCard.addEventListener("error", handleError);
 		paymentCard.addEventListener("valid", handleValid);
 		paymentCard.addEventListener("invalid", handleInvalid);
-
-		// return () => {
-		// 	paymentCard.removeEventListener("error", handleError);
-		// 	paymentCard.removeEventListener("valid", handleValid);
-		// 	paymentCard.removeEventListener("invalid", handleInvalid);
-		// };
 	});
 
 	return (

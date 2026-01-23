@@ -16,14 +16,13 @@ import {
 import { DefaultLayout } from "@/layouts/default";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import z from "zod";
+import type z from "zod";
 
 export const Route = createFileRoute("/account/registrations/checkout")({
 	validateSearch: registrationPageSchema,
 	scripts: () => [
 		{
-			src: "https://sandbox.usaepay.com/js/v2/pay.js",
-			// src: "https://www.usaepay.com/js/v2/pay.js",
+			src: `${import.meta.env.VITE_USAEPAY_BASE_URL}/js/v2/pay.js`,
 		},
 	],
 	component: RouteComponent,
@@ -35,9 +34,19 @@ const schema = checkoutSchema
 		paymentKey: true,
 	})
 	.extend({
-		// paymentKey: z.string().nullable(),
 		paymentCard: paymentCardSchema,
 	});
+
+// Test card
+//
+// "creditcard": {
+//     "cardholder": "John Doe",
+//     "number": "4000100011112224",
+//     "expiration": "0919",
+//     "cvc": "123",
+//     "avs_street": "1234 Main",
+//     "avs_zip": "12345"
+// }
 
 function RouteComponent() {
 	const cart = useCart(true);
@@ -60,36 +69,14 @@ function RouteComponent() {
 				state: "",
 				postalCode: "",
 			},
-			// paymentKey: null,
 			paymentCard: {
 				cnum: false,
 				cvv: false,
 				exp: false,
 			},
-			// paymentInfo: {
-			// 	cardNumber: "",
-			// 	name: "",
-			// 	expiry: "",
-			// 	securityCode: "",
-			// },
 		} as z.infer<typeof schema>,
 		validators: {
-			// onMount: schema,
 			onChange: schema,
-			// onSubmitAsync: async ({ formApi }) => {
-			// 	// Get payment key from USAePay here
-			// 	const result = await getPaymentKey();
-			//
-			// 	if (result.error) {
-			// 		return {
-			// 			form: "Invalid card information.",
-			// 		};
-			// 	}
-			//
-			// 	formApi.setFieldValue("paymentKey", result.key);
-			//
-			// 	return undefined;
-			// },
 		},
 		onSubmit: async ({ value: { billingInformation } }) => {
 			// Get payment key from USAePay here
@@ -217,59 +204,6 @@ function RouteComponent() {
 					)}
 				</form.AppField>
 
-				{/* <div className="bg-white rounded-lg max-w-md mx-auto p-4 pb-6 grid grid-cols-6 gap-3 items-start"> */}
-				{/* 	<h2 className={title({ size: "xs", class: "mb-2 col-span-full" })}> */}
-				{/* 		Billing Information */}
-				{/* 	</h2> */}
-				{/**/}
-				{/* 	<div id="paymentCardErrorContainer" /> */}
-				{/**/}
-				{/* 	<form.AppField name="paymentInfo.cardNumber"> */}
-				{/* 		{(field) => ( */}
-				{/* 			<field.PaymentCard */}
-				{/* 				className="col-span-full" */}
-				{/* 				field={field} */}
-				{/* 				label="Card Number" */}
-				{/* 				isRequired={true} */}
-				{/* 			/> */}
-				{/* 		)} */}
-				{/* 	</form.AppField> */}
-				{/**/}
-				{/* 	<form.AppField name="paymentInfo.name"> */}
-				{/* 		{(field) => ( */}
-				{/* 			<field.Text */}
-				{/* 				className="col-span-full" */}
-				{/* 				field={field} */}
-				{/* 				label="Name on Card" */}
-				{/* 				isRequired={true} */}
-				{/* 			/> */}
-				{/* 		)} */}
-				{/* 	</form.AppField> */}
-				{/**/}
-				{/* 	<form.AppField name="paymentInfo.expiry"> */}
-				{/* 		{(field) => ( */}
-				{/* 			<field.Expiry */}
-				{/* 				className="col-span-3" */}
-				{/* 				field={field} */}
-				{/* 				label="Expiration" */}
-				{/* 				isRequired={true} */}
-				{/* 				placeholder="MM/YY" */}
-				{/* 			/> */}
-				{/* 		)} */}
-				{/* 	</form.AppField> */}
-				{/**/}
-				{/* 	<form.AppField name="paymentInfo.securityCode"> */}
-				{/* 		{(field) => ( */}
-				{/* 			<field.Password */}
-				{/* 				className="col-span-3" */}
-				{/* 				field={field} */}
-				{/* 				label="Security Code" */}
-				{/* 				isRequired={true} */}
-				{/* 				placeholder="***" */}
-				{/* 			/> */}
-				{/* 		)} */}
-				{/* 	</form.AppField> */}
-				{/* </div> */}
 				<form.AppForm>
 					<form.SubmitButton size="lg" radius="full">
 						Pay ${total}

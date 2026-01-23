@@ -1,5 +1,10 @@
+import { requireAuthenticated } from "@/auth/shared";
+import { db } from "@/db/connection";
+import { memberships } from "@/db/schema";
+import { getDefaultTimeZone } from "@/lib/dates";
+import { parseDate, today } from "@internationalized/date";
 import { mutationOptions } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import z from "zod";
 
 export const cartSchema = z.object({
@@ -26,15 +31,61 @@ export const checkoutSchema = z.object({
 	cart: cartSchema,
 });
 
-export const checkoutFn = createServerFn()
-	.inputValidator(checkoutSchema)
-	.handler(({ data }) => {
-		console.log(JSON.stringify(data, null, 2));
+const createMemberships = createServerOnlyFn(
+	async (
+		purchaserId: string,
+		membershipTransactions: {
+			profileId: number;
+			transactionKey: string;
+		}[],
+	) => {
+		const validUntil = today(getDefaultTimeZone())
+			.set({
+				day: 1,
+				month: 1,
+			})
+			.add({ years: 1 })
+			.toString();
 
-		return {
-			success: true,
-		};
-	});
+		await db.transaction(async (txn) => {
+			await Promise.all(
+				membershipTransactions.map(({ profileId, transactionKey }) =>
+					txn.insert(memberships).values({
+						profileId,
+						transactionKey,
+						purchaserId,
+						validUntil,
+					}),
+				),
+			);
+		});
+	},
+);
+
+export const checkoutFn = createServerFn()
+	.middleware([requireAuthenticated])
+	.inputValidator(checkoutSchema)
+	.handler(
+		async ({
+			data: {
+				paymentKey,
+				cart: { memberships },
+			},
+			context: { viewer },
+		}) => {
+			await createMemberships(
+				viewer.id,
+				memberships.map((id, i) => ({
+					profileId: id,
+					transactionKey: `txn-${i}`,
+				})),
+			);
+
+			return {
+				success: true,
+			};
+		},
+	);
 
 export const checkoutMutationOptions = () =>
 	mutationOptions({

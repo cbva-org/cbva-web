@@ -54,6 +54,11 @@ export const Route = createFileRoute("/account/registrations/")({
 		}
 	},
 	component: RouteComponent,
+	scripts: () => [
+		{
+			src: `${import.meta.env.VITE_USAEPAY_BASE_URL}/js/v2/pay.js`,
+		},
+	],
 });
 
 function RouteComponent() {
