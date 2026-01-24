@@ -23,7 +23,13 @@ import { venueDirectors } from "./venue-directors";
 import { venues } from "./venues";
 import { faqs } from "./faqs";
 import { blogs } from "./blogs";
-import { invoices, memberships, tournamentRegistrations } from "./payments";
+import {
+	invoices,
+	membershipPricing,
+	memberships,
+	tournamentRegistrations,
+} from "./payments";
+import { settings } from "./settings";
 
 export const tables = {
 	blocks,
@@ -54,6 +60,8 @@ export const tables = {
 	faqs,
 	blogs,
 	invoices,
+	membershipPricing,
 	memberships,
+	settings,
 	tournamentRegistrations,
 };
