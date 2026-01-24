@@ -4,6 +4,13 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getInvoicesQueryOptions } from "@/functions/payments/get-invoices";
 import { title } from "@/components/base/primitives";
 import { AdminLayout } from "@/layouts/admin";
+import {
+	Disclosure,
+	DisclosureGroup,
+	DisclosureHeader,
+	DisclosurePanel,
+} from "@/components/base/disclosure";
+import { Pagination } from "@/components/base/pagination";
 
 const searchSchema = z.object({
 	page: z.number().default(1),
@@ -25,7 +32,7 @@ export const Route = createFileRoute("/admin/invoices")({
 function RouteComponent() {
 	const { page, pageSize } = Route.useSearch();
 
-	const { data: invoices } = useSuspenseQuery(
+	const { data: { data: invoices, pageInfo } = {} } = useSuspenseQuery(
 		getInvoicesQueryOptions({
 			pageInfo: {
 				page,
@@ -37,10 +44,10 @@ function RouteComponent() {
 	return (
 		<AdminLayout
 			classNames={{
-				content: "flex flex-col space-y-12 max-w-2xl px-3 py-12 mx-auto",
+				content: "flex flex-col space-y-8 max-w-2xl px-3 py-12 mx-auto",
 			}}
 		>
-			<section className="flex flex-col space-y-8">
+			<section className="flex flex-col space-y-4">
 				<h2
 					className={title({
 						size: "sm",
@@ -48,7 +55,107 @@ function RouteComponent() {
 					})}
 				>
 					<span>Invoices</span>
+					<span className="text-sm font-normal text-gray-500">
+						{pageInfo?.totalItems} total
+					</span>
 				</h2>
+
+				{invoices?.length === 0 ? (
+					<p className="text-gray-500">No invoices found.</p>
+				) : (
+					<DisclosureGroup>
+						{invoices?.map((invoice) => (
+							<Disclosure key={invoice.id}>
+								<DisclosureHeader
+									size="sm"
+									contentClassName="flex-1 flex flex-row justify-between items-center gap-4"
+								>
+									<span className="font-mono text-xs text-gray-500">
+										#{invoice.id}
+									</span>
+									<span className="flex-1 truncate">
+										{invoice.purchaser.name || invoice.purchaser.email}
+									</span>
+									<span className="text-sm text-gray-600">
+										{invoice.memberships.length > 0 && (
+											<span>{invoice.memberships.length} membership(s)</span>
+										)}
+										{invoice.memberships.length > 0 &&
+											invoice.tournamentRegistrations.length > 0 &&
+											", "}
+										{invoice.tournamentRegistrations.length > 0 && (
+											<span>
+												{invoice.tournamentRegistrations.length} registration(s)
+											</span>
+										)}
+									</span>
+								</DisclosureHeader>
+								<DisclosurePanel>
+									<div className="space-y-3 text-sm">
+										<div className="flex flex-col gap-1">
+											<span className="text-xs font-medium text-gray-500">
+												Transaction Key
+											</span>
+											<span className="font-mono text-xs">
+												{invoice.transactionKey}
+											</span>
+										</div>
+
+										{invoice.memberships.length > 0 && (
+											<div className="flex flex-col gap-1">
+												<span className="text-xs font-medium text-gray-500">
+													Memberships
+												</span>
+												<ul className="space-y-1">
+													{invoice.memberships.map((membership) => (
+														<li
+															key={membership.id}
+															className="flex justify-between"
+														>
+															<span>
+																{membership.profile.firstName}{" "}
+																{membership.profile.lastName}
+															</span>
+															<span className="text-gray-500">
+																Valid until {membership.validUntil}
+															</span>
+														</li>
+													))}
+												</ul>
+											</div>
+										)}
+
+										{invoice.tournamentRegistrations.length > 0 && (
+											<div className="flex flex-col gap-1">
+												<span className="text-xs font-medium text-gray-500">
+													Tournament Registrations
+												</span>
+												<ul className="space-y-1">
+													{invoice.tournamentRegistrations.map(
+														(registration) => (
+															<li key={registration.id}>
+																Team #{registration.tournamentDivisionTeamId}
+															</li>
+														),
+													)}
+												</ul>
+											</div>
+										)}
+									</div>
+								</DisclosurePanel>
+							</Disclosure>
+						))}
+					</DisclosureGroup>
+				)}
+
+				{pageInfo?.totalPages > 1 && (
+					<Pagination
+						to="/admin/invoices"
+						page={page}
+						pageSize={pageSize}
+						pageInfo={pageInfo}
+					/>
+				)}
 			</section>
 		</AdminLayout>
 	);
