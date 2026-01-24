@@ -39,6 +39,8 @@ const schema = checkoutSchema
 
 // Test card
 //
+// https://help.usaepay.info/developer/reference/testcards/
+//
 // "creditcard": {
 //     "cardholder": "John Doe",
 //     "number": "4000100011112224",

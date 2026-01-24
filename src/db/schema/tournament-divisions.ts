@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm/_relations";
 import {
 	boolean,
 	integer,
+	numeric,
 	pgTable,
 	serial,
 	text,
@@ -42,6 +43,7 @@ export const tournamentDivisions = pgTable(
 		displayGender: boolean(),
 		displayDivision: boolean(),
 		externalRef: uuid().unique(),
+		registrationPrice: numeric(),
 	},
 	(table) => [
 		unique("tournament_division_name_gender_unique").on(
