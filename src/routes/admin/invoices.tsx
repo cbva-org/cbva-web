@@ -14,6 +14,7 @@ import { Pagination } from "@/components/base/pagination";
 import { useDateFormatter } from "@react-aria/i18n";
 import { parseDate } from "@internationalized/date";
 import { getDefaultTimeZone } from "@/lib/dates";
+import { ProfileName } from "@/components/profiles/name";
 
 const searchSchema = z.object({
 	page: z.number().default(1),
@@ -120,10 +121,7 @@ function RouteComponent() {
 															key={membership.id}
 															className="flex justify-between"
 														>
-															<span>
-																{membership.profile.firstName}{" "}
-																{membership.profile.lastName}
-															</span>
+															<ProfileName {...membership.profile} />
 															<span className="text-gray-500">
 																Valid until{" "}
 																{dateFormatter.format(
