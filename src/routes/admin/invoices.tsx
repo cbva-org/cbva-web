@@ -11,6 +11,9 @@ import {
 	DisclosurePanel,
 } from "@/components/base/disclosure";
 import { Pagination } from "@/components/base/pagination";
+import { useDateFormatter } from "@react-aria/i18n";
+import { parseDate } from "@internationalized/date";
+import { getDefaultTimeZone } from "@/lib/dates";
 
 const searchSchema = z.object({
 	page: z.number().default(1),
@@ -41,6 +44,10 @@ function RouteComponent() {
 		}),
 	);
 
+	const dateFormatter = useDateFormatter({
+		dateStyle: "short",
+	});
+
 	return (
 		<AdminLayout
 			classNames={{
@@ -63,15 +70,18 @@ function RouteComponent() {
 				{invoices?.length === 0 ? (
 					<p className="text-gray-500">No invoices found.</p>
 				) : (
-					<DisclosureGroup>
+					<DisclosureGroup className="bg-white">
 						{invoices?.map((invoice) => (
 							<Disclosure key={invoice.id}>
 								<DisclosureHeader
 									size="sm"
 									contentClassName="flex-1 flex flex-row justify-between items-center gap-4"
 								>
-									<span className="font-mono text-xs text-gray-500">
+									<span className="text-xs text-gray-500">
 										#{invoice.id}
+										{invoice.createdAt && (
+											<>- {dateFormatter.format(invoice.createdAt)}</>
+										)}
 									</span>
 									<span className="flex-1 truncate">
 										{invoice.purchaser.name || invoice.purchaser.email}
@@ -96,9 +106,7 @@ function RouteComponent() {
 											<span className="text-xs font-medium text-gray-500">
 												Transaction Key
 											</span>
-											<span className="font-mono text-xs">
-												{invoice.transactionKey}
-											</span>
+											<span className="text-xs">{invoice.transactionKey}</span>
 										</div>
 
 										{invoice.memberships.length > 0 && (
@@ -117,7 +125,12 @@ function RouteComponent() {
 																{membership.profile.lastName}
 															</span>
 															<span className="text-gray-500">
-																Valid until {membership.validUntil}
+																Valid until{" "}
+																{dateFormatter.format(
+																	parseDate(membership.validUntil).toDate(
+																		getDefaultTimeZone(),
+																	),
+																)}
 															</span>
 														</li>
 													))}
@@ -148,7 +161,7 @@ function RouteComponent() {
 					</DisclosureGroup>
 				)}
 
-				{pageInfo?.totalPages > 1 && (
+				{pageInfo && pageInfo.totalPages > 1 && (
 					<Pagination
 						to="/admin/invoices"
 						page={page}

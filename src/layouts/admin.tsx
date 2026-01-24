@@ -6,6 +6,10 @@ export function AdminLayout(props: DefaultLayoutProps) {
 			{...props}
 			sideNavItems={[
 				{
+					title: "Dashboard",
+					to: "/admin" as const,
+				},
+				{
 					title: "Invoices",
 					to: "/admin/invoices" as const,
 				},

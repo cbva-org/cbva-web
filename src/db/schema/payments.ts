@@ -14,6 +14,7 @@ export const invoices = pgTable("invoices", {
 	purchaserId: text()
 		.notNull()
 		.references(() => users.id),
+	...timestamps,
 });
 
 export const selectInvoiceSchema = createSelectSchema(invoices);
