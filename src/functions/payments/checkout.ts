@@ -63,53 +63,57 @@ const createMemberships = createServerOnlyFn(
 
 const MEMBERSHIP_PRICE = 100;
 
+export const checkoutHandler = createServerOnlyFn(
+	async (
+		viewerId: string,
+		data: z.infer<typeof checkoutSchema>,
+	) => {
+		const {
+			paymentKey,
+			billingInformation,
+			cart: { memberships },
+		} = data;
+
+		if (memberships.length === 0) {
+			throw new Error("No memberships in cart");
+		}
+
+		const amount = memberships.length * MEMBERSHIP_PRICE;
+
+		const transaction = await postSale({
+			paymentKey,
+			amount,
+			billingAddress: {
+				firstName: billingInformation.firstName,
+				lastName: billingInformation.lastName,
+				street: billingInformation.address.filter(Boolean).join(", "),
+				city: billingInformation.city,
+				state: billingInformation.state,
+				postalCode: billingInformation.postalCode,
+			},
+			description: `CBVA Membership (${memberships.length})`,
+		});
+
+		if (transaction.result_code !== "A") {
+			throw new Error(transaction.error || `Payment declined: ${transaction.result}`);
+		}
+
+		const invoiceId = await createInvoice(viewerId, transaction.key);
+
+		await createMemberships(invoiceId, memberships);
+
+		return {
+			success: true,
+			transactionKey: transaction.key,
+			refnum: transaction.refnum,
+		};
+	},
+);
+
 export const checkoutFn = createServerFn()
 	.middleware([requireAuthenticated])
 	.inputValidator(checkoutSchema)
-	.handler(
-		async ({
-			data: {
-				paymentKey,
-				billingInformation,
-				cart: { memberships },
-			},
-			context: { viewer },
-		}) => {
-			if (memberships.length === 0) {
-				throw new Error("No memberships in cart");
-			}
-
-			const amount = memberships.length * MEMBERSHIP_PRICE;
-
-			const transaction = await postSale({
-				paymentKey,
-				amount,
-				billingAddress: {
-					firstName: billingInformation.firstName,
-					lastName: billingInformation.lastName,
-					street: billingInformation.address.filter(Boolean).join(", "),
-					city: billingInformation.city,
-					state: billingInformation.state,
-					postalCode: billingInformation.postalCode,
-				},
-				description: `CBVA Membership (${memberships.length})`,
-			});
-
-			if (transaction.result_code !== "A") {
-				throw new Error(transaction.error || `Payment declined: ${transaction.result}`);
-			}
-
-			const invoiceId = await createInvoice(viewer.id, transaction.key);
-
-			await createMemberships(invoiceId, memberships);
-
-			return {
-				success: true,
-				transactionKey: transaction.key,
-				refnum: transaction.refnum,
-			};
-		},
-	);
+	.handler(({ data, context: { viewer } }) => checkoutHandler(viewer.id, data));
 
 export const checkoutMutationOptions = () =>
 	mutationOptions({

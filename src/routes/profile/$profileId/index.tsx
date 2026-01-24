@@ -210,9 +210,16 @@ function RouteComponent() {
 									<CircleCheckIcon size={16} /> <span>Active Member</span>
 								</span>
 							) : (
-								<span className={tagStyles({ color: "red" })}>
-									<XCircleIcon size={16} /> <span>Inactive</span>
-								</span>
+								<Link
+									variant="alt"
+									to="/account/registrations"
+									search={{
+										memberships: [profile.id],
+									}}
+									className={tagStyles({ color: "red" })}
+								>
+									Purchase Membership
+								</Link>
 							)}
 						</div>
 
