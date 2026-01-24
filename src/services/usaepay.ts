@@ -35,7 +35,7 @@ export type TransactionResponse = {
 // var sha256 = require('sha256');
 //
 // var seed = "abcdefghijklmnop"
-// var apikey = "_V87Qtb513Cd3vabM7RC0TbtJWeSo8p7"
+// var apikey = "_V87Qtestkey"
 // var apipin = "123456"
 // var prehash = apikey + seed + apipin;
 // var apihash = 's2/'+ seed + '/' + sha256(prehash);

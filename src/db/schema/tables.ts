@@ -23,7 +23,7 @@ import { venueDirectors } from "./venue-directors";
 import { venues } from "./venues";
 import { faqs } from "./faqs";
 import { blogs } from "./blogs";
-import { memberships } from "./memberships";
+import { invoices, memberships, tournamentRegistrations } from "./payments";
 
 export const tables = {
 	blocks,
@@ -53,5 +53,7 @@ export const tables = {
 	rateLimiterFlexibleSchema,
 	faqs,
 	blogs,
+	invoices,
 	memberships,
+	tournamentRegistrations,
 };

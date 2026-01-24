@@ -1,6 +1,6 @@
 import { requireAuthenticated } from "@/auth/shared";
 import { db } from "@/db/connection";
-import { memberships } from "@/db/schema";
+import { invoices, memberships } from "@/db/schema";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { postSale } from "@/services/usaepay";
 import { today } from "@internationalized/date";
@@ -25,14 +25,22 @@ export const checkoutSchema = z.object({
 	cart: cartSchema,
 });
 
+const createInvoice = createServerOnlyFn(
+	async (purchaserId: string, transactionKey: string) => {
+		const [invoice] = await db
+			.insert(invoices)
+			.values({
+				transactionKey,
+				purchaserId,
+			})
+			.returning({ id: invoices.id });
+
+		return invoice.id;
+	},
+);
+
 const createMemberships = createServerOnlyFn(
-	async (
-		purchaserId: string,
-		membershipTransactions: {
-			profileId: number;
-			transactionKey: string;
-		}[],
-	) => {
+	async (invoiceId: number, profileIds: number[]) => {
 		const validUntil = today(getDefaultTimeZone())
 			.set({
 				day: 1,
@@ -41,18 +49,15 @@ const createMemberships = createServerOnlyFn(
 			.add({ years: 1 })
 			.toString();
 
-		await db.transaction(async (txn) => {
-			await Promise.all(
-				membershipTransactions.map(({ profileId, transactionKey }) =>
-					txn.insert(memberships).values({
-						profileId,
-						transactionKey,
-						purchaserId,
-						validUntil,
-					}),
-				),
-			);
-		});
+		await Promise.all(
+			profileIds.map((profileId) =>
+				db.insert(memberships).values({
+					profileId,
+					invoiceId,
+					validUntil,
+				}),
+			),
+		);
 	},
 );
 
@@ -94,13 +99,9 @@ export const checkoutFn = createServerFn()
 				throw new Error(transaction.error || `Payment declined: ${transaction.result}`);
 			}
 
-			await createMemberships(
-				viewer.id,
-				memberships.map((profileId) => ({
-					profileId,
-					transactionKey: transaction.key,
-				})),
-			);
+			const invoiceId = await createInvoice(viewer.id, transaction.key);
+
+			await createMemberships(invoiceId, memberships);
 
 			return {
 				success: true,

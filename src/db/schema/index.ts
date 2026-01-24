@@ -36,7 +36,7 @@ import { venueDirectorRelations, venueDirectors } from "./venue-directors";
 import { venuesRelations, venues } from "./venues";
 import { faqs } from "./faqs";
 import { blogs } from "./blogs";
-import { memberships } from "./memberships";
+import { memberships } from "./payments";
 import type { relations } from "./relations";
 
 export * from "./relations";
@@ -66,7 +66,7 @@ export * from "./venue-directors";
 export * from "./venues";
 export * from "./faqs";
 export * from "./blogs";
-export * from "./memberships";
+export * from "./payments";
 
 export const tables = {
 	blocks,

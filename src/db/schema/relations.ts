@@ -24,10 +24,33 @@ export const relations = defineRelations(tables, (r) => ({
 		profile: r.one.playerProfiles({
 			from: r.memberships.profileId,
 			to: r.playerProfiles.id,
+			optional: false,
 		}),
+		invoice: r.one.invoices({
+			from: r.memberships.invoiceId,
+			to: r.invoices.id,
+			optional: false,
+		}),
+	},
+	invoices: {
 		purchaser: r.one.users({
-			from: r.memberships.purchaserId,
+			from: r.invoices.purchaserId,
 			to: r.users.id,
+			optional: false,
+		}),
+		memberships: r.many.memberships(),
+		tournamentRegistrations: r.many.tournamentRegistrations(),
+	},
+	tournamentRegistrations: {
+		invoice: r.one.invoices({
+			from: r.tournamentRegistrations.invoiceId,
+			to: r.invoices.id,
+			optional: false,
+		}),
+		tournamentDivisionTeam: r.one.tournamentDivisionTeams({
+			from: r.tournamentRegistrations.tournamentDivisionTeamId,
+			to: r.tournamentDivisionTeams.id,
+			optional: false,
 		}),
 	},
 	pools: {
@@ -171,6 +194,10 @@ export const relations = defineRelations(tables, (r) => ({
 			to: r.tournamentDivisions.id,
 			optional: false,
 		}),
+		registration: r.one.tournamentRegistrations({
+			from: r.tournamentDivisionTeams.id,
+			to: r.tournamentRegistrations.tournamentDivisionTeamId,
+		}),
 	},
 	tournaments: {
 		venue: r.one.venues({
@@ -203,5 +230,9 @@ export const relations = defineRelations(tables, (r) => ({
 	},
 	venues: {
 		tournaments: r.many.tournaments(),
+	},
+	users: {
+		invoices: r.many.invoices(),
+		profiles: r.many.playerProfiles(),
 	},
 }));

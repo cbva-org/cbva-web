@@ -4,22 +4,41 @@ import { z } from "zod";
 import { playerProfiles } from "./player-profiles";
 import { users } from "./auth";
 import { timestamps } from "./shared";
+import { tournamentDivisionTeams } from "./tournament-division-teams";
 
 const { createSelectSchema } = createSchemaFactory({ zodInstance: z });
 
-export const memberships = pgTable("memberships", {
+export const invoices = pgTable("invoices", {
 	id: serial(),
 	transactionKey: text().notNull(),
+	purchaserId: text()
+		.notNull()
+		.references(() => users.id),
+});
+
+export const memberships = pgTable("memberships", {
+	id: serial(),
 	validUntil: date().notNull(),
 	profileId: integer()
 		.notNull()
 		.references(() => playerProfiles.id),
-	purchaserId: text()
+	invoiceId: integer()
 		.notNull()
-		.references(() => users.id),
+		.references(() => invoices.id),
 	...timestamps,
 });
 
 export const selectMembershipSchema = createSelectSchema(memberships);
 
 export type Membership = z.infer<typeof selectMembershipSchema>;
+
+export const tournamentRegistrations = pgTable("tournamentRegistrations", {
+	id: serial(),
+	tournamentDivisionTeamId: integer()
+		.notNull()
+		.references(() => tournamentDivisionTeams.id),
+	invoiceId: integer()
+		.notNull()
+		.references(() => invoices.id),
+	...timestamps,
+});
