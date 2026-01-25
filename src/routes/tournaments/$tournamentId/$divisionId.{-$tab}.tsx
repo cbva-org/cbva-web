@@ -252,6 +252,9 @@ function RouteComponent() {
 			},
 		});
 
+	// TODO:
+	// - if default-tournament-fee is set, then registration is open unless registationOpenDate is set to date
+
 	return (
 		<DefaultLayout classNames={{ content: "bg-white max-w-full" }}>
 			<VenueHeader {...venue} />

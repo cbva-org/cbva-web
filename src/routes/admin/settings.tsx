@@ -12,13 +12,11 @@ import {
 	DisclosureHeader,
 	DisclosurePanel,
 } from "@/components/base/disclosure";
-import { Checkbox } from "@/components/base/checkbox";
 import { getAllSettingsQueryOptions } from "@/functions/admin/get-all-settings";
 import { SettingsType, Setting } from "@/db/schema/settings";
 import { useAppForm } from "@/components/base/form";
 import { updateSettingMutationOptions } from "@/functions/settings/update-setting";
 import { queue } from "@/components/base/toast";
-import { useState } from "react";
 
 export const Route = createFileRoute("/admin/settings")({
 	loader: async ({ context: { queryClient, ...context } }) => {

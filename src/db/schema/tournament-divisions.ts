@@ -42,8 +42,8 @@ export const tournamentDivisions = pgTable(
 		autopromoteWaitlist: boolean().notNull().default(true),
 		displayGender: boolean(),
 		displayDivision: boolean(),
-		externalRef: uuid().unique(),
 		registrationPrice: numeric(),
+		externalRef: uuid().unique(),
 	},
 	(table) => [
 		unique("tournament_division_name_gender_unique").on(
