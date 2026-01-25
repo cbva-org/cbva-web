@@ -1,0 +1,176 @@
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from "@tanstack/react-query";
+import { title } from "@/components/base/primitives";
+import { AdminLayout } from "@/layouts/admin";
+import {
+	Disclosure,
+	DisclosureGroup,
+	DisclosureHeader,
+	DisclosurePanel,
+} from "@/components/base/disclosure";
+import { getSettingsQueryOptions } from "@/functions/admin/get-settings";
+import { SettingsType, Setting } from "@/db/schema/settings";
+import { useAppForm } from "@/components/base/form";
+import { updateSettingMutationOptions } from "@/functions/admin/update-settings";
+import { queue } from "@/components/base/toast";
+
+export const Route = createFileRoute("/admin/settings")({
+	loader: async ({ context: { queryClient, ...context } }) => {
+		const viewer = context.viewer;
+
+		if (!viewer || viewer.role !== "admin") {
+			throw redirect({ to: "/not-found" });
+		}
+	},
+	component: RouteComponent,
+});
+
+function formatValue(value: string, type: SettingsType) {
+	if (type === "money") {
+		const formatter = new Intl.NumberFormat("en-US", {
+			style: "currency",
+			currency: "USD",
+		});
+
+		return formatter.format(Number.parseFloat(value));
+	}
+
+	if (type === "float") {
+		return Number.parseFloat(value);
+	}
+
+	if (type === "int") {
+		return Number.parseInt(value, 10);
+	}
+
+	return value;
+}
+
+function RouteComponent() {
+	const { data: settings } = useSuspenseQuery(getSettingsQueryOptions());
+
+	return (
+		<AdminLayout
+			classNames={{
+				content: "flex flex-col space-y-8 max-w-2xl px-3 py-12 mx-auto",
+			}}
+		>
+			<section className="flex flex-col space-y-4">
+				<h2
+					className={title({
+						size: "sm",
+						class: "flex flex-row justify-between items-center",
+					})}
+				>
+					<span>Settings</span>
+				</h2>
+
+				<DisclosureGroup className="bg-white">
+					{settings?.map((setting) => (
+						<Disclosure key={setting.key}>
+							<DisclosureHeader
+								size="sm"
+								contentClassName="flex-1 flex flex-row justify-start items-center gap-4"
+							>
+								<span className="text-xs">{setting.label}:</span>
+								<span className="text-xs font-semibold">
+									{setting.value
+										? formatValue(setting.value, setting.type)
+										: "not set"}
+								</span>
+							</DisclosureHeader>
+							<DisclosurePanel>
+								<UpdateSettingsForm {...setting} settingKey={setting.key} />
+							</DisclosurePanel>
+						</Disclosure>
+					))}
+				</DisclosureGroup>
+			</section>
+		</AdminLayout>
+	);
+}
+
+function UpdateSettingsForm({
+	settingKey,
+	label,
+	value,
+	type,
+}: Omit<Setting, "key"> & { settingKey: string }) {
+	const queryClient = useQueryClient();
+
+	const { mutate } = useMutation({
+		...updateSettingMutationOptions(),
+		onSuccess: () => {
+			queryClient.invalidateQueries(getSettingsQueryOptions());
+
+			queue.add({
+				variant: "success",
+				title: "Success!",
+				description: "Updated setting successfully.",
+			});
+		},
+	});
+
+	const form = useAppForm({
+		defaultValues: {
+			value,
+		},
+		onSubmit: ({ value: { value }, formApi }) => {
+			mutate(
+				{
+					key: settingKey,
+					value: value?.toString() ?? null,
+				},
+				{
+					onSuccess: () => {
+						formApi.reset();
+					},
+				},
+			);
+		},
+	});
+
+	return (
+		<form
+			className="flex flex-col gap-y-3"
+			onSubmit={(e) => {
+				e.preventDefault();
+
+				form.handleSubmit();
+			}}
+		>
+			<h2>Update {label}</h2>
+
+			<form.AppField name="value">
+				{(field) => {
+					if (["money", "int", "float"].includes(type)) {
+						return (
+							<field.Number
+								field={field}
+								formatOptions={
+									type === "money"
+										? {
+												style: "currency",
+												currency: "USD",
+											}
+										: undefined
+								}
+							/>
+						);
+					}
+
+					return <field.Text field={field} />;
+				}}
+			</form.AppField>
+			<form.AppForm>
+				<form.Footer>
+					<form.SubmitButton>Save</form.SubmitButton>
+				</form.Footer>
+			</form.AppForm>
+		</form>
+	);
+}

@@ -23,12 +23,7 @@ import { venueDirectors } from "./venue-directors";
 import { venues } from "./venues";
 import { faqs } from "./faqs";
 import { blogs } from "./blogs";
-import {
-	invoices,
-	membershipPricing,
-	memberships,
-	tournamentRegistrations,
-} from "./payments";
+import { invoices, memberships, tournamentRegistrations } from "./payments";
 import { settings } from "./settings";
 
 export const tables = {
@@ -60,7 +55,6 @@ export const tables = {
 	faqs,
 	blogs,
 	invoices,
-	membershipPricing,
 	memberships,
 	settings,
 	tournamentRegistrations,

@@ -1,11 +1,4 @@
-import {
-	date,
-	integer,
-	numeric,
-	pgTable,
-	serial,
-	text,
-} from "drizzle-orm/pg-core";
+import { date, integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 import { playerProfiles } from "./player-profiles";
@@ -27,19 +20,6 @@ export const invoices = pgTable("invoices", {
 export const selectInvoiceSchema = createSelectSchema(invoices);
 
 export type Invoice = z.infer<typeof selectInvoiceSchema>;
-
-export const membershipPricing = pgTable("membership_pricing", {
-	id: serial().primaryKey(),
-	price: numeric().notNull(),
-	effectiveStartDate: date().notNull(),
-	effectiveEndDate: date(),
-	...timestamps,
-});
-
-export const selectMembershipPricingSchema =
-	createSelectSchema(membershipPricing);
-
-export type MembershipPricing = z.infer<typeof selectMembershipPricingSchema>;
 
 export const memberships = pgTable("memberships", {
 	id: serial().primaryKey(),

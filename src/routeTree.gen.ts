@@ -32,6 +32,7 @@ import { Route as InfoCedarsRouteImport } from './routes/info/cedars'
 import { Route as FaqsChar123SubjectChar125RouteImport } from './routes/faqs.{-$subject}'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
 import { Route as AdminInvoicesRouteImport } from './routes/admin/invoices'
 import { Route as AccountSetupRouteImport } from './routes/account/setup'
@@ -170,6 +171,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminScheduleRoute = AdminScheduleRouteImport.update({
   id: '/admin/schedule',
   path: '/admin/schedule',
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/account/setup': typeof AccountSetupRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -339,6 +346,7 @@ export interface FileRoutesByTo {
   '/account/setup': typeof AccountSetupRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -385,6 +393,7 @@ export interface FileRoutesById {
   '/account/setup': typeof AccountSetupRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/account/setup'
     | '/admin/invoices'
     | '/admin/schedule'
+    | '/admin/settings'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -477,6 +487,7 @@ export interface FileRouteTypes {
     | '/account/setup'
     | '/admin/invoices'
     | '/admin/schedule'
+    | '/admin/settings'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/account/setup'
     | '/admin/invoices'
     | '/admin/schedule'
+    | '/admin/settings'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -568,6 +580,7 @@ export interface RootRouteChildren {
   AccountSetupRoute: typeof AccountSetupRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminScheduleRoute: typeof AdminScheduleRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ApiPingRoute: typeof ApiPingRoute
   FaqsChar123SubjectChar125Route: typeof FaqsChar123SubjectChar125Route
@@ -761,6 +774,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/schedule': {
       id: '/admin/schedule'
       path: '/admin/schedule'
@@ -920,6 +940,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountSetupRoute: AccountSetupRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminScheduleRoute: AdminScheduleRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
   ApiPingRoute: ApiPingRoute,
   FaqsChar123SubjectChar125Route: FaqsChar123SubjectChar125Route,

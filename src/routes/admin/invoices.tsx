@@ -16,6 +16,9 @@ import { parseDate } from "@internationalized/date";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { ProfileName } from "@/components/profiles/name";
 
+// TODO: page for admins to update membership prices as well as tournament registration prices
+// maybe settings table is the best
+
 const searchSchema = z.object({
 	page: z.number().default(1),
 	pageSize: z.number().default(25),

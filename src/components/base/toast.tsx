@@ -33,6 +33,10 @@ export const queue = new ToastQueue<ToastContent>({
 	},
 });
 
+export function addToast(toast: ToastContent) {
+	queue.add(toast);
+}
+
 export function ToastRegion() {
 	return (
 		// The ToastRegion should be rendered at the root of your app.

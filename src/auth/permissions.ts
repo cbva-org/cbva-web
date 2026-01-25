@@ -12,6 +12,7 @@ export const statement = {
 	faqs: ["create", "update", "delete"],
 	blogs: ["create", "update", "delete"],
 	invoices: ["read"],
+	settings: ["read", "create", "update"],
 	...defaultStatements,
 } as const;
 
@@ -20,10 +21,6 @@ export const ac = createAccessControl(statement);
 export type Permissions = {
 	[K in keyof typeof statement]?: Array<(typeof statement)[K][number]>;
 };
-
-export const superadmin = ac.newRole({
-	...adminAc.statements,
-});
 
 export const admin = ac.newRole({
 	tournament: ["create", "update", "delete"],
@@ -34,7 +31,13 @@ export const admin = ac.newRole({
 	faqs: ["create", "update", "delete"],
 	blogs: ["create", "update", "delete"],
 	invoices: ["read"],
+	settings: ["read", "update"],
 	...adminAc.statements,
+});
+
+export const superadmin = ac.newRole({
+	...admin.statements,
+	settings: ["read", "create", "update"],
 });
 
 export const td = ac.newRole({

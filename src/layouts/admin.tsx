@@ -10,6 +10,10 @@ export function AdminLayout(props: DefaultLayoutProps) {
 					to: "/admin" as const,
 				},
 				{
+					title: "Settings",
+					to: "/admin/settings" as const,
+				},
+				{
 					title: "Invoices",
 					to: "/admin/invoices" as const,
 				},
