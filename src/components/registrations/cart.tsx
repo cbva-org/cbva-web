@@ -1,6 +1,6 @@
 import { sum } from "lodash-es";
 import { ProfileName } from "../profiles/name";
-import { useCartItems, useCartTotal } from "./context";
+import { useCartItems, useCartTotal, useMembershipsAvailable } from "./context";
 import { Link } from "../base/link";
 import { button } from "../base/button";
 import { useSearch } from "@tanstack/react-router";
@@ -8,10 +8,22 @@ import { useSearch } from "@tanstack/react-router";
 export function Cart() {
 	const items = useCartItems();
 	const total = useCartTotal();
+	const membershipsAvailable = useMembershipsAvailable();
 
 	const search = useSearch({
 		from: "/account/registrations/",
 	});
+
+	if (!membershipsAvailable) {
+		return (
+			<div className="col-span-2 bg-white rounded-lg py-3 flex flex-col">
+				<h2 className="px-4">Cart</h2>
+				<div className="p-4 flex-1 text-center text-default-600">
+					Memberships are not currently available for purchase.
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="col-span-2 bg-white rounded-lg py-3 flex flex-col">

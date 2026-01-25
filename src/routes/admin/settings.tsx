@@ -12,11 +12,13 @@ import {
 	DisclosureHeader,
 	DisclosurePanel,
 } from "@/components/base/disclosure";
+import { Checkbox } from "@/components/base/checkbox";
 import { getAllSettingsQueryOptions } from "@/functions/admin/get-all-settings";
 import { SettingsType, Setting } from "@/db/schema/settings";
 import { useAppForm } from "@/components/base/form";
 import { updateSettingMutationOptions } from "@/functions/settings/update-setting";
 import { queue } from "@/components/base/toast";
+import { useState } from "react";
 
 export const Route = createFileRoute("/admin/settings")({
 	loader: async ({ context: { queryClient, ...context } }) => {
@@ -118,12 +120,22 @@ function UpdateSettingsForm({
 	const form = useAppForm({
 		defaultValues: {
 			value,
+			unsetValue: value === null,
 		},
-		onSubmit: ({ value: { value }, formApi }) => {
+		listeners: {
+			onChange: ({ fieldApi, formApi }) => {
+				if (fieldApi.name === "unsetValue" && fieldApi.state.value) {
+					formApi.setFieldValue("value", null);
+				} else if (fieldApi.name === "unsetValue" && !fieldApi.state.value) {
+					formApi.setFieldValue("value", value);
+				}
+			},
+		},
+		onSubmit: ({ value: { value, unsetValue }, formApi }) => {
 			mutate(
 				{
 					key: settingKey,
-					value: value?.toString() ?? null,
+					value: unsetValue ? null : (value?.toString() ?? null),
 				},
 				{
 					onSuccess: () => {
@@ -145,27 +157,37 @@ function UpdateSettingsForm({
 		>
 			<h2>Update {label}</h2>
 
-			<form.AppField name="value">
-				{(field) => {
-					if (["money", "int", "float"].includes(type)) {
-						return (
-							<field.Number
-								field={field}
-								formatOptions={
-									type === "money"
-										? {
-												style: "currency",
-												currency: "USD",
-											}
-										: undefined
-								}
-							/>
-						);
-					}
+			<form.Subscribe selector={(state) => state.values.unsetValue}>
+				{(unsetValue) => (
+					<form.AppField name="value">
+						{(field) => (
+							<>
+								{["money", "int", "float"].includes(type) ? (
+									<field.Number
+										field={field}
+										formatOptions={
+											type === "money"
+												? {
+														style: "currency",
+														currency: "USD",
+													}
+												: undefined
+										}
+										isDisabled={unsetValue}
+									/>
+								) : (
+									<field.Text field={field} />
+								)}
+							</>
+						)}
+					</form.AppField>
+				)}
+			</form.Subscribe>
 
-					return <field.Text field={field} />;
-				}}
+			<form.AppField name="unsetValue">
+				{(field) => <field.Checkbox label="Remove value" field={field} />}
 			</form.AppField>
+
 			<form.AppForm>
 				<form.Footer>
 					<form.SubmitButton>Save</form.SubmitButton>

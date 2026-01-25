@@ -1,6 +1,7 @@
 import { cartSchema } from "@/functions/payments/checkout";
 import { getProfilesQueryOptions } from "@/functions/profiles/get-profiles";
 import { getViewerProfilesQueryOptions } from "@/functions/profiles/get-viewer-profiles";
+import { getSettingQueryOptions } from "@/functions/settings/get-setting";
 import { isDefined } from "@/utils/types";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
@@ -53,19 +54,42 @@ export function useCart(checkout?: boolean) {
 	return data;
 }
 
+export function useMembershipPrice() {
+	const { data } = useSuspenseQuery({
+		...getSettingQueryOptions("membership-price"),
+		select: (setting) => {
+			if (!setting?.value) return null;
+			const price = Number(setting.value);
+			return Number.isNaN(price) || price <= 0 ? null : price;
+		},
+	});
+
+	return data;
+}
+
+export function useMembershipsAvailable() {
+	const price = useMembershipPrice();
+	return price !== null;
+}
+
 export function useCartItems() {
 	const { memberships } = useSearch({
 		from: "/account/registrations/",
 	});
 
 	const profiles = useCartProfiles();
+	const membershipPrice = useMembershipPrice();
+
+	if (membershipPrice === null) {
+		return [];
+	}
 
 	return memberships
 		.map((id) => profiles.find((p) => p.id === id))
 		.filter(isDefined)
 		.map((profile) => ({
 			title: "Annual Membership",
-			price: 100,
+			price: membershipPrice,
 			profile,
 		}));
 }
@@ -78,11 +102,16 @@ export function useCartTotal(checkout?: boolean) {
 	});
 
 	const profiles = useCartProfiles(checkout);
+	const membershipPrice = useMembershipPrice();
+
+	if (membershipPrice === null) {
+		return null;
+	}
 
 	return sum(
 		memberships
 			.map((id) => profiles.find((p) => p.id === id))
 			.filter(isDefined)
-			.map(() => 100),
+			.map(() => membershipPrice),
 	);
 }

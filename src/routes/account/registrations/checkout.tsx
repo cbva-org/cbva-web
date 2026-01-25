@@ -99,6 +99,20 @@ function RouteComponent() {
 		},
 	});
 
+	if (total === null) {
+		return (
+			<DefaultLayout>
+				<h1 className={title({ className: "text-center" })}>Checkout</h1>
+
+				<div className="max-w-md mx-auto text-center">
+					<p className="text-lg text-default-600">
+						Memberships are not currently available for purchase.
+					</p>
+				</div>
+			</DefaultLayout>
+		);
+	}
+
 	return (
 		<DefaultLayout>
 			<h1 className={title({ className: "text-center" })}>Checkout</h1>
