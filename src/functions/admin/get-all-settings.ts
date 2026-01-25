@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/db/connection";
 
-export const getSettings = createServerFn({
+export const getAllSettings = createServerFn({
 	method: "GET",
 }).handler(() => {
 	return db.query.settings.findMany({
@@ -12,8 +12,8 @@ export const getSettings = createServerFn({
 	});
 });
 
-export const getSettingsQueryOptions = (key: string | null = null) =>
+export const getAllSettingsQueryOptions = (key: string | null = null) =>
 	queryOptions({
-		queryKey: ["getSettings", key],
-		queryFn: () => getSettings(),
+		queryKey: ["getAllSettings", key],
+		queryFn: () => getAllSettings(),
 	});

@@ -1,5 +1,6 @@
 import { db } from "@/db/connection";
 import { invoices, memberships } from "@/db/schema";
+import { settings } from "@/db/schema/settings";
 import { createProfiles, createUsers } from "@/tests/utils/users";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -56,9 +57,25 @@ function createDeclinedResponse(): TransactionResponse {
 	};
 }
 
+async function seedMembershipPrice(price: number) {
+	await db
+		.insert(settings)
+		.values({
+			key: "membership-price",
+			label: "Membership Price",
+			value: String(price),
+			type: "money",
+		})
+		.onConflictDoUpdate({
+			target: settings.key,
+			set: { value: String(price) },
+		});
+}
+
 describe("checkout", () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		vi.clearAllMocks();
+		await seedMembershipPrice(100);
 	});
 
 	test("creates memberships on successful payment", async () => {
@@ -156,9 +173,44 @@ describe("checkout", () => {
 
 		expect(mockPostSale).toHaveBeenCalledWith(
 			expect.objectContaining({
-				amount: 300, // 3 memberships * $100 each
+				amount: 300, // 3 memberships * $100 each (price from settings)
 				description: "CBVA Membership (3)",
 			}),
 		);
+	});
+
+	test("uses membership price from settings", async () => {
+		await seedMembershipPrice(50);
+
+		const [user] = await createUsers(db, 1);
+		const profiles = await createProfiles(db, [
+			{ userId: user.id },
+			{ userId: user.id },
+		]);
+		const profileIds = profiles.map((p) => p.id);
+
+		mockPostSale.mockResolvedValueOnce(createSuccessResponse());
+
+		await checkoutHandler(user.id, createCheckoutInput(profileIds));
+
+		expect(mockPostSale).toHaveBeenCalledWith(
+			expect.objectContaining({
+				amount: 100, // 2 memberships * $50 each
+			}),
+		);
+	});
+
+	test("throws error when membership price is not configured", async () => {
+		await db.delete(settings).where(eq(settings.key, "membership-price"));
+
+		const [user] = await createUsers(db, 1);
+		const profiles = await createProfiles(db, [{ userId: user.id }]);
+		const profileIds = profiles.map((p) => p.id);
+
+		await expect(
+			checkoutHandler(user.id, createCheckoutInput(profileIds)),
+		).rejects.toThrow("Membership price not configured");
+
+		expect(mockPostSale).not.toHaveBeenCalled();
 	});
 });

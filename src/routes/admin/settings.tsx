@@ -12,10 +12,10 @@ import {
 	DisclosureHeader,
 	DisclosurePanel,
 } from "@/components/base/disclosure";
-import { getSettingsQueryOptions } from "@/functions/admin/get-settings";
+import { getAllSettingsQueryOptions } from "@/functions/admin/get-all-settings";
 import { SettingsType, Setting } from "@/db/schema/settings";
 import { useAppForm } from "@/components/base/form";
-import { updateSettingMutationOptions } from "@/functions/admin/update-settings";
+import { updateSettingMutationOptions } from "@/functions/settings/update-setting";
 import { queue } from "@/components/base/toast";
 
 export const Route = createFileRoute("/admin/settings")({
@@ -51,7 +51,7 @@ function formatValue(value: string, type: SettingsType) {
 }
 
 function RouteComponent() {
-	const { data: settings } = useSuspenseQuery(getSettingsQueryOptions());
+	const { data: settings } = useSuspenseQuery(getAllSettingsQueryOptions());
 
 	return (
 		<AdminLayout
@@ -105,7 +105,7 @@ function UpdateSettingsForm({
 	const { mutate } = useMutation({
 		...updateSettingMutationOptions(),
 		onSuccess: () => {
-			queryClient.invalidateQueries(getSettingsQueryOptions());
+			queryClient.invalidateQueries(getAllSettingsQueryOptions());
 
 			queue.add({
 				variant: "success",
