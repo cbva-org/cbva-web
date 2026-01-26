@@ -108,10 +108,12 @@ function RouteComponent() {
 				const existing = search.divisions.find(
 					(d) => d.divisionId === divisionId,
 				);
+
 				if (existing) {
 					if (existing.profileIds.includes(profileId)) {
 						return search;
 					}
+
 					return {
 						...search,
 						divisions: search.divisions.map((d) =>
@@ -121,6 +123,7 @@ function RouteComponent() {
 						),
 					};
 				}
+
 				return {
 					...search,
 					divisions: [
@@ -686,10 +689,7 @@ function AddTournamentForm() {
 					to: "/account/registrations",
 					search: (search) => ({
 						...search,
-						divisions: [
-							...search.divisions,
-							{ divisionId, profileIds: [] },
-						],
+						divisions: [...search.divisions, { divisionId, profileIds: [] }],
 					}),
 				});
 			}
