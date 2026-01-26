@@ -592,22 +592,55 @@ function DroppableDivision({
 	onRemove: () => void;
 }) {
 	const [isDragOver, setIsDragOver] = useState(false);
+	const [dropError, setDropError] = useState<null | "full" | "gender">(null);
 	const isFull = profiles.length >= division.teamSize;
+
+	const isGenderAllowed = (playerGender: "male" | "female") => {
+		return division.gender === "coed" || playerGender === division.gender;
+	};
 
 	const { dragAndDropHooks } = useDragAndDrop({
 		acceptedDragTypes: ["profile"],
-		getDropOperation: () => isFull ? "cancel" : "copy",
-		onDropEnter: () => setIsDragOver(true),
-		onDropExit: () => setIsDragOver(false),
+		getDropOperation: (target, types, allowedOperations) => {
+			// TODO: Check if we can access drag data to determine gender compatibility
+			return isFull ? "cancel" : "copy";
+		},
+		onDropEnter: (e) => {
+			setIsDragOver(true);
+			setDropError(null);
+			// TODO: Attempt to access drag data to check gender mismatch
+		},
+		onDropExit: (e) => {
+			setIsDragOver(false);
+			setDropError(null);
+		},
 		async onRootDrop(e) {
 			setIsDragOver(false);
-			if (isFull) return;
+			setDropError(null);
+
+			if (isFull) {
+				setDropError("full");
+				setTimeout(() => setDropError(null), 2000);
+				return;
+			}
+
 			const items = await Promise.all(
 				e.items.filter(isTextDropItem).map(async (item) => {
 					const text = await item.getText("profile");
 					return JSON.parse(text) as PlayerProfile;
 				}),
 			);
+
+			// Check gender compatibility for all items
+			for (const item of items) {
+				if (!isGenderAllowed(item.gender)) {
+					setDropError("gender");
+					setTimeout(() => setDropError(null), 2000);
+					return;
+				}
+			}
+
+			// All checks passed, process the drop
 			for (const item of items) {
 				onProfileDrop(item.id);
 			}
@@ -618,9 +651,13 @@ function DroppableDivision({
 		<div
 			className={`p-3 border rounded-md transition-colors ${
 				isDragOver
-					? (isFull ? "border-red-500 bg-red-50" : "border-blue-500 bg-blue-50")
+					? isFull || dropError === "full"
+						? "border-red-500 bg-red-50"
+						: dropError === "gender"
+							? "border-orange-500 bg-orange-50"
+							: "border-blue-500 bg-blue-50"
 					: "border-gray-300 bg-gray-100"
-			} ${isFull ? "cursor-not-allowed" : ""}`}
+			} ${isFull || dropError ? "cursor-not-allowed" : ""}`}
 		>
 			<div className="flex flex-row items-start justify-between mb-2">
 				<div className="flex flex-col">
@@ -649,28 +686,41 @@ function DroppableDivision({
 				items={profiles}
 				dragAndDropHooks={dragAndDropHooks}
 				selectionMode="none"
-				className={isFull ? "cursor-not-allowed" : ""}
-				renderEmptyState={() => (
-					<div
-						className={`p-3 border-2 border-dashed rounded-md text-xs text-center transition-colors ${
-							isDragOver
-								? (isFull
-									? "border-red-500 bg-red-100 text-red-600 cursor-not-allowed"
-									: "border-blue-500 bg-blue-100 text-blue-600")
-								: (isFull
-									? "border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed"
-									: "border-gray-300 bg-white text-gray-500")
-						}`}
-					>
-						{isDragOver
-							? (isFull
-								? "Team full - cannot drop"
-								: "Drop to register")
-							: (isFull
-								? "Team full"
-								: "Drag players here...")}
-					</div>
-				)}
+				className={isFull || dropError ? "cursor-not-allowed" : ""}
+				renderEmptyState={() => {
+					const showGenderError = dropError === "gender";
+					const showFullError = isFull || dropError === "full";
+
+					return (
+						<div
+							className={`p-3 border-2 border-dashed rounded-md text-xs text-center transition-colors ${
+								isDragOver
+									? showFullError
+										? "border-red-500 bg-red-100 text-red-600 cursor-not-allowed"
+										: showGenderError
+											? "border-orange-500 bg-orange-100 text-orange-600 cursor-not-allowed"
+											: "border-blue-500 bg-blue-100 text-blue-600"
+									: showFullError
+										? "border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed"
+										: showGenderError
+											? "border-orange-300 bg-orange-50 text-orange-500 cursor-not-allowed"
+											: "border-gray-300 bg-white text-gray-500"
+							}`}
+						>
+							{isDragOver
+								? showFullError
+									? "Team full - cannot drop"
+									: showGenderError
+										? "Gender requirement not met - cannot drop"
+										: "Drop to register"
+								: showFullError
+									? "Team full"
+									: showGenderError
+										? "Gender requirement not met"
+										: "Drag players here..."}
+						</div>
+					);
+				}}
 			>
 				{(profile) => (
 					<ListBoxItem
