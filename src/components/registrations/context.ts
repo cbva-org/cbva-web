@@ -2,7 +2,9 @@ import { cartSchema } from "@/functions/payments/checkout";
 import { getProfilesQueryOptions } from "@/functions/profiles/get-profiles";
 import { getViewerProfilesQueryOptions } from "@/functions/profiles/get-viewer-profiles";
 import { getSettingQueryOptions } from "@/functions/settings/get-setting";
+import { getDefaultTimeZone } from "@/lib/dates";
 import { isDefined } from "@/utils/types";
+import { parseDate, today } from "@internationalized/date";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { sum, uniqBy } from "lodash-es";
@@ -70,6 +72,56 @@ export function useMembershipPrice() {
 export function useMembershipsAvailable() {
 	const price = useMembershipPrice();
 	return price !== null;
+}
+
+export function useDefaultTournamentPrice() {
+	const { data } = useSuspenseQuery({
+		...getSettingQueryOptions("default-tournament-price"),
+		select: (setting) => {
+			if (!setting?.value) return null;
+			const price = Number(setting.value);
+			return Number.isNaN(price) || price <= 0 ? null : price;
+		},
+	});
+
+	return data;
+}
+
+/**
+ * Determines if registration is open for a tournament division.
+ *
+ * Registration is open if:
+ * - A price is available (either division-specific or default tournament price)
+ * - AND either no registrationOpenDate is set, or today >= registrationOpenDate
+ */
+export function useIsRegistrationOpen({
+	registrationPrice,
+	registrationOpenDate,
+}: {
+	registrationPrice: string | null;
+	registrationOpenDate: string | null;
+}) {
+	const defaultPrice = useDefaultTournamentPrice();
+
+	// Check if a price is available (division-specific or default)
+	const hasPrice =
+		(registrationPrice !== null && Number(registrationPrice) > 0) ||
+		defaultPrice !== null;
+
+	if (!hasPrice) {
+		return false;
+	}
+
+	// If no registrationOpenDate is set, registration is open
+	if (!registrationOpenDate) {
+		return true;
+	}
+
+	// Check if today >= registrationOpenDate
+	const openDate = parseDate(registrationOpenDate);
+	const now = today(getDefaultTimeZone());
+
+	return now.compare(openDate) >= 0;
 }
 
 export function useCartItems() {

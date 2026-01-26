@@ -32,9 +32,19 @@ import { tournamentQueryOptions } from "@/data/tournaments";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { DefaultLayout } from "@/layouts/default";
 import { getDefaultTimeZone } from "@/lib/dates";
+import {
+	useDefaultTournamentPrice,
+	useIsRegistrationOpen,
+} from "@/components/registrations/context";
+import { button, Button } from "@/components/base/button";
 
 const dateFormatter = new DateFormatter("EN-US", {
 	dateStyle: "short",
+});
+
+const moneyFormatter = new Intl.NumberFormat("EN-US", {
+	style: "currency",
+	currency: "usd",
 });
 
 export const Route = createFileRoute(
@@ -252,8 +262,16 @@ function RouteComponent() {
 			},
 		});
 
-	// TODO:
-	// - if default-tournament-fee is set, then registration is open unless registationOpenDate is set to date
+	// const isRegistrationOpen = useIsRegistrationOpen({
+	// 	registrationPrice: activeDivision.registrationPrice,
+	// 	registrationOpenDate: tournament.registrationOpenDate,
+	// });
+
+	const isRegistrationOpen = false;
+
+	const defaultPrice = useDefaultTournamentPrice();
+
+	const price = activeDivision.registrationPrice ?? defaultPrice;
 
 	return (
 		<DefaultLayout classNames={{ content: "bg-white max-w-full" }}>
@@ -266,7 +284,7 @@ function RouteComponent() {
 				/>
 
 				<div className="py-12 max-w-full md:max-w-lg mx-auto flex flex-col space-y-6">
-					<div className="text-center flex flex-col space-y-2">
+					<div className="text-center flex flex-col items-center space-y-2">
 						{name && <h1 className={title()}>{name}</h1>}
 
 						<div className="flex flex-col">
@@ -275,6 +293,34 @@ function RouteComponent() {
 							>{`${venue.name}, ${venue.city}`}</h2>
 							<h3 className={dateClassName}>{formattedDate}</h3>
 						</div>
+
+						{match({
+							isOpen: isRegistrationOpen,
+							price,
+							openDate: tournament.registrationOpenDate,
+						})
+							.with(
+								{
+									isOpen: true,
+									price: P.number,
+								},
+								({ price }) => (
+									<Button color="primary" radius="full">
+										Register — {moneyFormatter.format(price)}
+									</Button>
+								),
+							)
+							// .exhaustive()
+							.otherwise(() => (
+								<div
+									className={button({
+										radius: "full",
+										isDisabled: true,
+									})}
+								>
+									Registration Closed
+								</div>
+							))}
 					</div>
 
 					<DropdownMenu

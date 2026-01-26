@@ -42,7 +42,7 @@ export const tournamentDivisions = pgTable(
 		autopromoteWaitlist: boolean().notNull().default(true),
 		displayGender: boolean(),
 		displayDivision: boolean(),
-		registrationPrice: numeric(),
+		registrationPrice: numeric({ mode: "number" }),
 		externalRef: uuid().unique(),
 	},
 	(table) => [
