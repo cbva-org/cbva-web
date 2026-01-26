@@ -98,14 +98,14 @@ export function useIsRegistrationOpen({
 	registrationPrice,
 	registrationOpenDate,
 }: {
-	registrationPrice: string | null;
+	registrationPrice: number | null;
 	registrationOpenDate: string | null;
 }) {
 	const defaultPrice = useDefaultTournamentPrice();
 
 	// Check if a price is available (division-specific or default)
 	const hasPrice =
-		(registrationPrice !== null && Number(registrationPrice) > 0) ||
+		(registrationPrice !== null && registrationPrice > 0) ||
 		defaultPrice !== null;
 
 	if (!hasPrice) {

@@ -1,4 +1,10 @@
-import { DateFormatter, parseDate } from "@internationalized/date";
+import {
+	CalendarDateTime,
+	DateFormatter,
+	parseDate,
+	parseDateTime,
+	today,
+} from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
@@ -38,8 +44,13 @@ import {
 } from "@/components/registrations/context";
 import { button, Button } from "@/components/base/button";
 
-const dateFormatter = new DateFormatter("EN-US", {
+const shortDateFormatter = new DateFormatter("EN-US", {
 	dateStyle: "short",
+});
+
+const shortDateTimeFormatter = new DateFormatter("EN-US", {
+	dateStyle: "short",
+	timeStyle: "short",
 });
 
 const moneyFormatter = new Intl.NumberFormat("EN-US", {
@@ -92,7 +103,7 @@ export const Route = createFileRoute(
 			? [
 					{
 						title: [
-							dateFormatter.format(
+							shortDateFormatter.format(
 								parseDate(loaderData.date).toDate(getDefaultTimeZone()),
 							),
 							loaderData.name,
@@ -262,12 +273,10 @@ function RouteComponent() {
 			},
 		});
 
-	// const isRegistrationOpen = useIsRegistrationOpen({
-	// 	registrationPrice: activeDivision.registrationPrice,
-	// 	registrationOpenDate: tournament.registrationOpenDate,
-	// });
-
-	const isRegistrationOpen = false;
+	const isRegistrationOpen = useIsRegistrationOpen({
+		registrationPrice: activeDivision.registrationPrice,
+		registrationOpenDate: tournament.registrationOpenDate,
+	});
 
 	const defaultPrice = useDefaultTournamentPrice();
 
@@ -297,7 +306,7 @@ function RouteComponent() {
 						{match({
 							isOpen: isRegistrationOpen,
 							price,
-							openDate: tournament.registrationOpenDate,
+							openAt: tournament.registrationOpenAt,
 						})
 							.with(
 								{
@@ -308,6 +317,29 @@ function RouteComponent() {
 									<Button color="primary" radius="full">
 										Register — {moneyFormatter.format(price)}
 									</Button>
+								),
+							)
+							.with(
+								{
+									isOpen: false,
+									openAt: P.when(
+										(ts: Date | null): ts is Date =>
+											ts !== null &&
+											ts >
+												today(getDefaultTimeZone()).toDate(
+													getDefaultTimeZone(),
+												),
+									),
+								},
+								({ openAt }) => (
+									<div
+										className={button({
+											radius: "full",
+											isDisabled: true,
+										})}
+									>
+										Registration Opens {shortDateTimeFormatter.format(openAt)}
+									</div>
 								),
 							)
 							// .exhaustive()

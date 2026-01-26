@@ -7,6 +7,7 @@ import {
 	serial,
 	text,
 	time,
+	timestamp,
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
@@ -25,6 +26,7 @@ export const tournaments = pgTable("tournaments", {
 	visible: boolean().notNull().default(false),
 	demo: boolean().notNull().default(false),
 	registrationOpenDate: date(),
+	registrationOpenAt: timestamp(),
 	venueId: integer()
 		.notNull()
 		.references(() => venues.id),
