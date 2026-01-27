@@ -14,6 +14,7 @@ export const getViewerProfilesHandler = createServerOnlyFn(
 						id: true,
 					},
 				},
+				level: true,
 			},
 			where: { userId: viewerId },
 			orderBy: {

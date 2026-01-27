@@ -7,6 +7,7 @@ import { ProfileName } from "@/components/profiles/name";
 import { ProfilePhoto } from "@/components/profiles/photo";
 import { Cart } from "@/components/registrations/cart";
 import {
+	CartProfile,
 	DragContext,
 	registrationPageSchema,
 	useCartProfiles,
@@ -14,7 +15,7 @@ import {
 } from "@/components/registrations/context";
 import { DivisionRegistrations } from "@/components/registrations/division-registrations";
 import { RegistrationDivisions } from "@/components/registrations/registration-divisions";
-import type { PlayerProfile } from "@/db/schema";
+import type { Level, PlayerProfile } from "@/db/schema";
 import { DefaultLayout } from "@/layouts/default";
 import { isDefined } from "@/utils/types";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
@@ -70,7 +71,7 @@ function RouteComponent() {
 	const navigate = useNavigate();
 
 	const profiles = useCartProfiles();
-	const [draggedProfile, setDraggedProfile] = useState<PlayerProfile | null>(
+	const [draggedProfile, setDraggedProfile] = useState<CartProfile | null>(
 		null,
 	);
 
@@ -105,63 +106,59 @@ function RouteComponent() {
 	return (
 		<DragContext.Provider value={{ draggedProfile, setDraggedProfile }}>
 			<DefaultLayout
-			classNames={{
-				content: "flex flex-col py-8 space-y-6",
-			}}
-		>
-			<div className="text-center py-8">
-				<h1 className={title()}>Registration</h1>
-			</div>
-
-			<div className="grid grid-cols-6 gap-x-3 px-3 max-w-6xl w-full mx-auto flex-1">
-				<div className="col-span-4 bg-white rounded-lg grid grid-cols-10">
-					<div className="col-span-3 border-r border-gray-200">
-						<div className="py-3 px-4 flex flex-row items-center justify-between">
-							<span>Players</span>
-
-							<AddPlayerForm />
-						</div>
-						<DraggableProfileList profiles={profiles} />
-					</div>
-					<div className="col-span-7">
-						<div className="py-3 px-4 flex flex-col gap-y-3 border-b border-gray-200">
-							<div className="flex flex-row items-center justify-between">
-								<span>Memberships</span>
-
-								<AddMembershipForm />
-							</div>
-							<DroppableMembershipsList
-								profiles={membershipProfiles}
-								onProfileDrop={addToMemberships}
-								onProfileRemove={removeFromMemberships}
-							/>
-						</div>
-						<div className="py-3 px-4 flex flex-col gap-y-3 border-b border-gray-200">
-							<div className="flex flex-row items-center justify-between">
-								<span>Tournaments</span>
-
-								<Button color="primary" variant="text" size="xs">
-									<PlusIcon size={12} /> Add Tournament
-								</Button>
-							</div>
-
-							<RegistrationDivisions />
-						</div>
-					</div>
+				classNames={{
+					content: "flex flex-col py-8 space-y-6",
+				}}
+			>
+				<div className="text-center py-8">
+					<h1 className={title()}>Registration</h1>
 				</div>
 
-				<Cart />
-			</div>
-		</DefaultLayout>
+				<div className="grid grid-cols-6 gap-x-3 px-3 max-w-6xl w-full mx-auto flex-1">
+					<div className="col-span-4 bg-white rounded-lg grid grid-cols-10">
+						<div className="col-span-3 border-r border-gray-200">
+							<div className="py-3 px-4 flex flex-row items-center justify-between">
+								<span>Players</span>
+
+								<AddPlayerForm />
+							</div>
+							<DraggableProfileList profiles={profiles} />
+						</div>
+						<div className="col-span-7">
+							<div className="py-3 px-4 flex flex-col gap-y-3 border-b border-gray-200">
+								<div className="flex flex-row items-center justify-between">
+									<span>Memberships</span>
+
+									<AddMembershipForm />
+								</div>
+								<DroppableMembershipsList
+									profiles={membershipProfiles}
+									onProfileDrop={addToMemberships}
+									onProfileRemove={removeFromMemberships}
+								/>
+							</div>
+							<div className="py-3 px-4 flex flex-col gap-y-3 border-b border-gray-200">
+								<div className="flex flex-row items-center justify-between">
+									<span>Tournaments</span>
+
+									<Button color="primary" variant="text" size="xs">
+										<PlusIcon size={12} /> Add Tournament
+									</Button>
+								</div>
+
+								<RegistrationDivisions />
+							</div>
+						</div>
+					</div>
+
+					<Cart />
+				</div>
+			</DefaultLayout>
 		</DragContext.Provider>
 	);
 }
 
-function DraggableProfileList({
-	profiles,
-}: {
-	profiles: (PlayerProfile & { registrations: number })[];
-}) {
+function DraggableProfileList({ profiles }: { profiles: CartProfile[] }) {
 	const setDraggedProfile = useSetDraggedProfile();
 
 	const { dragAndDropHooks } = useDragAndDrop({
@@ -205,6 +202,7 @@ function DraggableProfileList({
 						<GripVerticalIcon className="text-gray-400" size={16} />
 						<ProfilePhoto {...profile} />
 						<ProfileName {...profile} />
+						<span className="uppercase">({profile.level?.name})</span>
 					</div>
 					{profile.registrations > 0 && (
 						<span className="text-gray-400">({profile.registrations})</span>

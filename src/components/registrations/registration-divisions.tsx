@@ -4,6 +4,7 @@ import { getDefaultTimeZone } from "@/lib/dates";
 import { parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { RegistrationTeam } from "./registration-team";
+import { dbg } from "@/utils/dbg";
 
 export function RegistrationDivisions() {
 	const divisions = useCartDivisions();

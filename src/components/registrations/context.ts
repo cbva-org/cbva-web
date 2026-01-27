@@ -15,7 +15,7 @@ import z from "zod";
 // Context for tracking the currently dragged profile
 type DragContextValue = {
 	draggedProfile: PlayerProfile | null;
-	setDraggedProfile: (profile: PlayerProfile | null) => void;
+	setDraggedProfile: (profile: CartProfile | null) => void;
 };
 
 export const DragContext = createContext<DragContextValue | null>(null);
