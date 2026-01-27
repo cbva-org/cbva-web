@@ -25,7 +25,7 @@ import z from "zod";
 
 export const membershipItemSchema = z.object({
 	profileId: z.number(),
-	tshirtSize: tshirtSizeSchema.optional(),
+	tshirtSize: tshirtSizeSchema.nullish(),
 });
 
 export type MembershipItem = z.infer<typeof membershipItemSchema>;

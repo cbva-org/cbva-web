@@ -4,6 +4,7 @@ import {
 	useUsaePay,
 } from "@/components/base/form/fields/payment-key";
 import { title } from "@/components/base/primitives";
+import { Cart } from "@/components/registrations/cart";
 import {
 	registrationPageSchema,
 	useCart,
@@ -121,119 +122,123 @@ function RouteComponent() {
 		<DefaultLayout>
 			<h1 className={title({ className: "text-center" })}>Checkout</h1>
 
-			<form
-				className="flex flex-col gap-8 max-w-md mx-auto"
-				onSubmit={(e) => {
-					e.preventDefault();
+			<div className="w-full max-w-2xl grid grid-cols-8 mx-auto items-start gap-x-4">
+				<form
+					className="flex flex-col gap-4 col-span-5"
+					onSubmit={(e) => {
+						e.preventDefault();
 
-					form.handleSubmit();
-				}}
-			>
-				<div className="bg-white rounded-lg p-4 pb-6 grid grid-cols-6 gap-3 items-start">
-					<h2 className={title({ size: "xs", class: "mb-2 col-span-full" })}>
-						Billing Information
-					</h2>
+						form.handleSubmit();
+					}}
+				>
+					<div className="bg-white rounded-lg p-4 pb-6 grid grid-cols-6 gap-3 items-start">
+						<h2 className={title({ size: "xs", class: "mb-2 col-span-full" })}>
+							Billing Information
+						</h2>
 
-					<form.AppField name="billingInformation.firstName">
+						<form.AppField name="billingInformation.firstName">
+							{(field) => (
+								<field.Text
+									className="col-span-3"
+									field={field}
+									label="First Name"
+									isRequired={true}
+								/>
+							)}
+						</form.AppField>
+
+						<form.AppField name="billingInformation.lastName">
+							{(field) => (
+								<field.Text
+									className="col-span-3"
+									field={field}
+									label="Last Name"
+									isRequired={true}
+								/>
+							)}
+						</form.AppField>
+
+						<form.AppField name="billingInformation.address" mode="array">
+							{(field) => (
+								<>
+									<form.AppField name="billingInformation.address[0]">
+										{(subField) => (
+											<field.Text
+												className="col-span-full"
+												field={subField}
+												label="Address"
+												isRequired={true}
+											/>
+										)}
+									</form.AppField>
+									<form.AppField name="billingInformation.address[1]">
+										{(subField) => (
+											<field.Text
+												className="col-span-full"
+												field={subField}
+												label="Apartment, suite, etc"
+											/>
+										)}
+									</form.AppField>
+								</>
+							)}
+						</form.AppField>
+
+						<form.AppField name="billingInformation.city">
+							{(field) => (
+								<field.Text
+									className="col-span-full"
+									field={field}
+									label="City"
+									isRequired={true}
+								/>
+							)}
+						</form.AppField>
+
+						<form.AppField name="billingInformation.state">
+							{(field) => (
+								<field.Text
+									className="col-span-3"
+									field={field}
+									label="State"
+									isRequired={true}
+								/>
+							)}
+						</form.AppField>
+
+						<form.AppField name="billingInformation.postalCode">
+							{(field) => (
+								<field.Text
+									className="col-span-3"
+									field={field}
+									label="Zipcode"
+									isRequired={true}
+									inputMode="numeric"
+								/>
+							)}
+						</form.AppField>
+					</div>
+
+					<form.AppField name="paymentCard">
 						{(field) => (
-							<field.Text
-								className="col-span-3"
+							<field.PaymentKey
+								className="bg-white rounded-lg p-4 pb-0"
 								field={field}
-								label="First Name"
-								isRequired={true}
+								label="Billing Information"
+								paymentCard={paymentCard}
 							/>
 						)}
 					</form.AppField>
 
-					<form.AppField name="billingInformation.lastName">
-						{(field) => (
-							<field.Text
-								className="col-span-3"
-								field={field}
-								label="Last Name"
-								isRequired={true}
-							/>
-						)}
-					</form.AppField>
+					<form.AppForm>
+						<form.SubmitButton size="lg" radius="full">
+							Pay ${total}
+						</form.SubmitButton>
+					</form.AppForm>
+				</form>
 
-					<form.AppField name="billingInformation.address" mode="array">
-						{(field) => (
-							<>
-								<form.AppField name="billingInformation.address[0]">
-									{(subField) => (
-										<field.Text
-											className="col-span-full"
-											field={subField}
-											label="Address"
-											isRequired={true}
-										/>
-									)}
-								</form.AppField>
-								<form.AppField name="billingInformation.address[1]">
-									{(subField) => (
-										<field.Text
-											className="col-span-full"
-											field={subField}
-											label="Apartment, suite, etc"
-										/>
-									)}
-								</form.AppField>
-							</>
-						)}
-					</form.AppField>
-
-					<form.AppField name="billingInformation.city">
-						{(field) => (
-							<field.Text
-								className="col-span-full"
-								field={field}
-								label="City"
-								isRequired={true}
-							/>
-						)}
-					</form.AppField>
-
-					<form.AppField name="billingInformation.state">
-						{(field) => (
-							<field.Text
-								className="col-span-3"
-								field={field}
-								label="State"
-								isRequired={true}
-							/>
-						)}
-					</form.AppField>
-
-					<form.AppField name="billingInformation.postalCode">
-						{(field) => (
-							<field.Text
-								className="col-span-3"
-								field={field}
-								label="Zipcode"
-								isRequired={true}
-								inputMode="numeric"
-							/>
-						)}
-					</form.AppField>
-				</div>
-
-				<form.AppField name="paymentCard">
-					{(field) => (
-						<field.PaymentKey
-							className="bg-white rounded-lg p-4 pb-0"
-							field={field}
-							label="Billing Information"
-							paymentCard={paymentCard}
-						/>
-					)}
-				</form.AppField>
-
-				<form.AppForm>
-					<form.SubmitButton size="lg" radius="full">
-						Pay ${total}
-					</form.SubmitButton>
-				</form.AppForm>
-			</form>
+				<Cart checkout={true} className="col-span-3" />
+			</div>
 		</DefaultLayout>
 	);
 }

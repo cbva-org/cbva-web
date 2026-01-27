@@ -34,6 +34,7 @@ import {
 	useDragAndDrop,
 } from "react-aria-components";
 import z from "zod";
+import { Label } from "@/components/base/field";
 
 export const Route = createFileRoute("/account/registrations/")({
 	validateSearch: registrationPageSchema,
@@ -314,7 +315,7 @@ function DroppableMembershipsList({
 								<ProfileName {...profile} />
 							</div>
 							<div className="flex flex-row items-center gap-x-2">
-								<span className="text-sm">T-Shirt size:</span>
+								<Label isRequired={true}>T-Shirt size</Label>
 								<MenuTrigger>
 									<AriaButton className="text-sm px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 flex items-center gap-1">
 										{sizeLabel}

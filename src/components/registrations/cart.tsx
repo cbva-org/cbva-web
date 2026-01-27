@@ -7,18 +7,38 @@ import { useCartItems, useCartTotal } from "./context";
 import { Link } from "../base/link";
 import { button } from "../base/button";
 import { useSearch } from "@tanstack/react-router";
+import { twMerge } from "tailwind-merge";
 
-export function Cart() {
-	const items = useCartItems();
-	const total = useCartTotal();
+export function Cart({
+	checkout,
+	className,
+}: {
+	checkout?: boolean;
+	className?: string;
+}) {
+	const items = useCartItems(checkout);
+	const total = useCartTotal(checkout);
 	const dateFormatter = useDateFormatter();
 
 	const search = useSearch({
-		from: "/account/registrations/",
+		from: checkout
+			? "/account/registrations/checkout"
+			: "/account/registrations/",
 	});
 
+	// Check if all memberships have a t-shirt size selected
+	const allMembershipsHaveTshirtSize = search.memberships.every(
+		(m) => m.tshirtSize != null,
+	);
+	const canCheckout = items.length > 0 && allMembershipsHaveTshirtSize;
+
 	return (
-		<div className="col-span-2 bg-white rounded-lg py-3 flex flex-col">
+		<div
+			className={twMerge(
+				"col-span-2 bg-white rounded-lg py-3 flex flex-col",
+				className,
+			)}
+		>
 			<h2 className="px-4">Cart</h2>
 
 			<div className="p-4 flex-1 border-b border-gray-300">
@@ -58,19 +78,28 @@ export function Cart() {
 				<div className="text-lg">Total</div>
 				<div>${total}</div>
 			</div>
-			<div className="p-4 font-bold flex flex-row justify-between">
-				<Link
-					className={button({
-						color: "primary",
-						radius: "full",
-						className: "w-full",
-					})}
-					to="/account/registrations/checkout"
-					search={search}
-				>
-					Checkout
-				</Link>
-			</div>
+			{!checkout && (
+				<div className="p-4 font-bold flex flex-col gap-2">
+					{!allMembershipsHaveTshirtSize && search.memberships.length > 0 && (
+						<p className="text-sm text-amber-600 text-center">
+							Please select a t-shirt size for all memberships
+						</p>
+					)}
+					<Link
+						className={button({
+							color: "primary",
+							radius: "full",
+							className: "w-full",
+							isDisabled: !canCheckout,
+						})}
+						to="/account/registrations/checkout"
+						search={search}
+						disabled={!canCheckout}
+					>
+						Checkout
+					</Link>
+				</div>
+			)}
 		</div>
 	);
 }
