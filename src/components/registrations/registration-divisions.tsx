@@ -3,9 +3,7 @@ import { useCartDivisions } from "./context";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
-import { dbg } from "@/utils/dbg";
 import { RegistrationTeam } from "./registration-team";
-import { uniqueId } from "lodash-es";
 
 export function RegistrationDivisions() {
 	const divisions = useCartDivisions();
@@ -24,10 +22,11 @@ export function RegistrationDivisions() {
 							)}
 						</span>
 						<div className="flex flex-col gap-y-4">
-							{teams.map(({ profileIds }, i) => (
+							{teams.map(({ id, profileIds }, i) => (
 								<RegistrationTeam
-									key={uniqueId()}
+									key={id}
 									{...division}
+									id={id}
 									name={`Team ${i + 1}`}
 									profileIds={profileIds}
 								/>

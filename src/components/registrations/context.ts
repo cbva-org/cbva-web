@@ -9,12 +9,14 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { groupBy, sum, uniqBy } from "lodash-es";
 import z from "zod";
+import { v4 as uuidv4 } from "uuid";
 
 export const registrationPageSchema = cartSchema.extend({
 	profiles: z.array(z.number()).default([]),
 	teams: z
 		.array(
 			z.object({
+				id: z.uuidv4().default(uuidv4()),
 				divisionId: z.number(),
 				profileIds: z.array(z.number()),
 			}),
@@ -54,6 +56,8 @@ export function useCartProfiles(checkout?: boolean) {
 	return uniqBy(viewerProfiles.concat(otherProfiles), "id");
 }
 
+export type CartProfile = ReturnType<typeof useCartProfiles>[number];
+
 export function useCartDivisionRegistrations(checkout?: boolean) {
 	const { teams } = useSearch({
 		from: checkout
@@ -79,8 +83,7 @@ export function useCartDivisions(checkout?: boolean) {
 			data.map((div) => ({
 				...div,
 				teams:
-					registrations.find((reg) => dbg(reg.divisionId) === dbg(div.id))
-						?.teams ?? [],
+					registrations.find((reg) => reg.divisionId === div.id)?.teams ?? [],
 			})),
 	});
 
