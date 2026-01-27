@@ -194,6 +194,10 @@ export const relations = defineRelations(tables, (r) => ({
 			to: r.tournamentDivisions.id,
 			optional: false,
 		}),
+		invoice: r.one.invoices({
+			from: r.tournamentDivisionTeams.invoiceId,
+			to: r.invoices.id,
+		}),
 		registration: r.one.tournamentRegistrations({
 			from: r.tournamentDivisionTeams.id,
 			to: r.tournamentRegistrations.tournamentDivisionTeamId,

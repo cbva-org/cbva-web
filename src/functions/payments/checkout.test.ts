@@ -1,8 +1,14 @@
 import { db } from "@/db/connection";
-import { invoices, memberships } from "@/db/schema";
+import {
+	invoices,
+	memberships,
+	teamPlayers,
+	tournamentDivisionTeams,
+} from "@/db/schema";
 import { settings } from "@/db/schema/settings";
+import { bootstrapTournament } from "@/tests/utils/tournaments";
 import { createProfiles, createUsers } from "@/tests/utils/users";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { TransactionResponse } from "@/services/usaepay";
 
@@ -15,7 +21,10 @@ vi.mock("@/services/usaepay", () => ({
 // Import after mocking
 const { checkoutHandler } = await import("./checkout");
 
-function createCheckoutInput(profileIds: number[]) {
+function createCheckoutInput(
+	profileIds: number[],
+	teams: { divisionId: number; profileIds: number[] }[] = [],
+) {
 	return {
 		billingInformation: {
 			firstName: "John",
@@ -28,6 +37,7 @@ function createCheckoutInput(profileIds: number[]) {
 		paymentKey: "test-payment-key",
 		cart: {
 			memberships: profileIds,
+			teams,
 		},
 	};
 }
@@ -72,9 +82,24 @@ async function seedMembershipPrice(price: number) {
 		});
 }
 
+async function seedDefaultTournamentPrice(price: number) {
+	await db
+		.insert(settings)
+		.values({
+			key: "default-tournament-price",
+			label: "Default Tournament Price",
+			value: String(price),
+			type: "money",
+		})
+		.onConflictDoUpdate({
+			target: settings.key,
+			set: { value: String(price) },
+		});
+}
+
 describe("checkout", () => {
 	beforeEach(async () => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 		await seedMembershipPrice(100);
 	});
 
@@ -88,7 +113,10 @@ describe("checkout", () => {
 
 		mockPostSale.mockResolvedValueOnce(createSuccessResponse());
 
-		const result = await checkoutHandler(user.id, createCheckoutInput(profileIds));
+		const result = await checkoutHandler(
+			user.id,
+			createCheckoutInput(profileIds),
+		);
 
 		expect(result.success).toBe(true);
 		expect(result.transactionKey).toBe("txn-123");
@@ -152,7 +180,7 @@ describe("checkout", () => {
 
 		await expect(
 			checkoutHandler(user.id, createCheckoutInput([])),
-		).rejects.toThrow("No memberships in cart");
+		).rejects.toThrow("Cart is empty");
 
 		// Verify postSale was never called
 		expect(mockPostSale).not.toHaveBeenCalled();
@@ -212,5 +240,282 @@ describe("checkout", () => {
 		).rejects.toThrow("Membership price not configured");
 
 		expect(mockPostSale).not.toHaveBeenCalled();
+	});
+
+	test("creates team registration on successful payment", async () => {
+		await seedDefaultTournamentPrice(75);
+
+		const [user] = await createUsers(db, 1);
+		const profiles = await createProfiles(db, [
+			{ userId: user.id, gender: "male" },
+			{ userId: user.id, gender: "male" },
+		]);
+		const profileIds = profiles.map((p) => p.id);
+
+		const tournament = await bootstrapTournament(db, {
+			date: "2025-06-01",
+			startTime: "09:00",
+			divisions: [{ division: "aa", gender: "male", teams: 0 }],
+		});
+
+		mockPostSale.mockResolvedValueOnce(createSuccessResponse());
+
+		const result = await checkoutHandler(
+			user.id,
+			createCheckoutInput(
+				[],
+				[{ divisionId: tournament.divisions[0], profileIds }],
+			),
+		);
+
+		expect(result.success).toBe(true);
+
+		// Verify invoice was created
+		const [invoice] = await db
+			.select()
+			.from(invoices)
+			.where(eq(invoices.purchaserId, user.id));
+
+		expect(invoice).toBeDefined();
+
+		// Verify team was created and registered
+		const registeredTeams = await db
+			.select()
+			.from(tournamentDivisionTeams)
+			.where(eq(tournamentDivisionTeams.invoiceId, invoice.id));
+
+		expect(registeredTeams).toHaveLength(1);
+		expect(registeredTeams[0].tournamentDivisionId).toBe(
+			tournament.divisions[0],
+		);
+		expect(registeredTeams[0].pricePaid).toBe(75);
+		expect(registeredTeams[0].status).toBe("registered");
+
+		// Verify team players were created
+		const players = await db
+			.select()
+			.from(teamPlayers)
+			.where(eq(teamPlayers.teamId, registeredTeams[0].teamId));
+
+		expect(players).toHaveLength(2);
+		expect(players.map((p) => p.playerProfileId).sort()).toEqual(
+			profileIds.sort(),
+		);
+	});
+
+	test("creates multiple team registrations", async () => {
+		await seedDefaultTournamentPrice(50);
+
+		const [user] = await createUsers(db, 1);
+		const profiles = await createProfiles(db, [
+			{ userId: user.id, gender: "male" },
+			{ userId: user.id, gender: "male" },
+			{ userId: user.id, gender: "female" },
+			{ userId: user.id, gender: "female" },
+		]);
+
+		const tournament = await bootstrapTournament(db, {
+			date: "2025-06-01",
+			startTime: "09:00",
+			divisions: [
+				{ division: "aa", gender: "male", teams: 0 },
+				{ division: "aa", gender: "female", teams: 0 },
+			],
+		});
+
+		mockPostSale.mockResolvedValueOnce(createSuccessResponse());
+
+		await checkoutHandler(
+			user.id,
+			createCheckoutInput(
+				[],
+				[
+					{
+						divisionId: tournament.divisions[0],
+						profileIds: [profiles[0].id, profiles[1].id],
+					},
+					{
+						divisionId: tournament.divisions[1],
+						profileIds: [profiles[2].id, profiles[3].id],
+					},
+				],
+			),
+		);
+
+		// Verify correct amount was charged
+		expect(mockPostSale).toHaveBeenCalledWith(
+			expect.objectContaining({
+				amount: 100, // 2 teams * $50 each
+				description: "CBVA Team Registration (2)",
+			}),
+		);
+
+		// Verify both teams were registered
+		const [invoice] = await db
+			.select()
+			.from(invoices)
+			.where(eq(invoices.purchaserId, user.id));
+
+		const registeredTeams = await db
+			.select()
+			.from(tournamentDivisionTeams)
+			.where(eq(tournamentDivisionTeams.invoiceId, invoice.id));
+
+		expect(registeredTeams).toHaveLength(2);
+	});
+
+	test("creates team registrations and memberships together", async () => {
+		await seedDefaultTournamentPrice(60);
+
+		const [user] = await createUsers(db, 1);
+		const profiles = await createProfiles(db, [
+			{ userId: user.id, gender: "male" },
+			{ userId: user.id, gender: "male" },
+		]);
+		const profileIds = profiles.map((p) => p.id);
+
+		const tournament = await bootstrapTournament(db, {
+			date: "2025-06-01",
+			startTime: "09:00",
+			divisions: [{ division: "aa", gender: "male", teams: 0 }],
+		});
+
+		mockPostSale.mockResolvedValueOnce(createSuccessResponse());
+
+		await checkoutHandler(
+			user.id,
+			createCheckoutInput(profileIds, [
+				{ divisionId: tournament.divisions[0], profileIds },
+			]),
+		);
+
+		// Verify correct amount was charged (2 memberships * $100 + 1 team * $60)
+		expect(mockPostSale).toHaveBeenCalledWith(
+			expect.objectContaining({
+				amount: 260,
+				description: "CBVA Membership (2), Team Registration (1)",
+			}),
+		);
+
+		// Verify invoice was created
+		const [invoice] = await db
+			.select()
+			.from(invoices)
+			.where(eq(invoices.purchaserId, user.id));
+
+		// Verify memberships were created
+		const createdMemberships = await db
+			.select()
+			.from(memberships)
+			.where(eq(memberships.invoiceId, invoice.id));
+
+		expect(createdMemberships).toHaveLength(2);
+
+		// Verify team was registered
+		const registeredTeams = await db
+			.select()
+			.from(tournamentDivisionTeams)
+			.where(eq(tournamentDivisionTeams.invoiceId, invoice.id));
+
+		expect(registeredTeams).toHaveLength(1);
+	});
+
+	test("uses division-specific registration price", async () => {
+		await seedDefaultTournamentPrice(50);
+
+		const [user] = await createUsers(db, 1);
+		const profiles = await createProfiles(db, [
+			{ userId: user.id, gender: "male" },
+			{ userId: user.id, gender: "male" },
+		]);
+		const profileIds = profiles.map((p) => p.id);
+
+		const tournament = await bootstrapTournament(db, {
+			date: "2025-06-01",
+			startTime: "09:00",
+			divisions: [{ division: "aa", gender: "male", teams: 0 }],
+		});
+
+		// Set a division-specific price
+		const { tournamentDivisions } = await import("@/db/schema");
+		await db
+			.update(tournamentDivisions)
+			.set({ registrationPrice: 80 })
+			.where(eq(tournamentDivisions.id, tournament.divisions[0]));
+
+		mockPostSale.mockResolvedValueOnce(createSuccessResponse());
+
+		await checkoutHandler(
+			user.id,
+			createCheckoutInput(
+				[],
+				[{ divisionId: tournament.divisions[0], profileIds }],
+			),
+		);
+
+		// Verify division-specific price was used instead of default
+		expect(mockPostSale).toHaveBeenCalledWith(
+			expect.objectContaining({
+				amount: 80,
+			}),
+		);
+
+		// Verify pricePaid was recorded correctly
+		const [invoice] = await db
+			.select()
+			.from(invoices)
+			.where(eq(invoices.purchaserId, user.id));
+
+		const [registeredTeam] = await db
+			.select()
+			.from(tournamentDivisionTeams)
+			.where(eq(tournamentDivisionTeams.invoiceId, invoice.id));
+
+		expect(registeredTeam.pricePaid).toBe(80);
+	});
+
+	test("does not create team registrations on declined payment", async () => {
+		await seedDefaultTournamentPrice(50);
+
+		const [user] = await createUsers(db, 1);
+		const profiles = await createProfiles(db, [
+			{ userId: user.id, gender: "male" },
+			{ userId: user.id, gender: "male" },
+		]);
+		const profileIds = profiles.map((p) => p.id);
+
+		const tournament = await bootstrapTournament(db, {
+			date: "2025-06-01",
+			startTime: "09:00",
+			divisions: [{ division: "aa", gender: "male", teams: 0 }],
+		});
+
+		mockPostSale.mockResolvedValueOnce(createDeclinedResponse());
+
+		await expect(
+			checkoutHandler(
+				user.id,
+				createCheckoutInput(
+					[],
+					[{ divisionId: tournament.divisions[0], profileIds }],
+				),
+			),
+		).rejects.toThrow("Insufficient funds");
+
+		// Verify no invoice was created
+		const userInvoices = await db
+			.select()
+			.from(invoices)
+			.where(eq(invoices.purchaserId, user.id));
+
+		expect(userInvoices).toHaveLength(0);
+
+		// Verify no teams were created with these profile ids
+		const allTeamPlayers = await db
+			.select()
+			.from(teamPlayers)
+			.where(inArray(teamPlayers.playerProfileId, profileIds));
+
+		expect(allTeamPlayers).toHaveLength(0);
 	});
 });

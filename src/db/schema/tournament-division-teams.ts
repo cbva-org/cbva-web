@@ -3,12 +3,14 @@ import {
 	boolean,
 	doublePrecision,
 	integer,
+	numeric,
 	pgTable,
 	serial,
 	uuid,
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
+import { invoices } from "./payments";
 import { levels } from "./levels";
 import { poolTeams } from "./pool-teams";
 import { teamStatusEnum, timestamps } from "./shared";
@@ -26,6 +28,8 @@ export const tournamentDivisionTeams = pgTable("tournament_division_teams", {
 	teamId: integer()
 		.notNull()
 		.references(() => teams.id),
+	invoiceId: integer().references(() => invoices.id, { onDelete: "set null" }),
+	pricePaid: numeric({ mode: "number" }),
 	seed: integer(),
 	finish: integer(),
 	playoffsSeed: integer(),

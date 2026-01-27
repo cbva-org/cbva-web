@@ -139,6 +139,8 @@ const createTeamRegistrations = createServerOnlyFn(
 			divisions.map((d) => [d.id, d.registrationPrice]),
 		);
 
+		const defaultPrice = await getDefaultTournamentPrice();
+
 		for (const cartTeam of cartTeams) {
 			// Create the team
 			const [team] = await db
@@ -154,10 +156,16 @@ const createTeamRegistrations = createServerOnlyFn(
 				})),
 			);
 
+			// Calculate price paid
+			const divisionPrice = divisionPriceMap.get(cartTeam.divisionId);
+			const pricePaid = divisionPrice ?? defaultPrice ?? 0;
+
 			// Register team in the division
 			await db.insert(tournamentDivisionTeams).values({
 				tournamentDivisionId: cartTeam.divisionId,
 				teamId: team.id,
+				invoiceId,
+				pricePaid,
 				status: "registered",
 			});
 		}
