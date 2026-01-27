@@ -1,4 +1,11 @@
-import { date, integer, pgTable, serial, text } from "drizzle-orm/pg-core";
+import {
+	date,
+	integer,
+	pgEnum,
+	pgTable,
+	serial,
+	text,
+} from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 import { playerProfiles } from "./player-profiles";
@@ -21,6 +28,19 @@ export const selectInvoiceSchema = createSelectSchema(invoices);
 
 export type Invoice = z.infer<typeof selectInvoiceSchema>;
 
+export const tshirtSizeEnum = pgEnum("tshirt-size", [
+	"xs",
+	"sm",
+	"m",
+	"l",
+	"xl",
+	"xxl",
+]);
+
+export const tshirtSizeSchema = createSelectSchema(tshirtSizeEnum);
+
+export type TshirtSize = z.infer<typeof tshirtSizeSchema>;
+
 export const memberships = pgTable("memberships", {
 	id: serial().primaryKey(),
 	validUntil: date().notNull(),
@@ -30,6 +50,7 @@ export const memberships = pgTable("memberships", {
 	invoiceId: integer()
 		.notNull()
 		.references(() => invoices.id),
+	tshirtSize: tshirtSizeEnum(),
 	...timestamps,
 });
 

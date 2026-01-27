@@ -7,21 +7,20 @@ import { ProfileName } from "@/components/profiles/name";
 import { ProfilePhoto } from "@/components/profiles/photo";
 import { Cart } from "@/components/registrations/cart";
 import {
-	CartProfile,
+	type CartProfile,
 	DragContext,
 	registrationPageSchema,
 	useCartProfiles,
 	useSetDraggedProfile,
 } from "@/components/registrations/context";
-import { DivisionRegistrations } from "@/components/registrations/division-registrations";
 import { DraggableProfile } from "@/components/registrations/draggable-profile";
 import { RegistrationDivisions } from "@/components/registrations/registration-divisions";
-import type { Level, PlayerProfile } from "@/db/schema";
+import type { PlayerProfile } from "@/db/schema";
 import { DefaultLayout } from "@/layouts/default";
 import { isDefined } from "@/utils/types";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { uniq, without } from "lodash-es";
-import { GripVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import {
 	DialogTrigger,
@@ -270,9 +269,12 @@ function DroppableMembershipsList({
 					textValue={`${profile.preferredName || profile.firstName} ${profile.lastName}`}
 					className="p-2 flex flex-row items-center justify-between bg-gray-100 border border-gray-300 rounded-md mb-2 last-of-type:mb-0"
 				>
-					<div className="flex flex-row gap-x-2 items-center">
-						<ProfilePhoto {...profile} />
-						<ProfileName {...profile} />
+					<div className="flex flex-row">
+						<div className="flex flex-row gap-x-2 items-center">
+							<ProfilePhoto {...profile} />
+							<ProfileName {...profile} />
+						</div>
+						<span>T-shirt size</span>
 					</div>
 					<Button
 						variant="text"
