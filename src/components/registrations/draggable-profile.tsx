@@ -32,7 +32,11 @@ export function DraggableProfile({
 			)}
 			<ProfilePhoto {...profile} className="h-6 w-6 shrink-0" />
 			<ProfileName {...profile} link={false} className="truncate min-w-0" />
-			{showLevel && <span className="uppercase">({profile.level?.name})</span>}
+			{showLevel && (
+				<span className="uppercase">
+					({profile.level?.abbreviated ?? profile.level?.name ?? "N"})
+				</span>
+			)}
 			{error && <ErrorPopover>{error}</ErrorPopover>}
 			{onRemove && (
 				<Button variant="text" className="shrink-0" onPress={onRemove}>

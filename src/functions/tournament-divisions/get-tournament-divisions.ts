@@ -39,6 +39,7 @@ export const getTournamentDivisions = createServerFn({
 								id: true,
 								name: true,
 								city: true,
+								slug: true,
 							},
 						},
 					},

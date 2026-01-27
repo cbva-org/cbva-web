@@ -186,29 +186,7 @@ export function useIsRegistrationOpen({
 	return true;
 }
 
-export function useCartItems() {
-	const { memberships } = useSearch({
-		from: "/account/registrations/",
-	});
-
-	const profiles = useCartProfiles();
-	const membershipPrice = useMembershipPrice();
-
-	if (membershipPrice === null) {
-		return [];
-	}
-
-	return memberships
-		.map((id) => profiles.find((p) => p.id === id))
-		.filter(isDefined)
-		.map((profile) => ({
-			title: "Annual Membership",
-			price: membershipPrice,
-			profile,
-		}));
-}
-
-export function useCartTotal(checkout?: boolean) {
+export function useMembershipItems(checkout?: boolean) {
 	const { memberships } = useSearch({
 		from: checkout
 			? "/account/registrations/checkout"
@@ -219,13 +197,52 @@ export function useCartTotal(checkout?: boolean) {
 	const membershipPrice = useMembershipPrice();
 
 	if (membershipPrice === null) {
-		return null;
+		return [];
 	}
 
-	return sum(
-		memberships
-			.map((id) => profiles.find((p) => p.id === id))
-			.filter(isDefined)
-			.map(() => membershipPrice),
+	return memberships
+		.map((id) => profiles.find((p) => p.id === id))
+		.filter(isDefined)
+		.map((profile) => ({
+			type: "membership" as const,
+			title: "Annual Membership",
+			price: membershipPrice,
+			profiles: [profile],
+		}));
+}
+
+export function useTeamItems(checkout?: boolean) {
+	const divisions = useCartDivisions(checkout);
+	const profiles = useCartProfiles(checkout);
+	const defaultPrice = useDefaultTournamentPrice();
+
+	return divisions.flatMap((division) =>
+		division.teams.map((team, index) => {
+			const price = division.registrationPrice ?? defaultPrice ?? 0;
+			const teamProfiles = team.profileIds
+				.map((id) => profiles.find((p) => p.id === id))
+				.filter(isDefined);
+
+			return {
+				type: "team" as const,
+				title: `Team ${index + 1}`,
+				division,
+				price,
+				profiles: teamProfiles,
+			};
+		}),
 	);
+}
+
+export function useCartItems(checkout?: boolean) {
+	const membershipItems = useMembershipItems(checkout);
+	const teamItems = useTeamItems(checkout);
+
+	return [...membershipItems, ...teamItems];
+}
+
+export function useCartTotal(checkout?: boolean) {
+	const items = useCartItems(checkout);
+
+	return sum(items.map(({ price }) => price));
 }
