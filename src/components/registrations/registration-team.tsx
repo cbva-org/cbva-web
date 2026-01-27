@@ -6,6 +6,7 @@ import { tv } from "tailwind-variants";
 import { useCartProfiles } from "./context";
 import { dbg } from "@/utils/dbg";
 import { DraggableProfile } from "./draggable-profile";
+import { without } from "lodash-es";
 
 const teamStyles = tv({
 	base: "p-3 bg-gray-50 border border-gray-300 rounded-md flex flex-row items-center gap-x-4 transition-colors",
@@ -17,7 +18,7 @@ const teamStyles = tv({
 });
 
 const slotStyles = tv({
-	base: "p-2 border border-gray-300 rounded-sm text-sm",
+	base: "p-2 border border-gray-200 bg-gray-200 rounded-sm text-sm",
 	variants: {
 		isDragOver: {
 			true: "border-blue-500 bg-blue-100 text-blue-600",
@@ -65,6 +66,23 @@ export function RegistrationTeam({
 		});
 	};
 
+	const removeFromTeam = (profileId: number) => {
+		navigate({
+			to: "/account/registrations",
+			replace: true,
+			search: (search) => ({
+				...search,
+				teams: search.teams
+					?.map((t) =>
+						t.id === id
+							? { ...t, profileIds: without(t.profileIds, profileId) }
+							: t,
+					)
+					.filter((d) => d.profileIds.length > 0),
+			}),
+		});
+	};
+
 	return (
 		<DropZone
 			className={teamStyles({ isDragOver })}
@@ -96,11 +114,12 @@ export function RegistrationTeam({
 						key={profile.id}
 						{...profile}
 						className={slotStyles()}
+						onRemove={() => removeFromTeam(profile.id)}
 					/>
 				))}
 
 				{teamSize > profileIds.length && (
-					<div className="text-gray-500">
+					<div className="text-gray-600 text-sm ml-2">
 						Add {teamSize - profileIds.length} more player(s)
 					</div>
 				)}
