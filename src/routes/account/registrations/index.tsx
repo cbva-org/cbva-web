@@ -14,6 +14,7 @@ import {
 	useSetDraggedProfile,
 } from "@/components/registrations/context";
 import { DivisionRegistrations } from "@/components/registrations/division-registrations";
+import { DraggableProfile } from "@/components/registrations/draggable-profile";
 import { RegistrationDivisions } from "@/components/registrations/registration-divisions";
 import type { Level, PlayerProfile } from "@/db/schema";
 import { DefaultLayout } from "@/layouts/default";
@@ -198,12 +199,8 @@ function DraggableProfileList({ profiles }: { profiles: CartProfile[] }) {
 					textValue={`${profile.preferredName || profile.firstName} ${profile.lastName}`}
 					className="p-2 flex flex-row items-center justify-between border-b border-gray-200 cursor-grab active:cursor-grabbing"
 				>
-					<div className="flex flex-row gap-x-2 items-center">
-						<GripVerticalIcon className="text-gray-400" size={16} />
-						<ProfilePhoto {...profile} />
-						<ProfileName {...profile} />
-						<span className="uppercase">({profile.level?.name})</span>
-					</div>
+					<DraggableProfile {...profile} draggable={true} showLevel={true} />
+
 					{profile.registrations > 0 && (
 						<span className="text-gray-400">({profile.registrations})</span>
 					)}

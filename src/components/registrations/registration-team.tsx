@@ -188,7 +188,7 @@ export function RegistrationTeam({
 						gender,
 						profileIds,
 						division.order,
-						adding,
+						true,
 					);
 
 					if (valid) {

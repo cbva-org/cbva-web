@@ -10,26 +10,32 @@ export function DraggableProfile({
 	className,
 	draggable,
 	error,
+	showLevel,
 	onRemove,
 	...profile
 }: CartProfile & {
 	className?: string;
 	draggable?: boolean;
+	showLevel?: boolean;
 	error?: string;
-	onRemove: () => void;
+	onRemove?: () => void;
 }) {
 	return (
-		<div className={twMerge("flex flex-row gap-x-2 items-center", className)}>
-			{draggable && <GripVerticalIcon className="text-gray-400" size={16} />}
-			<ProfilePhoto {...profile} />
-			<ProfileName
-				{...profile}
-				link={false}
-				className="whitespace-nowrap text-ellipsis"
-			/>
+		<div
+			className={twMerge(
+				"flex flex-row gap-x-2 items-center min-w-0",
+				className,
+			)}
+		>
+			{draggable && (
+				<GripVerticalIcon className="text-gray-400 shrink-0" size={16} />
+			)}
+			<ProfilePhoto {...profile} className="h-6 w-6 shrink-0" />
+			<ProfileName {...profile} link={false} className="truncate min-w-0" />
+			{showLevel && <span className="uppercase">({profile.level?.name})</span>}
 			{error && <ErrorPopover>{error}</ErrorPopover>}
 			{onRemove && (
-				<Button variant="text" onPress={onRemove}>
+				<Button variant="text" className="shrink-0" onPress={onRemove}>
 					<Trash2Icon size={16} />
 				</Button>
 			)}
