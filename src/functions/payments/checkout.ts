@@ -10,6 +10,7 @@ import {
 	teams,
 	tournamentDivisionTeams,
 	tournamentDivisions,
+	tournaments,
 } from "@/db/schema";
 import { settings } from "@/db/schema/settings";
 import { getDefaultTimeZone } from "@/lib/dates";
@@ -17,7 +18,7 @@ import { postSale } from "@/services/usaepay";
 import { today } from "@internationalized/date";
 import { mutationOptions } from "@tanstack/react-query";
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import z from "zod";
 
 export const cartSchema = z.object({
@@ -122,10 +123,7 @@ const getDefaultTournamentPrice = createServerOnlyFn(async () => {
 });
 
 const createTeamRegistrations = createServerOnlyFn(
-	async (
-		invoiceId: number,
-		cartTeams: z.infer<typeof cartSchema>["teams"],
-	) => {
+	async (invoiceId: number, cartTeams: z.infer<typeof cartSchema>["teams"]) => {
 		if (cartTeams.length === 0) return;
 
 		// Get division prices
@@ -221,9 +219,10 @@ const validateTeamRegistrations = createServerOnlyFn(
 			.innerJoin(divisions, eq(tournamentDivisions.divisionId, divisions.id))
 			.where(inArray(tournamentDivisions.id, divisionIds));
 
-		const divisionMap = new Map(
-			tournamentDivisionData.map((d) => [d.id, d]),
-		);
+		const divisionMap = new Map<
+			number,
+			{ id: number; gender: string; divisionOrder: number | null }
+		>(tournamentDivisionData.map((d) => [d.id, d]));
 
 		// Check all divisions exist
 		for (const divisionId of divisionIds) {
@@ -233,9 +232,7 @@ const validateTeamRegistrations = createServerOnlyFn(
 		}
 
 		// Get all profile IDs with their genders and level orders
-		const allProfileIds = [
-			...new Set(cartTeams.flatMap((t) => t.profileIds)),
-		];
+		const allProfileIds = [...new Set(cartTeams.flatMap((t) => t.profileIds))];
 		const profiles = await db
 			.select({
 				id: playerProfiles.id,
@@ -246,7 +243,10 @@ const validateTeamRegistrations = createServerOnlyFn(
 			.leftJoin(levels, eq(playerProfiles.levelId, levels.id))
 			.where(inArray(playerProfiles.id, allProfileIds));
 
-		const profileMap = new Map(profiles.map((p) => [p.id, p]));
+		const profileMap = new Map<
+			number,
+			{ id: number; gender: string; levelOrder: number | null }
+		>(profiles.map((p) => [p.id, p]));
 
 		// Validate each team's players match the division gender and level
 		for (const cartTeam of cartTeams) {
@@ -272,10 +272,93 @@ const validateTeamRegistrations = createServerOnlyFn(
 					division.divisionOrder !== null &&
 					profile.levelOrder > division.divisionOrder
 				) {
+					throw new Error("Player level does not qualify for this division");
+				}
+			}
+		}
+
+		// Check for duplicate same-day tournament registrations
+		// Get tournament dates for the divisions being registered for
+		const divisionTournamentDates = await db
+			.select({
+				divisionId: tournamentDivisions.id,
+				tournamentDate: tournaments.date,
+			})
+			.from(tournamentDivisions)
+			.innerJoin(
+				tournaments,
+				eq(tournamentDivisions.tournamentId, tournaments.id),
+			)
+			.where(inArray(tournamentDivisions.id, divisionIds));
+
+		const divisionDateMap = new Map<number, string>(
+			divisionTournamentDates.map((d) => [d.divisionId, d.tournamentDate]),
+		);
+
+		// Query existing tournament registrations for all players in the cart
+		const existingRegistrations = await db
+			.select({
+				profileId: teamPlayers.playerProfileId,
+				tournamentDate: tournaments.date,
+			})
+			.from(teamPlayers)
+			.innerJoin(teams, eq(teamPlayers.teamId, teams.id))
+			.innerJoin(
+				tournamentDivisionTeams,
+				eq(teams.id, tournamentDivisionTeams.teamId),
+			)
+			.innerJoin(
+				tournamentDivisions,
+				eq(
+					tournamentDivisionTeams.tournamentDivisionId,
+					tournamentDivisions.id,
+				),
+			)
+			.innerJoin(
+				tournaments,
+				eq(tournamentDivisions.tournamentId, tournaments.id),
+			)
+			.where(
+				and(
+					inArray(teamPlayers.playerProfileId, allProfileIds),
+					ne(tournamentDivisionTeams.status, "cancelled"),
+				),
+			);
+
+		const existingRegistrationsByProfile = new Map<number, Set<string>>();
+		for (const reg of existingRegistrations) {
+			if (!existingRegistrationsByProfile.has(reg.profileId)) {
+				existingRegistrationsByProfile.set(reg.profileId, new Set<string>());
+			}
+			existingRegistrationsByProfile.get(reg.profileId).add(reg.tournamentDate);
+		}
+
+		// Check for conflicts within the cart and with existing registrations
+		const cartProfileDates = new Map<number, Set<string>>(); // profileId -> Set of dates in this cart
+		for (const cartTeam of cartTeams) {
+			const tournamentDate = divisionDateMap.get(cartTeam.divisionId);
+			if (!tournamentDate) continue;
+
+			for (const profileId of cartTeam.profileIds) {
+				// Check against existing registrations
+				const existingDates = existingRegistrationsByProfile.get(profileId);
+				if (existingDates && existingDates.has(tournamentDate)) {
 					throw new Error(
-						"Player level does not qualify for this division",
+						`Player already registered in a tournament on this date: ${tournamentDate}`,
 					);
 				}
+
+				// Check within the cart
+				if (!cartProfileDates.has(profileId)) {
+					cartProfileDates.set(profileId, new Set<string>());
+				}
+				const profileDates = cartProfileDates.get(profileId);
+				if (profileDates.has(tournamentDate)) {
+					throw new Error(
+						`Player cannot be registered in multiple teams on the same tournament date: ${tournamentDate}`,
+					);
+				}
+				profileDates.add(tournamentDate);
 			}
 		}
 	},

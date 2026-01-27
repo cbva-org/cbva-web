@@ -20,6 +20,7 @@ import {
 	getTournamentDisplay,
 	getTournamentDivisionDisplay,
 } from "@/hooks/tournament";
+import { CopyButton } from "@/components/base/copy-button";
 
 const searchSchema = z.object({
 	page: z.number().default(1),
@@ -121,7 +122,10 @@ function RouteComponent() {
 											<span className="text-xs font-medium text-gray-500">
 												Transaction Key
 											</span>
-											<span className="text-xs">{invoice.transactionKey}</span>
+											<span className="text-xs flex flex-row gap-x-1 items-center">
+												<span>{invoice.transactionKey}</span>
+												<CopyButton size="xs" value={invoice.transactionKey} />
+											</span>
 										</div>
 
 										{invoice.memberships.length > 0 && (

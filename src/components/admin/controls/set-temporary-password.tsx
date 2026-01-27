@@ -8,6 +8,7 @@ import { title } from "@/components/base/primitives";
 import { authClient } from "@/auth/client";
 import { CopyIcon, LockIcon } from "lucide-react";
 import { dbg } from "@/utils/dbg";
+import { CopyButton } from "@/components/base/copy-button";
 
 // Code for password generation from https://dev.to/hayrhotoca/build-a-secure-password-generator-with-javascript-41nl
 function secureRandom() {
@@ -88,12 +89,6 @@ export function SetTemporaryPasswordForm({
 		},
 	});
 
-	const handleCopyPress = () => {
-		if (password) {
-			navigator.clipboard.writeText(password);
-		}
-	};
-
 	const form = useAppForm({
 		onSubmit: () => {
 			mutate();
@@ -157,9 +152,7 @@ export function SetTemporaryPasswordForm({
 							</p>
 							<div className="rounded-lg border border-gray-900 p-3 flex flex-row items-center justify-between">
 								<span>{password}</span>
-								<Button variant="icon" tooltip="Copy" onPress={handleCopyPress}>
-									<CopyIcon />
-								</Button>
+								<CopyButton value={password} />
 							</div>
 							<Button
 								onPress={() => setOpen(false)}

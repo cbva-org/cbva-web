@@ -535,10 +535,7 @@ describe("checkout", () => {
 		await expect(
 			checkoutHandler(
 				user.id,
-				createCheckoutInput(
-					[],
-					[{ divisionId: 999999, profileIds }],
-				),
+				createCheckoutInput([], [{ divisionId: 999999, profileIds }]),
 			),
 		).rejects.toThrow("Division not found");
 
@@ -614,5 +611,62 @@ describe("checkout", () => {
 		).rejects.toThrow("level");
 
 		expect(mockPostSale).not.toHaveBeenCalled();
+	});
+
+	test("prevents player from being registered on two teams in tournaments on the same day", async () => {
+		await seedDefaultTournamentPrice(75);
+
+		const [user] = await createUsers(db, 1);
+		const profiles = await createProfiles(db, [
+			{ userId: user.id, gender: "male" },
+			{ userId: user.id, gender: "male" },
+			{ userId: user.id, gender: "male" },
+		]);
+		const [profile1, profile2, profile3] = profiles;
+
+		const tournament1 = await bootstrapTournament(db, {
+			date: "2025-06-01",
+			startTime: "09:00",
+			divisions: [{ division: "aa", gender: "male", teams: 0 }],
+		});
+
+		// First registration succeeds
+		mockPostSale.mockResolvedValueOnce(createSuccessResponse());
+		await checkoutHandler(
+			user.id,
+			createCheckoutInput(
+				[],
+				[
+					{
+						divisionId: tournament1.divisions[0],
+						profileIds: [profile1.id, profile2.id],
+					},
+				],
+			),
+		);
+
+		// Create second tournament on same date
+		const tournament2 = await bootstrapTournament(db, {
+			date: "2025-06-01", // same date
+			startTime: "14:00", // different start time
+			divisions: [{ division: "aa", gender: "male", teams: 0 }],
+		});
+
+		// Attempt to register same player (profile1) in second tournament
+		await expect(
+			checkoutHandler(
+				user.id,
+				createCheckoutInput(
+					[],
+					[
+						{
+							divisionId: tournament2.divisions[0],
+							profileIds: [profile1.id, profile3.id],
+						},
+					],
+				),
+			),
+		).rejects.toThrow("Player already registered in a tournament on this date");
+		expect(mockPostSale).toHaveBeenCalledTimes(1);
 	});
 });
