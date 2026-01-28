@@ -214,13 +214,15 @@ const calculateTeamsTotal = createServerOnlyFn(
 );
 
 const validateMemberships = createServerOnlyFn(
-	async (membershipItems: z.infer<typeof cartSchema>["memberships"]) => {
-		if (membershipItems.length === 0) return;
+	async (membershipItems: z.infer<typeof cartSchema>["memberships"]): Promise<string[]> => {
+		const errors: string[] = [];
+
+		if (membershipItems.length === 0) return errors;
 
 		// Check that all memberships have a t-shirt size
 		const missingTshirtSize = membershipItems.some((m) => m.tshirtSize == null);
 		if (missingTshirtSize) {
-			throw new Error("All memberships must have a t-shirt size selected");
+			errors.push("All memberships must have a t-shirt size selected");
 		}
 
 		const profileIds = membershipItems.map((m) => m.profileId);
@@ -228,7 +230,7 @@ const validateMemberships = createServerOnlyFn(
 		// Check for duplicate profile IDs within the cart
 		const uniqueProfileIds = new Set(profileIds);
 		if (uniqueProfileIds.size !== profileIds.length) {
-			throw new Error("Duplicate memberships in cart for the same player");
+			errors.push("Duplicate memberships in cart for the same player");
 		}
 
 		// Check for existing active memberships
@@ -243,16 +245,20 @@ const validateMemberships = createServerOnlyFn(
 
 		if (activeMemberships.length > 0) {
 			const activeProfileIds = activeMemberships.map((m) => m.profileId);
-			throw new Error(
+			errors.push(
 				`Player(s) already have active memberships: ${activeProfileIds.join(", ")}`,
 			);
 		}
+
+		return errors;
 	},
 );
 
 const validateTeamRegistrations = createServerOnlyFn(
-	async (cartTeams: z.infer<typeof cartSchema>["teams"]) => {
-		if (cartTeams.length === 0) return;
+	async (cartTeams: z.infer<typeof cartSchema>["teams"]): Promise<string[]> => {
+		const errors: string[] = [];
+
+		if (cartTeams.length === 0) return errors;
 
 		// Get all division IDs and validate they exist (with division order for level checks)
 		const divisionIds = [...new Set(cartTeams.map((t) => t.divisionId))];
@@ -272,10 +278,14 @@ const validateTeamRegistrations = createServerOnlyFn(
 		>(tournamentDivisionData.map((d) => [d.id, d]));
 
 		// Check all divisions exist
+		const missingDivisions: number[] = [];
 		for (const divisionId of divisionIds) {
 			if (!divisionMap.has(divisionId)) {
-				throw new Error("Division not found");
+				missingDivisions.push(divisionId);
 			}
+		}
+		if (missingDivisions.length > 0) {
+			errors.push(`Division(s) not found: ${missingDivisions.join(", ")}`);
 		}
 
 		// Get all profile IDs with their genders and level orders
@@ -296,6 +306,10 @@ const validateTeamRegistrations = createServerOnlyFn(
 		>(profiles.map((p) => [p.id, p]));
 
 		// Validate each team's players match the division gender and level
+		const missingProfiles: number[] = [];
+		const genderMismatches: string[] = [];
+		const levelMismatches: number[] = [];
+
 		for (const cartTeam of cartTeams) {
 			const division = divisionMap.get(cartTeam.divisionId);
 			if (!division) continue;
@@ -303,12 +317,13 @@ const validateTeamRegistrations = createServerOnlyFn(
 			for (const profileId of cartTeam.profileIds) {
 				const profile = profileMap.get(profileId);
 				if (!profile) {
-					throw new Error("Player profile not found");
+					missingProfiles.push(profileId);
+					continue;
 				}
 
 				if (profile.gender !== division.gender) {
-					throw new Error(
-						`Player gender does not match division: expected ${division.gender}, got ${profile.gender}`,
+					genderMismatches.push(
+						`Player ${profileId} gender (${profile.gender}) does not match division (${division.gender})`,
 					);
 				}
 
@@ -319,9 +334,21 @@ const validateTeamRegistrations = createServerOnlyFn(
 					division.divisionOrder !== null &&
 					profile.levelOrder > division.divisionOrder
 				) {
-					throw new Error("Player level does not qualify for this division");
+					levelMismatches.push(profileId);
 				}
 			}
+		}
+
+		if (missingProfiles.length > 0) {
+			errors.push(`Player profile(s) not found: ${missingProfiles.join(", ")}`);
+		}
+		if (genderMismatches.length > 0) {
+			errors.push(...genderMismatches);
+		}
+		if (levelMismatches.length > 0) {
+			errors.push(
+				`Player(s) do not qualify for division level: ${levelMismatches.join(", ")}`,
+			);
 		}
 
 		// Check for duplicate same-day tournament registrations
@@ -383,7 +410,10 @@ const validateTeamRegistrations = createServerOnlyFn(
 		}
 
 		// Check for conflicts within the cart and with existing registrations
+		const existingConflicts: string[] = [];
+		const cartConflicts: string[] = [];
 		const cartProfileDates = new Map<number, Set<string>>(); // profileId -> Set of dates in this cart
+
 		for (const cartTeam of cartTeams) {
 			const tournamentDate = divisionDateMap.get(cartTeam.divisionId);
 			if (!tournamentDate) continue;
@@ -392,8 +422,8 @@ const validateTeamRegistrations = createServerOnlyFn(
 				// Check against existing registrations
 				const existingDates = existingRegistrationsByProfile.get(profileId);
 				if (existingDates?.has(tournamentDate)) {
-					throw new Error(
-						`Player already registered in a tournament on this date: ${tournamentDate}`,
+					existingConflicts.push(
+						`Player ${profileId} already registered on ${tournamentDate}`,
 					);
 				}
 
@@ -403,13 +433,22 @@ const validateTeamRegistrations = createServerOnlyFn(
 				}
 				const profileDates = cartProfileDates.get(profileId) ?? new Set();
 				if (profileDates.has(tournamentDate)) {
-					throw new Error(
-						`Player cannot be registered in multiple teams on the same tournament date: ${tournamentDate}`,
+					cartConflicts.push(
+						`Player ${profileId} in multiple teams on ${tournamentDate}`,
 					);
 				}
 				profileDates.add(tournamentDate);
 			}
 		}
+
+		if (existingConflicts.length > 0) {
+			errors.push(...existingConflicts);
+		}
+		if (cartConflicts.length > 0) {
+			errors.push(...cartConflicts);
+		}
+
+		return errors;
 	},
 );
 
@@ -425,11 +464,14 @@ export const checkoutHandler = createServerOnlyFn(
 			throw new Error("Cart is empty");
 		}
 
-		// Validate memberships before processing payment
-		await validateMemberships(membershipItems);
+		// Validate cart before processing payment
+		const membershipErrors = await validateMemberships(membershipItems);
+		const teamErrors = await validateTeamRegistrations(cartTeams);
+		const allErrors = [...membershipErrors, ...teamErrors];
 
-		// Validate team registrations before processing payment
-		await validateTeamRegistrations(cartTeams);
+		if (allErrors.length > 0) {
+			throw new Error(allErrors.join("; "));
+		}
 
 		// Calculate totals
 		let membershipsTotal = 0;
@@ -504,25 +546,9 @@ export const checkoutMutationOptions = () =>
 export const validateCartFn = createServerFn()
 	.inputValidator(cartSchema)
 	.handler(async ({ data: { memberships: membershipItems, teams: cartTeams } }) => {
-		const errors: string[] = [];
-
-		// Validate memberships
-		if (membershipItems.length > 0) {
-			try {
-				await validateMemberships(membershipItems);
-			} catch (e) {
-				errors.push(e instanceof Error ? e.message : "Invalid memberships");
-			}
-		}
-
-		// Validate team registrations
-		if (cartTeams.length > 0) {
-			try {
-				await validateTeamRegistrations(cartTeams);
-			} catch (e) {
-				errors.push(e instanceof Error ? e.message : "Invalid team registrations");
-			}
-		}
+		const membershipErrors = await validateMemberships(membershipItems);
+		const teamErrors = await validateTeamRegistrations(cartTeams);
+		const errors = [...membershipErrors, ...teamErrors];
 
 		return {
 			valid: errors.length === 0,

@@ -574,7 +574,7 @@ describe("checkout", () => {
 				user.id,
 				createCheckoutInput([], [{ divisionId: 999999, profileIds }]),
 			),
-		).rejects.toThrow("Division not found");
+		).rejects.toThrow("Division(s) not found");
 
 		expect(mockPostSale).not.toHaveBeenCalled();
 	});
@@ -758,7 +758,7 @@ describe("checkout", () => {
 					],
 				),
 			),
-		).rejects.toThrow("Player already registered in a tournament on this date");
+		).rejects.toThrow("already registered on");
 		expect(mockPostSale).toHaveBeenCalledTimes(1);
 	});
 });

@@ -13,6 +13,7 @@ import {
 	DragContext,
 	registrationPageSchema,
 	useCartProfiles,
+	useDraggedProfile,
 	useSetDraggedProfile,
 } from "@/components/registrations/context";
 import { DraggableProfile } from "@/components/registrations/draggable-profile";
@@ -27,12 +28,14 @@ import { useState } from "react";
 import {
 	Button as AriaButton,
 	DialogTrigger,
+	DropZone,
 	isTextDropItem,
 	ListBox,
 	ListBoxItem,
 	MenuTrigger,
 	useDragAndDrop,
 } from "react-aria-components";
+import { match } from "ts-pattern";
 import z from "zod";
 import { Label } from "@/components/base/field";
 
@@ -240,6 +243,12 @@ const TSHIRT_SIZE_OPTIONS: { value: TshirtSize; label: string }[] = [
 	{ value: "xxl", label: "XXL" },
 ];
 
+type MembershipDragState =
+	| "none"
+	| "valid"
+	| "already-in-cart"
+	| "already-existing";
+
 function DroppableMembershipsList({
 	profiles,
 	memberships,
@@ -253,103 +262,165 @@ function DroppableMembershipsList({
 	onProfileRemove: (profileId: number) => void;
 	onTshirtSizeChange: (profileId: number, size: TshirtSize) => void;
 }) {
-	const [isDragOver, setIsDragOver] = useState(false);
+	const [dragState, setDragState] = useState<MembershipDragState>("none");
+	const draggedProfile = useDraggedProfile();
+	const cartProfiles = useCartProfiles();
 
-	const { dragAndDropHooks } = useDragAndDrop({
-		acceptedDragTypes: ["profile"],
-		getDropOperation: () => "copy",
-		onDropEnter: () => setIsDragOver(true),
-		onDropExit: () => setIsDragOver(false),
-		async onRootDrop(e) {
-			setIsDragOver(false);
-			const items = await Promise.all(
-				e.items.filter(isTextDropItem).map(async (item) => {
-					const text = await item.getText("profile");
-					return JSON.parse(text) as CartProfile;
-				}),
-			);
-			for (const item of items) {
-				onProfileDrop(item.id);
-			}
-		},
-	});
+	const membershipProfileIds = memberships.map((m) => m.profileId);
+
+	const getDragStateForProfile = (
+		profile: CartProfile | null,
+	): MembershipDragState => {
+		if (!profile) return "valid";
+		// Can't drop if already in cart memberships
+		if (membershipProfileIds.includes(profile.id)) return "already-in-cart";
+		// Can't drop if already has active membership
+		if (profile.activeMembership !== null) return "already-existing";
+		return "valid";
+	};
+
+	const isInvalidState = (state: MembershipDragState): boolean =>
+		state === "already-in-cart" || state === "already-existing";
 
 	return (
-		<ListBox
-			aria-label="Memberships"
-			items={profiles}
-			dragAndDropHooks={dragAndDropHooks}
-			selectionMode="single"
-			dependencies={[memberships]}
-			renderEmptyState={() => (
+		<DropZone
+			className={`rounded-md transition-colors ${
+				isInvalidState(dragState)
+					? "bg-red-50"
+					: dragState === "valid"
+						? "bg-blue-50"
+						: ""
+			}`}
+			getDropOperation={(types) => (types.has("profile") ? "copy" : "cancel")}
+			onDropEnter={() => {
+				setDragState(getDragStateForProfile(draggedProfile));
+			}}
+			onDropExit={() => {
+				setDragState("none");
+			}}
+			onDrop={async (e) => {
+				const items = await Promise.all(
+					e.items.filter(isTextDropItem).map(async (item) => {
+						const text = await item.getText("profile");
+						return JSON.parse(text) as { id: number };
+					}),
+				);
+
+				for (const item of items) {
+					// Look up the full profile from cart profiles
+					const profile = cartProfiles.find((p) => p.id === item.id);
+					if (getDragStateForProfile(profile ?? null) === "valid") {
+						onProfileDrop(item.id);
+					}
+				}
+
+				setDragState("none");
+			}}
+		>
+			{profiles.length === 0 ? (
 				<div
 					className={`p-4 border-2 border-dashed rounded-md text-sm text-center transition-colors ${
-						isDragOver
-							? "border-blue-500 bg-blue-50 text-blue-600"
-							: "border-gray-300 bg-gray-50 text-gray-600"
+						isInvalidState(dragState)
+							? "border-red-400 bg-red-50 text-red-600"
+							: dragState === "valid"
+								? "border-blue-500 bg-blue-50 text-blue-600"
+								: "border-gray-300 bg-gray-50 text-gray-600"
 					}`}
 				>
-					{isDragOver
-						? "Drop to add membership"
-						: "Drag players here to add memberships..."}
+					{match(dragState)
+						.with("already-in-cart", () => "Player already in cart")
+						.with(
+							"already-existing",
+							() => "Player already has an active membership",
+						)
+						.with("valid", () => "Drop to add memb!ership")
+						.otherwise(() => "Drag players here to add memberships...")}
+
+					{/* {dragState === "already-in-cart" */}
+					{/* 	? "Player already in cart" */}
+					{/* 	: dragState === "already-existing" */}
+					{/* 		? "Player already has an active membership" */}
+					{/* 		: dragState === "valid" */}
+					{/* 			? "Drop to add membership" */}
+					{/* 			: "Drag players here to add memberships..."} */}
+				</div>
+			) : (
+				<div className="flex flex-col gap-2">
+					{profiles.map((profile) => {
+						const membership = memberships.find(
+							(m) => m.profileId === profile.id,
+						);
+						const currentSize = membership?.tshirtSize;
+						const sizeLabel =
+							TSHIRT_SIZE_OPTIONS.find((o) => o.value === currentSize)?.label ??
+							"Select";
+
+						return (
+							<div
+								key={profile.id}
+								className="p-2 flex flex-row items-center justify-between bg-gray-100 border border-gray-300 rounded-md gap-x-4"
+							>
+								<div className="flex flex-row gap-x-4 items-center flex-1">
+									<div className="flex flex-row gap-x-2 items-center flex-1">
+										<ProfilePhoto {...profile} />
+										<ProfileName {...profile} />
+									</div>
+									<div className="flex flex-row items-center gap-x-2">
+										<Label isRequired={true}>T-Shirt size</Label>
+										<MenuTrigger>
+											<AriaButton className="text-sm px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 flex items-center gap-1">
+												{sizeLabel}
+												<ChevronDownIcon size={14} />
+											</AriaButton>
+
+											<Menu>
+												{TSHIRT_SIZE_OPTIONS.map((option) => (
+													<MenuItem
+														key={option.value}
+														id={option.value}
+														onAction={() =>
+															onTshirtSizeChange(profile.id, option.value)
+														}
+													>
+														{option.label}
+													</MenuItem>
+												))}
+											</Menu>
+										</MenuTrigger>
+									</div>
+								</div>
+								<Button
+									variant="text"
+									size="xs"
+									tooltip="Remove membership"
+									onPress={() => onProfileRemove(profile.id)}
+								>
+									<Trash2Icon size={16} />
+								</Button>
+							</div>
+						);
+					})}
+
+					{dragState !== "none" && (
+						<div
+							className={`p-4 border-2 border-dashed rounded-md text-sm text-center transition-colors ${
+								isInvalidState(dragState)
+									? "border-red-400 bg-red-50 text-red-600"
+									: "border-blue-500 bg-blue-50 text-blue-600"
+							}`}
+						>
+							{match(dragState)
+								.with("already-in-cart", () => "Player already in cart")
+								.with(
+									"already-existing",
+									() => "Player already has an active membership",
+								)
+								.otherwise(() => "Drop to add memb!ership")}
+						</div>
+					)}
 				</div>
 			)}
-		>
-			{(profile) => {
-				const membership = memberships.find((m) => m.profileId === profile.id);
-				const currentSize = membership?.tshirtSize;
-				const sizeLabel =
-					TSHIRT_SIZE_OPTIONS.find((o) => o.value === currentSize)?.label ??
-					"Select";
-
-				return (
-					<ListBoxItem
-						key={profile.id}
-						id={profile.id}
-						textValue={`${profile.preferredName || profile.firstName} ${profile.lastName}`}
-						className="p-2 flex flex-row items-center justify-between bg-gray-100 border border-gray-300 rounded-md mb-2 gap-x-4 last-of-type:mb-0"
-					>
-						<div className="flex flex-row gap-x-4 items-center flex-1">
-							<div className="flex flex-row gap-x-2 items-center flex-1">
-								<ProfilePhoto {...profile} />
-								<ProfileName {...profile} />
-							</div>
-							<div className="flex flex-row items-center gap-x-2">
-								<Label isRequired={true}>T-Shirt size</Label>
-								<MenuTrigger>
-									<AriaButton className="text-sm px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 flex items-center gap-1">
-										{sizeLabel}
-										<ChevronDownIcon size={14} />
-									</AriaButton>
-
-									<Menu>
-										{TSHIRT_SIZE_OPTIONS.map((option) => (
-											<MenuItem
-												key={option.value}
-												id={option.value}
-												onAction={() =>
-													onTshirtSizeChange(profile.id, option.value)
-												}
-											>
-												{option.label}
-											</MenuItem>
-										))}
-									</Menu>
-								</MenuTrigger>
-							</div>
-						</div>
-						<Button
-							variant="text"
-							size="xs"
-							tooltip="Remove membership"
-							onPress={() => onProfileRemove(profile.id)}
-						>
-							<Trash2Icon size={16} />
-						</Button>
-					</ListBoxItem>
-				);
-			}}
-		</ListBox>
+		</DropZone>
 	);
 }
 
