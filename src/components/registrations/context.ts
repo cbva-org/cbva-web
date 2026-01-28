@@ -1,10 +1,13 @@
-import { cartSchema } from "@/functions/payments/checkout";
+import {
+	cartSchema,
+	validateCartQueryOptions,
+} from "@/functions/payments/checkout";
 import { getProfilesQueryOptions } from "@/functions/profiles/get-profiles";
 import { getViewerProfilesQueryOptions } from "@/functions/profiles/get-viewer-profiles";
 import { getSettingQueryOptions } from "@/functions/settings/get-setting";
 import { getTournamentDivisionsQueryOptions } from "@/functions/tournament-divisions/get-tournament-divisions";
 import { isDefined } from "@/utils/types";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { groupBy, sum, uniqBy } from "lodash-es";
 import { createContext, useContext } from "react";
@@ -248,4 +251,31 @@ export function useCartTotal(checkout?: boolean) {
 	const items = useCartItems(checkout);
 
 	return sum(items.map(({ price }) => price));
+}
+
+export function useCartValidation(checkout?: boolean) {
+	const { memberships, teams } = useSearch({
+		from: checkout
+			? "/account/registrations/checkout"
+			: "/account/registrations/",
+	});
+
+	// Transform teams to match cartSchema (remove the id field)
+	const cartTeams = teams.map(({ divisionId, profileIds }) => ({
+		divisionId,
+		profileIds,
+	}));
+
+	const { data, isLoading, error } = useQuery({
+		...validateCartQueryOptions({ memberships, teams: cartTeams }),
+		// Only run validation when there's something in the cart
+		enabled: memberships.length > 0 || teams.length > 0,
+	});
+
+	return {
+		isValid: data?.valid ?? false,
+		errors: data?.errors ?? [],
+		isLoading,
+		error,
+	};
 }

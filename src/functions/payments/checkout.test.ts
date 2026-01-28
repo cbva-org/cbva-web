@@ -157,48 +157,21 @@ describe("checkout", () => {
 		});
 	});
 
-	test("creates memberships with undefined tshirt size", async () => {
+	test("throws error when membership is missing tshirt size", async () => {
 		const [user] = await createUsers(db, 1);
-		const profiles = await createProfiles(db, [
-			{ userId: user.id },
-			{ userId: user.id },
-		]);
+		const profiles = await createProfiles(db, [{ userId: user.id }]);
 		const profileIds = profiles.map((p) => p.id);
 
 		mockPostSale.mockResolvedValueOnce(createSuccessResponse());
 
-		const result = await checkoutHandler(
-			user.id,
-			createCheckoutInput(profileIds, [], { includeTshirtSize: false }),
-		);
+		await expect(
+			checkoutHandler(
+				user.id,
+				createCheckoutInput(profileIds, [], { includeTshirtSize: false }),
+			),
+		).rejects.toThrow("All memberships must have a t-shirt size selected");
 
-		expect(result.success).toBe(true);
-		expect(result.transactionKey).toBe("txn-123");
-		expect(result.refnum).toBe("ref-456");
-
-		// Verify invoice was created
-		const [invoice] = await db
-			.select()
-			.from(invoices)
-			.where(eq(invoices.purchaserId, user.id));
-
-		expect(invoice).toBeDefined();
-		expect(invoice.transactionKey).toBe("txn-123");
-
-		// Verify memberships were created for each profile
-		const createdMemberships = await db
-			.select()
-			.from(memberships)
-			.where(eq(memberships.invoiceId, invoice.id));
-
-		expect(createdMemberships).toHaveLength(2);
-		expect(createdMemberships.map((m) => m.profileId).sort()).toEqual(
-			profileIds.sort(),
-		);
-		// Verify tshirt sizes are null
-		createdMemberships.forEach(membership => {
-			expect(membership.tshirtSize).toBeNull();
-		});
+		expect(mockPostSale).not.toHaveBeenCalled();
 	});
 
 	test("does not create memberships on declined payment", async () => {

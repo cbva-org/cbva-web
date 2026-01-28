@@ -18,7 +18,7 @@ import { settings } from "@/db/schema/settings";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { postSale } from "@/services/usaepay";
 import { today } from "@internationalized/date";
-import { mutationOptions } from "@tanstack/react-query";
+import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import z from "zod";
@@ -216,6 +216,12 @@ const calculateTeamsTotal = createServerOnlyFn(
 const validateMemberships = createServerOnlyFn(
 	async (membershipItems: z.infer<typeof cartSchema>["memberships"]) => {
 		if (membershipItems.length === 0) return;
+
+		// Check that all memberships have a t-shirt size
+		const missingTshirtSize = membershipItems.some((m) => m.tshirtSize == null);
+		if (missingTshirtSize) {
+			throw new Error("All memberships must have a t-shirt size selected");
+		}
 
 		const profileIds = membershipItems.map((m) => m.profileId);
 
@@ -492,4 +498,40 @@ export const checkoutFn = createServerFn()
 export const checkoutMutationOptions = () =>
 	mutationOptions({
 		mutationFn: (data: z.infer<typeof checkoutSchema>) => checkoutFn({ data }),
+	});
+
+// Validate cart without processing payment - for async validation on the client
+export const validateCartFn = createServerFn()
+	.inputValidator(cartSchema)
+	.handler(async ({ data: { memberships: membershipItems, teams: cartTeams } }) => {
+		const errors: string[] = [];
+
+		// Validate memberships
+		if (membershipItems.length > 0) {
+			try {
+				await validateMemberships(membershipItems);
+			} catch (e) {
+				errors.push(e instanceof Error ? e.message : "Invalid memberships");
+			}
+		}
+
+		// Validate team registrations
+		if (cartTeams.length > 0) {
+			try {
+				await validateTeamRegistrations(cartTeams);
+			} catch (e) {
+				errors.push(e instanceof Error ? e.message : "Invalid team registrations");
+			}
+		}
+
+		return {
+			valid: errors.length === 0,
+			errors,
+		};
+	});
+
+export const validateCartQueryOptions = (cart: z.infer<typeof cartSchema>) =>
+	queryOptions({
+		queryKey: ["validateCart", JSON.stringify(cart)],
+		queryFn: () => validateCartFn({ data: cart }),
 	});

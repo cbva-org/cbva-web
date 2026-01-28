@@ -3,10 +3,9 @@ import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { parseDate } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { ProfileName } from "../profiles/name";
-import { useCartItems, useCartTotal } from "./context";
+import { useCartItems, useCartTotal, useCartValidation } from "./context";
 import { Link } from "../base/link";
 import { button } from "../base/button";
-import { useSearch } from "@tanstack/react-router";
 import { twMerge } from "tailwind-merge";
 
 export function Cart({
@@ -19,18 +18,9 @@ export function Cart({
 	const items = useCartItems(checkout);
 	const total = useCartTotal(checkout);
 	const dateFormatter = useDateFormatter();
+	const { isValid, errors, isLoading } = useCartValidation(checkout);
 
-	const search = useSearch({
-		from: checkout
-			? "/account/registrations/checkout"
-			: "/account/registrations/",
-	});
-
-	// Check if all memberships have a t-shirt size selected
-	const allMembershipsHaveTshirtSize = search.memberships.every(
-		(m) => m.tshirtSize != null,
-	);
-	const canCheckout = items.length > 0 && allMembershipsHaveTshirtSize;
+	const canCheckout = items.length > 0 && isValid && !isLoading;
 
 	return (
 		<div
@@ -80,10 +70,12 @@ export function Cart({
 			</div>
 			{!checkout && (
 				<div className="p-4 font-bold flex flex-col gap-2">
-					{!allMembershipsHaveTshirtSize && search.memberships.length > 0 && (
-						<p className="text-sm text-amber-600 text-center">
-							Please select a t-shirt size for all memberships
-						</p>
+					{errors.length > 0 && (
+						<div className="text-sm text-amber-600 text-center space-y-1">
+							{errors.map((error, i) => (
+								<p key={i}>{error}</p>
+							))}
+						</div>
 					)}
 					<Link
 						className={button({
@@ -93,10 +85,9 @@ export function Cart({
 							isDisabled: !canCheckout,
 						})}
 						to="/account/registrations/checkout"
-						search={search}
 						disabled={!canCheckout}
 					>
-						Checkout
+						{isLoading ? "Validating..." : "Checkout"}
 					</Link>
 				</div>
 			)}
