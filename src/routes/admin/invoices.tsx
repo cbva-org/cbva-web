@@ -53,6 +53,7 @@ function RouteComponent() {
 
 	const dateFormatter = useDateFormatter({
 		dateStyle: "short",
+		timeStyle: "short",
 	});
 
 	return (
