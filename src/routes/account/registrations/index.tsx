@@ -35,6 +35,7 @@ import {
 	ListBox,
 	ListBoxItem,
 	MenuTrigger,
+	RadioGroup,
 	useDragAndDrop,
 } from "react-aria-components";
 import { match } from "ts-pattern";
@@ -514,6 +515,20 @@ function AddMembershipForm() {
 				profileIds: z.array(z.number()),
 			}),
 		},
+		listeners: {
+			onChange: ({ fieldApi, formApi }) => {
+				// RadioGroup sets profileIds array directly, ProfilePicker sets profileIds[0]
+				const shouldSubmit =
+					(fieldApi.name === "profileIds" &&
+						Array.isArray(fieldApi.state.value) &&
+						fieldApi.state.value.length > 0) ||
+					(fieldApi.name === "profileIds[0]" && fieldApi.state.value != null);
+
+				if (shouldSubmit) {
+					formApi.handleSubmit();
+				}
+			},
+		},
 		onSubmit: ({ value: { profileIds }, formApi }) => {
 			if (profileIds.length) {
 				navigate({
@@ -560,37 +575,51 @@ function AddMembershipForm() {
 							form.handleSubmit();
 						}}
 					>
-						<form.AppField name="profileIds">
-							{(field) => (
-								<field.RadioGroup mode="int" field={field}>
-									{availableProfiles.map((profile) => (
-										<Radio key={profile.id} value={profile.id.toString()}>
-											<ProfilePhoto {...profile} />
-											<ProfileName {...profile} link={false} />
-										</Radio>
-									))}
-								</field.RadioGroup>
-							)}
-						</form.AppField>
-						<div className="flex flex-row items-center space-x-3">
-							<hr className="flex-1 border-gray-300" />
-							<span className="text-gray-500 text-lg">OR</span>
-							<hr className="flex-1 border-gray-300" />
-						</div>
+						{availableProfiles.length > 0 && (
+							<>
+								<form.AppField name="profileIds">
+									{(field) => (
+										<RadioGroup
+											value={field.state.value[0]?.toString()}
+											onChange={(value) => {
+												field.handleChange([Number.parseInt(value, 10)]);
+											}}
+											aria-label="Select a player"
+										>
+											{availableProfiles.map((profile) => (
+												<Radio key={profile.id} value={profile.id.toString()}>
+													<ProfilePhoto {...profile} />
+													<ProfileName {...profile} link={false} />
+												</Radio>
+											))}
+										</RadioGroup>
+									)}
+								</form.AppField>
+								<div className="flex flex-row items-center space-x-3">
+									<hr className="flex-1 border-gray-300" />
+									<span className="text-gray-500 text-lg">OR</span>
+									<hr className="flex-1 border-gray-300" />
+								</div>
+							</>
+						)}
 						<form.AppField name="profileIds" mode="array">
 							{(field) => (
-								<field.ProfilePicker
-									label="Search"
-									field={field}
-									selectedProfileIds={field.state.value}
-								/>
+								<form.AppField name="profileIds[0]">
+									{(subField) => (
+										<field.ProfilePicker
+											label="Search for a player"
+											field={subField}
+											selectedProfileIds={
+												field.state.value[0] ? [field.state.value[0]] : []
+											}
+										/>
+									)}
+								</form.AppField>
 							)}
 						</form.AppField>
 						<form.AppForm>
 							<form.Footer>
 								<Button slot="close">Cancel</Button>
-
-								<form.SubmitButton>Add</form.SubmitButton>
 							</form.Footer>
 						</form.AppForm>
 					</form>
