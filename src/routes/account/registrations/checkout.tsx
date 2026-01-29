@@ -18,7 +18,7 @@ import {
 } from "@/functions/payments/checkout";
 import { DefaultLayout } from "@/layouts/default";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type z from "zod";
 
 export const Route = createFileRoute("/account/registrations/checkout")({
@@ -54,14 +54,28 @@ const schema = checkoutSchema
 // }
 
 function RouteComponent() {
+	const search = Route.useSearch();
+
 	const cart = useCart("checkout");
 	const items = useCartItems("checkout");
 	const total = useCartTotal("checkout");
 
 	const { getPaymentKey, paymentCard } = useUsaePay();
 
-	const { mutate: checkout, failureReason } = useMutation({
+	const navigate = useNavigate();
+
+	const {
+		mutate: checkout,
+		isPending,
+		failureReason,
+	} = useMutation({
 		...checkoutMutationOptions(),
+		onSuccess: () => {
+			navigate({
+				to: "/account/registrations/success",
+				search,
+			});
+		},
 	});
 
 	const form = useAppForm({
@@ -240,7 +254,12 @@ function RouteComponent() {
 					)}
 
 					<form.AppForm>
-						<form.SubmitButton size="lg" radius="full" allowInvalid={true}>
+						<form.SubmitButton
+							isDisabled={isPending}
+							size="lg"
+							radius="full"
+							allowInvalid={true}
+						>
 							Pay ${total}
 						</form.SubmitButton>
 					</form.AppForm>
