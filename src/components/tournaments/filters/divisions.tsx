@@ -34,7 +34,7 @@ export function FilterDivisions({ values }: FilterDivisionsProps) {
 			})),
 	});
 
-	const placeholder = "Divisions";
+	const placeholder = "All divisions";
 
 	return (
 		<div>

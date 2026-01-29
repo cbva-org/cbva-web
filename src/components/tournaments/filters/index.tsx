@@ -1,9 +1,9 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import z from "zod";
 import { button } from "@/components/base/button";
 import { Checkbox } from "@/components/base/checkbox";
-import { UnderConstruction } from "@/components/under-construction";
 import { genderSchema } from "@/db/schema/shared";
+import { FilterDateRange } from "./date-range";
 import { FilterDivisions } from "./divisions";
 import { FilterGender } from "./gender";
 import { FilterVenues } from "./venues";
@@ -15,6 +15,8 @@ export const tournamentListFilterSchema = z.object({
 	venues: z.array(z.number()).default([]),
 	genders: z.array(genderSchema).default([]),
 	past: z.boolean().default(false),
+	startDate: z.string().nullable().default(null),
+	endDate: z.string().nullable().default(null),
 });
 
 export type TournamentListFiltersProps = z.infer<
@@ -22,39 +24,40 @@ export type TournamentListFiltersProps = z.infer<
 >;
 
 export function TournamentListFilters({
-	page,
-	pageSize,
+	past,
+	startDate,
+	endDate,
 	divisions,
 	venues,
 	genders,
-	past,
 }: TournamentListFiltersProps) {
-	const navigate = useNavigate();
+	const router = useRouter();
 
 	return (
 		<div className="max-w-xl mx-auto flex flex-col space-y-2 px-2">
-			<UnderConstruction description="I'll be adding more filters here. Date range, names, juniors only, etc. Let me know what you'd like to have." />
+			<FilterDateRange startDate={startDate} endDate={endDate} />
 			<FilterVenues values={new Set(venues)} />
 			<FilterDivisions values={new Set(divisions)} />
 			<FilterGender values={new Set(genders)} />
 			<Checkbox
 				isSelected={past}
 				onChange={(value) => {
-					navigate({
-						// to: router.location.pathname,
-						search: {
-							page,
-							pageSize,
-							divisions,
-							venues,
-							genders,
+					router.navigate({
+						to: "/tournaments",
+						search: (prev) => ({
+							...prev,
+							page: 1,
 							past: value,
-						},
+						}),
 					});
 				}}
 				label={<>Past Tournaments Only</>}
 			/>
-			<Link className={button({ class: "mt-2" })} search={{}}>
+			<Link
+				to="/tournaments"
+				className={button({ class: "mt-2" })}
+				search={{}}
+			>
 				Clear Filters
 			</Link>
 		</div>

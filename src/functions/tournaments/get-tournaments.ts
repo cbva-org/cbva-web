@@ -16,6 +16,8 @@ const getTournamentsSchema = tournamentListFilterSchema.pick({
 	page: true,
 	pageSize: true,
 	genders: true,
+	startDate: true,
+	endDate: true,
 });
 
 export const getTournamentsHandler = createServerOnlyFn(
@@ -27,6 +29,8 @@ export const getTournamentsHandler = createServerOnlyFn(
 			venues,
 			genders,
 			past,
+			startDate,
+			endDate,
 		}: z.infer<typeof getTournamentsSchema>,
 		viewer: SessionViewer | undefined,
 	) => {
@@ -68,20 +72,36 @@ export const getTournamentsHandler = createServerOnlyFn(
 						orderBy: (t, { asc }) => [asc(t.name)],
 					},
 				},
-				where: (tournaments, { sql, gt, lt, and, eq, inArray, exists }) => {
+				where: (tournaments, { sql, gt, lt, gte, lte, and, eq, inArray, exists }) => {
 					const filters = [
 						eq(tournaments.demo, false),
 						viewer?.role === "admin" ? null : eq(tournaments.visible, true),
-						past
-							? lt(
-									tournaments.date,
-									sql`current_date at time zone 'america/los_angeles'`,
-								)
-							: gt(
-									tournaments.date,
-									sql`current_date at time zone 'america/los_angeles'`,
-								),
 					].filter(isNotNull);
+
+					// Use date range if provided, otherwise use past/future filter
+					if (startDate) {
+						filters.push(gte(tournaments.date, startDate));
+					} else if (!past) {
+						// Default to future tournaments if no start date and not viewing past
+						filters.push(
+							gt(
+								tournaments.date,
+								sql`current_date at time zone 'america/los_angeles'`,
+							),
+						);
+					}
+
+					if (endDate) {
+						filters.push(lte(tournaments.date, endDate));
+					} else if (past && !startDate) {
+						// Default to past tournaments if past is true and no dates specified
+						filters.push(
+							lt(
+								tournaments.date,
+								sql`current_date at time zone 'america/los_angeles'`,
+							),
+						);
+					}
 
 					if (divisions.length) {
 						filters.push(
@@ -151,6 +171,8 @@ export const tournamentsQueryOptions = (data: {
 	page: number;
 	pageSize: number;
 	genders: TournamentDivision["gender"][];
+	startDate: string | null;
+	endDate: string | null;
 }) =>
 	queryOptions({
 		queryKey: ["tournaments", JSON.stringify(data)],

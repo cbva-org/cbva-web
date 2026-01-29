@@ -39,7 +39,7 @@ export function FilterGender({ values }: FilterGenderProps) {
 		},
 	];
 
-	const placeholder = "Genders";
+	const placeholder = "Men's, Women's, Coed";
 
 	return (
 		<div>
