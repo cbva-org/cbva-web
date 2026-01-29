@@ -54,9 +54,9 @@ const schema = checkoutSchema
 // }
 
 function RouteComponent() {
-	const cart = useCart(true);
-	const items = useCartItems(true);
-	const total = useCartTotal(true);
+	const cart = useCart("checkout");
+	const items = useCartItems("checkout");
+	const total = useCartTotal("checkout");
 
 	const { getPaymentKey, paymentCard } = useUsaePay();
 
@@ -247,7 +247,7 @@ function RouteComponent() {
 				</form>
 
 				<Cart
-					checkout={true}
+					route="checkout"
 					className="col-span-full md:col-span-3 order-1 md:order-2"
 				/>
 			</div>

@@ -49,6 +49,7 @@ import { Route as ProfileProfileIdEditRouteImport } from './routes/profile/$prof
 import { Route as JuniorsLeaderboardChar123GenderChar125RouteImport } from './routes/juniors/leaderboard.{-$gender}'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AccountVerifySuccessRouteImport } from './routes/account/verify/success'
+import { Route as AccountRegistrationsSuccessRouteImport } from './routes/account/registrations/success'
 import { Route as AccountRegistrationsCheckoutRouteImport } from './routes/account/registrations/checkout'
 import { Route as MatchesPoolMatchIdIndexRouteImport } from './routes/matches/pool/$matchId/index'
 import { Route as MatchesPlayoffMatchIdIndexRouteImport } from './routes/matches/playoff/$matchId/index'
@@ -261,6 +262,12 @@ const AccountVerifySuccessRoute = AccountVerifySuccessRouteImport.update({
   path: '/account/verify/success',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRegistrationsSuccessRoute =
+  AccountRegistrationsSuccessRouteImport.update({
+    id: '/account/registrations/success',
+    path: '/account/registrations/success',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AccountRegistrationsCheckoutRoute =
   AccountRegistrationsCheckoutRouteImport.update({
     id: '/account/registrations/checkout',
@@ -323,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/td': typeof TdIndexRoute
   '/tournaments': typeof TournamentsIndexRoute
   '/account/registrations/checkout': typeof AccountRegistrationsCheckoutRoute
+  '/account/registrations/success': typeof AccountRegistrationsSuccessRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
@@ -370,6 +378,7 @@ export interface FileRoutesByTo {
   '/td': typeof TdIndexRoute
   '/tournaments': typeof TournamentsIndexRoute
   '/account/registrations/checkout': typeof AccountRegistrationsCheckoutRoute
+  '/account/registrations/success': typeof AccountRegistrationsSuccessRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
@@ -418,6 +427,7 @@ export interface FileRoutesById {
   '/td/': typeof TdIndexRoute
   '/tournaments/': typeof TournamentsIndexRoute
   '/account/registrations/checkout': typeof AccountRegistrationsCheckoutRoute
+  '/account/registrations/success': typeof AccountRegistrationsSuccessRoute
   '/account/verify/success': typeof AccountVerifySuccessRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/juniors/leaderboard/{-$gender}': typeof JuniorsLeaderboardChar123GenderChar125Route
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/td'
     | '/tournaments'
     | '/account/registrations/checkout'
+    | '/account/registrations/success'
     | '/account/verify/success'
     | '/api/auth/$'
     | '/juniors/leaderboard/{-$gender}'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/td'
     | '/tournaments'
     | '/account/registrations/checkout'
+    | '/account/registrations/success'
     | '/account/verify/success'
     | '/api/auth/$'
     | '/juniors/leaderboard/{-$gender}'
@@ -561,6 +573,7 @@ export interface FileRouteTypes {
     | '/td/'
     | '/tournaments/'
     | '/account/registrations/checkout'
+    | '/account/registrations/success'
     | '/account/verify/success'
     | '/api/auth/$'
     | '/juniors/leaderboard/{-$gender}'
@@ -609,6 +622,7 @@ export interface RootRouteChildren {
   TdIndexRoute: typeof TdIndexRoute
   TournamentsIndexRoute: typeof TournamentsIndexRoute
   AccountRegistrationsCheckoutRoute: typeof AccountRegistrationsCheckoutRoute
+  AccountRegistrationsSuccessRoute: typeof AccountRegistrationsSuccessRoute
   AccountVerifySuccessRoute: typeof AccountVerifySuccessRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   JuniorsLeaderboardChar123GenderChar125Route: typeof JuniorsLeaderboardChar123GenderChar125Route
@@ -906,6 +920,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountVerifySuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/registrations/success': {
+      id: '/account/registrations/success'
+      path: '/account/registrations/success'
+      fullPath: '/account/registrations/success'
+      preLoaderRoute: typeof AccountRegistrationsSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/registrations/checkout': {
       id: '/account/registrations/checkout'
       path: '/account/registrations/checkout'
@@ -977,6 +998,7 @@ const rootRouteChildren: RootRouteChildren = {
   TdIndexRoute: TdIndexRoute,
   TournamentsIndexRoute: TournamentsIndexRoute,
   AccountRegistrationsCheckoutRoute: AccountRegistrationsCheckoutRoute,
+  AccountRegistrationsSuccessRoute: AccountRegistrationsSuccessRoute,
   AccountVerifySuccessRoute: AccountVerifySuccessRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   JuniorsLeaderboardChar123GenderChar125Route:

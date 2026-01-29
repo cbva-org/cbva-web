@@ -19,18 +19,17 @@ import {
 } from "../base/disclosure";
 
 export function Cart({
-	checkout,
+	route,
 	className,
 }: {
-	checkout?: boolean;
+	route?: "registration" | "checkout" | "success";
 	className?: string;
-	smallScreen?: boolean;
 }) {
-	const items = useCartItems(checkout);
-	const total = useCartTotal(checkout);
-	const cart = useCart(checkout);
+	const items = useCartItems(route);
+	const total = useCartTotal(route);
+	const cart = useCart(route);
 	const dateFormatter = useDateFormatter();
-	const { isValid, errors, isLoading } = useCartValidation(checkout);
+	const { isValid, errors, isLoading } = useCartValidation(route);
 
 	const canCheckout = items.length > 0 && isValid && !isLoading;
 
@@ -89,7 +88,7 @@ export function Cart({
 					<div className="text-lg">Total</div>
 					<div>${total}</div>
 				</div>
-				{!checkout && (
+				{route !== "checkout" && route !== "success" && (
 					<div className="p-4 font-bold flex flex-col gap-2">
 						{errors.length > 0 && (
 							<div className="text-sm text-amber-600 text-center space-y-1">
