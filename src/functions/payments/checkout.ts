@@ -70,7 +70,10 @@ const createInvoice = createServerOnlyFn(
 );
 
 const createMemberships = createServerOnlyFn(
-	async (invoiceId: number, membershipItems: Array<{ profileId: number, tshirtSize?: TshirtSize }>) => {
+	async (
+		invoiceId: number,
+		membershipItems: Array<{ profileId: number; tshirtSize?: TshirtSize }>,
+	) => {
 		const validUntil = today(getDefaultTimeZone())
 			.set({
 				day: 1,
@@ -214,7 +217,9 @@ const calculateTeamsTotal = createServerOnlyFn(
 );
 
 const validateMemberships = createServerOnlyFn(
-	async (membershipItems: z.infer<typeof cartSchema>["memberships"]): Promise<string[]> => {
+	async (
+		membershipItems: z.infer<typeof cartSchema>["memberships"],
+	): Promise<string[]> => {
 		const errors: string[] = [];
 
 		if (membershipItems.length === 0) return errors;
@@ -267,6 +272,7 @@ const validateTeamRegistrations = createServerOnlyFn(
 				id: tournamentDivisions.id,
 				gender: tournamentDivisions.gender,
 				divisionOrder: divisions.order,
+				teamSize: tournamentDivisions.teamSize,
 			})
 			.from(tournamentDivisions)
 			.innerJoin(divisions, eq(tournamentDivisions.divisionId, divisions.id))
@@ -274,7 +280,12 @@ const validateTeamRegistrations = createServerOnlyFn(
 
 		const divisionMap = new Map<
 			number,
-			{ id: number; gender: string; divisionOrder: number | null }
+			{
+				id: number;
+				gender: string;
+				divisionOrder: number | null;
+				teamSize: number;
+			}
 		>(tournamentDivisionData.map((d) => [d.id, d]));
 
 		// Check all divisions exist
@@ -286,6 +297,17 @@ const validateTeamRegistrations = createServerOnlyFn(
 		}
 		if (missingDivisions.length > 0) {
 			errors.push(`Division(s) not found: ${missingDivisions.join(", ")}`);
+		}
+
+		// Validate team sizes match division requirements
+		for (const cartTeam of cartTeams) {
+			const division = divisionMap.get(cartTeam.divisionId);
+			if (!division) continue;
+
+			const playerCount = cartTeam.profileIds.length;
+			if (playerCount !== division.teamSize) {
+				errors.push("Not all teams have all players added.");
+			}
 		}
 
 		// Get all profile IDs with their genders and level orders
@@ -545,16 +567,18 @@ export const checkoutMutationOptions = () =>
 // Validate cart without processing payment - for async validation on the client
 export const validateCartFn = createServerFn()
 	.inputValidator(cartSchema)
-	.handler(async ({ data: { memberships: membershipItems, teams: cartTeams } }) => {
-		const membershipErrors = await validateMemberships(membershipItems);
-		const teamErrors = await validateTeamRegistrations(cartTeams);
-		const errors = [...membershipErrors, ...teamErrors];
+	.handler(
+		async ({ data: { memberships: membershipItems, teams: cartTeams } }) => {
+			const membershipErrors = await validateMemberships(membershipItems);
+			const teamErrors = await validateTeamRegistrations(cartTeams);
+			const errors = [...membershipErrors, ...teamErrors];
 
-		return {
-			valid: errors.length === 0,
-			errors,
-		};
-	});
+			return {
+				valid: errors.length === 0,
+				errors,
+			};
+		},
+	);
 
 export const validateCartQueryOptions = (cart: z.infer<typeof cartSchema>) =>
 	queryOptions({

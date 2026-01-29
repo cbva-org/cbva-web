@@ -1,9 +1,10 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import {
 	Button,
+	Button as AriaButton,
 	composeRenderProps,
 	DateField,
 	DateInput,
@@ -20,7 +21,7 @@ import { venuesQueryOptions } from "@/data/venues";
 import {
 	searchTournamentDivisionsQueryOptions,
 	type SearchTournamentDivisionsInput,
-} from "@/functions/tournament-divisions/get-tournament-divisions";
+} from "@/functions/tournament-divisions/search-tournament-divisions";
 import { focusRing } from "@/components/base/utils";
 import {
 	Description,
@@ -30,6 +31,8 @@ import {
 	Label,
 } from "./shared";
 import { itemStyles, popoverStyles } from "./multi-select";
+import { today } from "@internationalized/date";
+import { getDefaultTimeZone } from "@/lib/dates";
 
 export type DivisionPickerFieldProps = FieldProps & {
 	isDisabled?: boolean;
@@ -158,6 +161,8 @@ function FilterDropdown<T extends number>({
 	);
 }
 
+const PAGE_SIZE = 25;
+
 export function DivisionPickerField({
 	label,
 	description,
@@ -175,9 +180,10 @@ export function DivisionPickerField({
 		() => new Set(initialVenueIds ?? []),
 	);
 	const [filterStartDate, setFilterStartDate] = useState<DateValue | null>(
-		null,
+		today(getDefaultTimeZone()),
 	);
 	const [filterEndDate, setFilterEndDate] = useState<DateValue | null>(null);
+	const [page, setPage] = useState(1);
 
 	const { data: divisions } = useSuspenseQuery({
 		...divisionsQueryOptions(),
@@ -203,11 +209,24 @@ export function DivisionPickerField({
 		startDate: filterStartDate?.toString() ?? dateRange?.startDate,
 		endDate: filterEndDate?.toString() ?? dateRange?.endDate,
 		excludeIds: selectedDivisionIds,
+		paging: { page, size: PAGE_SIZE },
 	};
 
-	const { data: tournamentDivisions, isLoading } = useQuery(
+	const { data, isLoading } = useQuery(
 		searchTournamentDivisionsQueryOptions(searchParams),
 	);
+
+	const tournamentDivisions = data?.data ?? [];
+	const totalPages = data?.pageInfo.totalPages ?? 1;
+	const totalCount = data?.pageInfo.totalItems ?? 0;
+
+	// Reset to page 1 when filters change
+	const handleFilterChange =
+		<T,>(setter: (value: T) => void) =>
+		(value: T) => {
+			setter(value);
+			setPage(1);
+		};
 
 	return (
 		<div className="flex flex-col gap-2">
@@ -217,7 +236,7 @@ export function DivisionPickerField({
 				<DateField
 					aria-label="Start date"
 					value={filterStartDate}
-					onChange={setFilterStartDate}
+					onChange={handleFilterChange(setFilterStartDate)}
 					isDisabled={isDisabled}
 					className="flex-shrink-0"
 				>
@@ -237,7 +256,7 @@ export function DivisionPickerField({
 				<DateField
 					aria-label="End date"
 					value={filterEndDate}
-					onChange={setFilterEndDate}
+					onChange={handleFilterChange(setFilterEndDate)}
 					isDisabled={isDisabled}
 					className="flex-shrink-0"
 				>
@@ -256,14 +275,14 @@ export function DivisionPickerField({
 					label="Divisions"
 					options={divisions}
 					selectedValues={filterDivisionIds}
-					onSelectionChange={setFilterDivisionIds}
+					onSelectionChange={handleFilterChange(setFilterDivisionIds)}
 				/>
 
 				<FilterDropdown
 					label="Locations"
 					options={venues}
 					selectedValues={filterVenueIds}
-					onSelectionChange={setFilterVenueIds}
+					onSelectionChange={handleFilterChange(setFilterVenueIds)}
 				/>
 			</div>
 
@@ -290,7 +309,7 @@ export function DivisionPickerField({
 					</div>
 				)}
 			>
-				{(tournamentDivisions ?? []).map((td) => {
+				{tournamentDivisions.map((td) => {
 					const displayText = formatTournamentDivision(td);
 					return (
 						<ListBoxItem
@@ -313,6 +332,33 @@ export function DivisionPickerField({
 					);
 				})}
 			</ListBox>
+
+			{totalPages > 1 && (
+				<div className="flex items-center justify-between text-sm text-gray-600">
+					<span>
+						{totalCount} tournament{totalCount !== 1 ? "s" : ""}
+					</span>
+					<div className="flex items-center gap-2">
+						<AriaButton
+							isDisabled={page <= 1 || isLoading}
+							onPress={() => setPage((p) => Math.max(1, p - 1))}
+							className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							<ChevronLeft className="w-4 h-4" />
+						</AriaButton>
+						<span>
+							Page {page} of {totalPages}
+						</span>
+						<AriaButton
+							isDisabled={page >= totalPages || isLoading}
+							onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+							className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							<ChevronRight className="w-4 h-4" />
+						</AriaButton>
+					</div>
+				</div>
+			)}
 
 			{description && <Description>{description}</Description>}
 			<Errors field={field} />

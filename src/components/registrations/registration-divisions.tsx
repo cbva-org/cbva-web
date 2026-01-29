@@ -10,7 +10,7 @@ export function RegistrationDivisions() {
 	const dateFormatter = useDateFormatter();
 
 	return (
-		<div>
+		<div className="flex flex-col gap-y-4">
 			{divisions.map(
 				({ divisionId, teams, tournament: { venue, date }, ...division }) => (
 					<div key={divisionId} className="flex flex-col gap-y-4">

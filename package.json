@@ -16,7 +16,7 @@
 		"test:browser": "vitest --config=vitest.browser.config.ts"
 	},
 	"dependencies": {
-		"@internationalized/date": "^3.10.0",
+		"@internationalized/date": "^3.10.1",
 		"@lexical/headless": "^0.39.0",
 		"@lexical/html": "^0.39.0",
 		"@lexical/link": "^0.39.0",
