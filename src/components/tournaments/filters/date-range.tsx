@@ -1,14 +1,25 @@
-import { parseDate } from "@internationalized/date";
+import { parseDate, type CalendarDate } from "@internationalized/date";
 import { Link, useRouter } from "@tanstack/react-router";
-import { XIcon } from "lucide-react";
+import { CalendarIcon, XIcon } from "lucide-react";
 import {
-	DateField,
+	Button,
+	CalendarCell,
+	CalendarGrid,
 	DateInput,
+	DateRangePicker,
 	DateSegment,
+	Dialog,
+	Group,
+	Heading,
 	Label,
+	RangeCalendar,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
-import { fieldGroupStyles } from "@/components/base/form/fields/shared";
+import { Popover } from "@/components/base/popover";
+import {
+	fieldGroupStyles,
+	baseInputStyles,
+} from "@/components/base/form/fields/shared";
 
 type FilterDateRangeProps = {
 	startDate: string | null;
@@ -27,29 +38,62 @@ const segmentStyles = tv({
 	},
 });
 
+const calendarCellStyles = tv({
+	base: "w-8 h-8 text-sm rounded-lg text-center cursor-default forced-colors:text-[ButtonText]",
+	variants: {
+		isHovered: {
+			true: "bg-gray-200",
+		},
+		isFocused: {
+			true: "bg-blue-200 text-black",
+		},
+		isSelected: {
+			true: "bg-blue-600 text-white",
+		},
+		isSelectionStart: {
+			true: "rounded-l-lg",
+		},
+		isSelectionEnd: {
+			true: "rounded-r-lg",
+		},
+		isOutsideMonth: {
+			true: "text-gray-300",
+		},
+		isDisabled: {
+			true: "text-gray-300",
+		},
+	},
+	compoundVariants: [
+		{
+			isSelected: true,
+			isSelectionStart: false,
+			isSelectionEnd: false,
+			class: "bg-blue-100 text-blue-900 rounded-none",
+		},
+	],
+});
+
 export function FilterDateRange({ startDate, endDate }: FilterDateRangeProps) {
 	const router = useRouter();
 
-	const handleStartDateChange = (value: { toString: () => string } | null) => {
-		const newStartDate = value?.toString() ?? null;
-		router.navigate({
-			to: "/tournaments",
-			search: (prev) => ({
-				...prev,
-				page: 1,
-				startDate: newStartDate,
-			}),
-		});
-	};
+	const value =
+		startDate && endDate
+			? {
+					start: parseDate(startDate),
+					end: parseDate(endDate),
+				}
+			: null;
 
-	const handleEndDateChange = (value: { toString: () => string } | null) => {
-		const newEndDate = value?.toString() ?? null;
+	const handleChange = (
+		range: { start: CalendarDate; end: CalendarDate } | null,
+	) => {
 		router.navigate({
 			to: "/tournaments",
 			search: (prev) => ({
 				...prev,
 				page: 1,
-				endDate: newEndDate,
+				startDate: range?.start.toString() ?? null,
+				endDate: range?.end.toString() ?? null,
 			}),
 		});
 	};
@@ -58,45 +102,59 @@ export function FilterDateRange({ startDate, endDate }: FilterDateRangeProps) {
 		<div className="flex flex-col gap-2">
 			<Label className="text-sm font-medium">Date Range</Label>
 			<div className="flex flex-row gap-2 items-center">
-				<DateField
-					value={startDate ? parseDate(startDate) : null}
-					onChange={handleStartDateChange}
-					aria-label="Start date"
+				<DateRangePicker
+					value={value}
+					onChange={handleChange}
+					aria-label="Tournament date range"
 					className="flex-1"
 				>
-					<DateInput
-						className={(renderProps) =>
-							fieldGroupStyles({
-								...renderProps,
-								class: "bg-white block w-full px-2 py-1.5 text-sm",
-							})
-						}
+					<Group
+						className={fieldGroupStyles({
+							class: "bg-white flex items-center text-sm gap-1 w-full",
+						})}
 					>
-						{(segment) => (
-							<DateSegment segment={segment} className={segmentStyles} />
-						)}
-					</DateInput>
-				</DateField>
-				<span className="text-gray-500">to</span>
-				<DateField
-					value={endDate ? parseDate(endDate) : null}
-					onChange={handleEndDateChange}
-					aria-label="End date (optional)"
-					className="flex-1"
-				>
-					<DateInput
-						className={(renderProps) =>
-							fieldGroupStyles({
-								...renderProps,
-								class: "bg-white block w-full px-2 py-1.5 text-sm",
-							})
-						}
-					>
-						{(segment) => (
-							<DateSegment segment={segment} className={segmentStyles} />
-						)}
-					</DateInput>
-				</DateField>
+						<DateInput slot="start" className={baseInputStyles}>
+							{(segment) => (
+								<DateSegment segment={segment} className={segmentStyles} />
+							)}
+						</DateInput>
+						<span className="text-gray-500 px-1">–</span>
+						<DateInput slot="end" className={baseInputStyles}>
+							{(segment) => (
+								<DateSegment segment={segment} className={segmentStyles} />
+							)}
+						</DateInput>
+						<Button className="flex items-center px-1 text-gray-600 hover:text-gray-800">
+							<CalendarIcon size={16} />
+						</Button>
+					</Group>
+					<Popover>
+						<Dialog className="p-4">
+							<RangeCalendar className="min-w-[280px]">
+								<header className="flex items-center justify-between mb-2">
+									<Button
+										slot="previous"
+										className="rounded-lg hover:bg-gray-200 p-2"
+									>
+										◀
+									</Button>
+									<Heading className="font-semibold" />
+									<Button
+										slot="next"
+										className="rounded-lg hover:bg-gray-200 p-2"
+									>
+										▶
+									</Button>
+								</header>
+								<CalendarGrid className="w-full">
+									{(date) => (
+										<CalendarCell className={calendarCellStyles} date={date} />
+									)}
+								</CalendarGrid>
+							</RangeCalendar>
+						</Dialog>
+					</Popover>
+				</DateRangePicker>
 				{(startDate || endDate) && (
 					<Link
 						to="/tournaments"
