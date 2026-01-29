@@ -19,8 +19,6 @@ export function ProfileList({
 	profiles,
 	linkNames = true,
 }: ProfileListProps) {
-	console.log(profiles);
-
 	return (
 		<ul className={className}>
 			{profiles.map(

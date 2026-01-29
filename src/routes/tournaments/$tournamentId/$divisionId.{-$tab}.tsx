@@ -58,6 +58,7 @@ const moneyFormatter = new Intl.NumberFormat("EN-US", {
 export const Route = createFileRoute(
 	"/tournaments/$tournamentId/$divisionId/{-$tab}",
 )({
+	ssr: "data-only",
 	component: RouteComponent,
 	validateSearch: (
 		search: Record<string, unknown>,

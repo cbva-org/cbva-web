@@ -42,6 +42,7 @@ const RichTextDisplay = lazy(async () => {
 });
 
 export const Route = createFileRoute("/tournaments/faqs")({
+	ssr: "data-only",
 	loader: async ({ context: { queryClient } }) => {
 		return await queryClient.ensureQueryData(
 			getFaqsQueryOptions("tournaments"),

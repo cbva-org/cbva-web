@@ -17,6 +17,7 @@ import type { Gender, LexicalState } from "@/db/schema/shared";
 import { DefaultLayout } from "@/layouts/default";
 
 export const Route = createFileRoute("/ratings")({
+	ssr: "data-only",
 	loader: async ({ context: { queryClient } }) => {
 		await Promise.all([
 			queryClient.ensureQueryData(contentPageBlocksQueryOptions("ratings")),

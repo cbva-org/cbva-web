@@ -11,6 +11,7 @@ import { DeleteBlogForm } from "@/components/blogs/delete-blog-form";
 import { ReorderBlogsForm } from "@/components/blogs/reorder-blog-form";
 
 export const Route = createFileRoute("/info/cedars")({
+	ssr: "data-only",
 	loader: ({ context: { queryClient } }) => {
 		return queryClient.ensureQueryData(getBlogsQueryOptions("cedars"));
 	},
