@@ -260,7 +260,7 @@ export function DivisionPickerField({
 				/>
 
 				<FilterDropdown
-					label="Venues"
+					label="Locations"
 					options={venues}
 					selectedValues={filterVenueIds}
 					onSelectionChange={setFilterVenueIds}
