@@ -1,13 +1,25 @@
-import type { Division, Gender, PlayerProfile } from "@/db/schema";
+import type { Division, PlayerProfile } from "@/db/schema";
+import type { Gender } from "@/db/schema/shared";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
-import { DropZone, isTextDropItem } from "react-aria-components";
+import {
+	Button as AriaButton,
+	DialogTrigger,
+	DropZone,
+	isTextDropItem,
+	ListBox,
+	ListBoxItem,
+} from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { CartProfile, useCartProfiles, useDraggedProfile } from "./context";
 import { DraggableProfile } from "./draggable-profile";
 import { without } from "lodash-es";
 import { Button } from "../base/button";
+import { Popover } from "../base/popover";
+import { ProfilePhoto } from "../profiles/photo";
+import { ProfileName } from "../profiles/name";
 import { Trash2Icon } from "lucide-react";
+import { getGenderDisplay } from "@/hooks/tournament";
 
 const teamStyles = tv({
 	base: "p-3 bg-gray-50 border border-gray-300 rounded-md flex flex-row items-center gap-x-4 transition-colors",
@@ -42,6 +54,7 @@ type DragState = "none" | "valid" | "invalid";
 function isProfileValidForDivision(
 	profile: CartProfile,
 	divisionGender: Gender,
+	divisionMaxAge: number | null,
 	currentProfileIds: number[],
 	divisionOrder: number,
 	adding: boolean,
@@ -56,7 +69,7 @@ function isProfileValidForDivision(
 	if (divisionGender !== "coed" && profile.gender !== divisionGender) {
 		return {
 			valid: false,
-			reason: "Wrong division",
+			reason: getGenderDisplay(divisionGender, divisionMaxAge),
 		};
 	}
 
@@ -168,6 +181,7 @@ export function RegistrationTeam({
 					const { valid, reason } = isProfileValidForDivision(
 						draggedProfile,
 						gender,
+						division.maxAge,
 						profileIds,
 						division.order,
 						true,
@@ -203,6 +217,7 @@ export function RegistrationTeam({
 					const { valid } = isProfileValidForDivision(
 						profile,
 						gender,
+						division.maxAge,
 						profileIds,
 						division.order,
 						true,
@@ -225,6 +240,7 @@ export function RegistrationTeam({
 					const validation = isProfileValidForDivision(
 						profile,
 						gender,
+						division.maxAge,
 						profileIds,
 						division.order,
 						false,
@@ -245,11 +261,17 @@ export function RegistrationTeam({
 				})}
 
 				{emptySlots > 0 && (
-					<div className={slotStyles({ dragState })}>
-						{dragState === "invalid" && invalidReason
-							? invalidReason
-							: `Add ${emptySlots} more player(s)`}
-					</div>
+					<AddPlayerSlot
+						dragState={dragState}
+						invalidReason={invalidReason}
+						emptySlots={emptySlots}
+						cartProfiles={cartProfiles}
+						currentProfileIds={profileIds}
+						divisionGender={gender}
+						divisionOrder={division.order}
+						cartMembershipProfileIds={cartMembershipProfileIds}
+						onSelectProfile={addProfileToTeam}
+					/>
 				)}
 			</div>
 
@@ -257,5 +279,106 @@ export function RegistrationTeam({
 				<Trash2Icon size={16} />
 			</Button>
 		</DropZone>
+	);
+}
+
+function AddPlayerSlot({
+	dragState,
+	invalidReason,
+	emptySlots,
+	cartProfiles,
+	currentProfileIds,
+	divisionGender,
+	divisionMaxAge,
+	divisionOrder,
+	cartMembershipProfileIds,
+	onSelectProfile,
+}: {
+	dragState: DragState;
+	invalidReason?: string;
+	emptySlots: number;
+	cartProfiles: CartProfile[];
+	currentProfileIds: number[];
+	divisionGender: Gender;
+	divisionMaxAge: number | null;
+	divisionOrder: number;
+	cartMembershipProfileIds: number[];
+	onSelectProfile: (profile: CartProfile) => void;
+}) {
+	const [isOpen, setIsOpen] = useState(false);
+
+	// Filter to profiles that can be added to this team
+	const availableProfiles = cartProfiles.filter((profile) => {
+		const { valid } = isProfileValidForDivision(
+			profile,
+			divisionGender,
+			divisionMaxAge,
+			currentProfileIds,
+			divisionOrder,
+			true,
+			cartMembershipProfileIds,
+		);
+		return valid;
+	});
+
+	const handleSelectProfile = (profile: CartProfile) => {
+		onSelectProfile(profile);
+		setIsOpen(false);
+	};
+
+	// Show drag feedback when dragging, otherwise show clickable add button
+	if (dragState !== "none") {
+		return (
+			<div className={slotStyles({ dragState })}>
+				{dragState === "invalid" && invalidReason
+					? invalidReason
+					: `Add ${emptySlots} more player(s)`}
+			</div>
+		);
+	}
+
+	return (
+		<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
+			<AriaButton
+				className={`${slotStyles({ dragState })} cursor-pointer hover:bg-gray-300 flex items-center gap-1`}
+			>
+				Add {emptySlots} more player(s)
+			</AriaButton>
+			<Popover className="p-2 min-w-48 max-h-64 overflow-auto">
+				{availableProfiles.length === 0 ? (
+					<div className="p-2 text-sm text-gray-500">
+						No eligible players available
+					</div>
+				) : (
+					<ListBox
+						aria-label="Select a player to add"
+						selectionMode="single"
+						onSelectionChange={(keys) => {
+							const selectedId = [...keys][0];
+							if (typeof selectedId === "number") {
+								const profile = availableProfiles.find(
+									(p) => p.id === selectedId,
+								);
+								if (profile) {
+									handleSelectProfile(profile);
+								}
+							}
+						}}
+					>
+						{availableProfiles.map((profile) => (
+							<ListBoxItem
+								key={profile.id}
+								id={profile.id}
+								textValue={`${profile.preferredName || profile.firstName} ${profile.lastName}`}
+								className="p-2 flex flex-row items-center gap-2 cursor-pointer rounded hover:bg-gray-100 outline-none focus:bg-gray-100"
+							>
+								<ProfilePhoto {...profile} />
+								<ProfileName {...profile} link={false} />
+							</ListBoxItem>
+						))}
+					</ListBox>
+				)}
+			</Popover>
+		</DialogTrigger>
 	);
 }
