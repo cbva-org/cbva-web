@@ -7,6 +7,7 @@ import { findPaged, pagingOptionsSchema } from "@/db/pagination";
 import { requirePermissions } from "@/auth/shared";
 
 export const getInvoicesSchema = z.object({
+	transactionKey: z.string().optional().nullable(),
 	pageInfo: pagingOptionsSchema,
 });
 
@@ -19,11 +20,14 @@ export const getInvoices = createServerFn({
 		}),
 	])
 	.inputValidator(getInvoicesSchema)
-	.handler(async ({ data: { pageInfo } }) => {
+	.handler(async ({ data: { transactionKey, pageInfo } }) => {
 		return findPaged(db, "invoices", {
 			paging: pageInfo,
 			countColumn: "id",
 			query: {
+				where: {
+					transactionKey: transactionKey ? transactionKey : undefined,
+				},
 				with: {
 					purchaser: true,
 					memberships: {

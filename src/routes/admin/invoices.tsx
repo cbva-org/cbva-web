@@ -1,5 +1,5 @@
 import z from "zod";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getInvoicesQueryOptions } from "@/functions/payments/get-invoices";
 import { title } from "@/components/base/primitives";
@@ -21,8 +21,10 @@ import {
 	getTournamentDivisionDisplay,
 } from "@/hooks/tournament";
 import { CopyButton } from "@/components/base/copy-button";
+import { SearchField } from "@/components/base/search-field";
 
 const searchSchema = z.object({
+	key: z.string().default(""),
 	page: z.number().default(1),
 	pageSize: z.number().default(25),
 });
@@ -40,10 +42,11 @@ export const Route = createFileRoute("/admin/invoices")({
 });
 
 function RouteComponent() {
-	const { page, pageSize } = Route.useSearch();
+	const { key, page, pageSize } = Route.useSearch();
 
 	const { data: { data: invoices, pageInfo } = {} } = useSuspenseQuery(
 		getInvoicesQueryOptions({
+			transactionKey: key,
 			pageInfo: {
 				page,
 				size: pageSize,
@@ -55,6 +58,8 @@ function RouteComponent() {
 		dateStyle: "short",
 		timeStyle: "short",
 	});
+
+	const navigate = useNavigate();
 
 	return (
 		<AdminLayout
@@ -74,6 +79,20 @@ function RouteComponent() {
 						{pageInfo?.totalItems} total
 					</span>
 				</h2>
+
+				<SearchField
+					label="Paste Transaction Key"
+					value={key}
+					onChange={(value) => {
+						navigate({
+							replace: true,
+							search: (search) => ({
+								...search,
+								key: value,
+							}),
+						});
+					}}
+				/>
 
 				{invoices?.length === 0 ? (
 					<p className="text-gray-500">No invoices found.</p>
