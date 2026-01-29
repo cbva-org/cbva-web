@@ -433,6 +433,13 @@ function AddPlayerForm() {
 		defaultValues: {
 			profileId: null as number | null,
 		},
+		listeners: {
+			onChange: ({ fieldApi, formApi }) => {
+				if (fieldApi.state.value !== null) {
+					formApi.handleSubmit();
+				}
+			},
+		},
 		onSubmit: ({ value: { profileId }, formApi }) => {
 			if (profileId) {
 				navigate({
@@ -481,7 +488,7 @@ function AddPlayerForm() {
 							<form.Footer>
 								<Button slot="close">Cancel</Button>
 
-								<form.SubmitButton>Add</form.SubmitButton>
+								{/* <form.SubmitButton>Add</form.SubmitButton> */}
 							</form.Footer>
 						</form.AppForm>
 					</form>
