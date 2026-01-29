@@ -32,6 +32,7 @@ const disclosure = tv({
 	},
 	defaultVariants: {
 		card: true,
+		border: true,
 	},
 });
 

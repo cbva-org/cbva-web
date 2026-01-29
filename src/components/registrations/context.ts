@@ -157,7 +157,7 @@ export function useDefaultTournamentPrice() {
 export function useIsSeasonOpen() {
 	const { data } = useSuspenseQuery({
 		...getSettingQueryOptions("default-tournament-price"),
-		select: (setting) => isDefined(setting),
+		select: (setting) => (setting ? isDefined(setting.value) : false),
 	});
 
 	return data;
