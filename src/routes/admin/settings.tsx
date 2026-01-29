@@ -183,7 +183,7 @@ function UpdateSettingsForm({
 			</form.Subscribe>
 
 			<form.AppField name="unsetValue">
-				{(field) => <field.Checkbox label="Remove value" field={field} />}
+				{(field) => <field.Checkbox label="Empty value" field={field} />}
 			</form.AppField>
 
 			<form.AppForm>
