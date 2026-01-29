@@ -68,7 +68,7 @@ export function ProfileList({
 										memberships: [{ profileId: id, tshirtSize: undefined }],
 									}}
 								>
-									Inactive
+									Pay Membership
 								</Link>
 							)}
 
