@@ -19,6 +19,7 @@ import { twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
 import { useIsMounted } from "@/lib/dom";
 import { composeTailwindRenderProps, focusRing } from "./utils";
+import { uniqBy } from "lodash-es";
 
 export function Label(props: LabelProps & { isRequired?: boolean }) {
 	return (
@@ -53,6 +54,26 @@ export function FieldError(props: FieldErrorProps) {
 				"text-sm text-red-600 forced-colors:text-[Mark]",
 			)}
 		/>
+	);
+}
+
+export type ErrorsProps = {
+	errors?: { message: string }[];
+};
+
+export function Errors({ errors = [] }: ErrorsProps) {
+	return (
+		<FieldError>
+			<ul>
+				{errors.map(({ message }: { message: string }) => (
+					<li key={message}>
+						<Text slot="errorMessage" className="text-red-600 text-sm">
+							{message}
+						</Text>
+					</li>
+				))}
+			</ul>
+		</FieldError>
 	);
 }
 

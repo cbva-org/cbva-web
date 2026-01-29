@@ -131,5 +131,5 @@ export const fieldGroupStyles = tv({
 });
 
 export function Group(props: GroupProps) {
-	return <RACGroup {...props} className={fieldGroupStyles} />;
+	return <RACGroup {...props} className={fieldGroupStyles(props)} />;
 }

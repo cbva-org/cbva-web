@@ -89,6 +89,11 @@ const links: (NavbarItem | NavbarGroupItem)[] = [
 				to: "/faqs/{-$subject}",
 				label: "FAQs",
 			},
+			{
+				kind: "item",
+				to: "/prize-pool",
+				label: "Prize Pool",
+			},
 		],
 	},
 	{

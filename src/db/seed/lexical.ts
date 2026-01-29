@@ -336,3 +336,37 @@ export async function seedCalCupPage() {
 
 	await db.insert(blocks).values(serializedSeeds).onConflictDoNothing();
 }
+
+const prizePoolSeeds = [
+	{
+		path: "prize-pool",
+		key: "prize-pool-1",
+		content: `Prize pool.
+`,
+	},
+	{
+		path: "prize-pool",
+		key: "prize-pool-2",
+		content: `Prize pool.
+`,
+	},
+];
+
+export async function seedPrizePoolPage() {
+	const editor = new LexicalEditorService();
+
+	const serializedSeeds: CreateBlock[] = [];
+
+	for (const { path, key, content } of prizePoolSeeds) {
+		await editor.injectHTML(await Promise.resolve(marked.parse(content)));
+		const state = editor.getEditorStateJSON();
+
+		serializedSeeds.push({
+			page: path,
+			key,
+			content: state,
+		});
+	}
+
+	await db.insert(blocks).values(serializedSeeds).onConflictDoNothing();
+}

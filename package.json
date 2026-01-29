@@ -4,6 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "docker compose up -d && vite dev",
+		"dev:host": "pnpm dev --host",
 		"start": "node .output/server/index.mjs",
 		"build": "vite build",
 		"db:gen": "drizzle-kit generate",
