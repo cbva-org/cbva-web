@@ -45,11 +45,22 @@ export const registrationPageSchema = cartSchema.extend({
 		.default([]),
 });
 
-export function useCartProfiles(checkout?: boolean) {
+type CartRoute = "registration" | "checkout" | "success";
+
+function getRouteFrom(route?: CartRoute) {
+	switch (route) {
+		case "checkout":
+			return "/account/registrations/checkout";
+		case "success":
+			return "/account/registrations/success";
+		default:
+			return "/account/registrations/";
+	}
+}
+
+export function useCartProfiles(route?: CartRoute) {
 	const { profiles: profileIds } = useSearch({
-		from: checkout
-			? "/account/registrations/checkout"
-			: "/account/registrations/",
+		from: getRouteFrom(route),
 	});
 
 	const { data: viewerProfiles } = useSuspenseQuery({
@@ -79,11 +90,9 @@ export function useCartProfiles(checkout?: boolean) {
 
 export type CartProfile = ReturnType<typeof useCartProfiles>[number];
 
-export function useCartDivisionRegistrations(checkout?: boolean) {
+export function useCartDivisionRegistrations(route?: CartRoute) {
 	const { teams } = useSearch({
-		from: checkout
-			? "/account/registrations/checkout"
-			: "/account/registrations/",
+		from: getRouteFrom(route),
 	});
 
 	const divisions = groupBy(teams, "divisionId");
@@ -94,8 +103,8 @@ export function useCartDivisionRegistrations(checkout?: boolean) {
 	}));
 }
 
-export function useCartDivisions(checkout?: boolean) {
-	const registrations = useCartDivisionRegistrations(checkout);
+export function useCartDivisions(route?: CartRoute) {
+	const registrations = useCartDivisionRegistrations(route);
 	const divisionIds = registrations.map((r) => r.divisionId);
 
 	const { data } = useSuspenseQuery({
@@ -113,11 +122,9 @@ export function useCartDivisions(checkout?: boolean) {
 
 export type CartDivision = ReturnType<typeof useCartDivisions>[number];
 
-export function useCart(checkout?: boolean) {
+export function useCart(route?: CartRoute) {
 	const data = useSearch({
-		from: checkout
-			? "/account/registrations/checkout"
-			: "/account/registrations/",
+		from: getRouteFrom(route),
 	});
 
 	return data;
@@ -197,14 +204,12 @@ export function useIsRegistrationOpen({
 	return true;
 }
 
-export function useMembershipItems(checkout?: boolean) {
+export function useMembershipItems(route?: CartRoute) {
 	const { memberships } = useSearch({
-		from: checkout
-			? "/account/registrations/checkout"
-			: "/account/registrations/",
+		from: getRouteFrom(route),
 	});
 
-	const profiles = useCartProfiles(checkout);
+	const profiles = useCartProfiles(route);
 	const membershipPrice = useMembershipPrice();
 
 	if (membershipPrice === null) {
@@ -226,9 +231,9 @@ export function useMembershipItems(checkout?: boolean) {
 		}));
 }
 
-export function useTeamItems(checkout?: boolean) {
-	const divisions = useCartDivisions(checkout);
-	const profiles = useCartProfiles(checkout);
+export function useTeamItems(route?: CartRoute) {
+	const divisions = useCartDivisions(route);
+	const profiles = useCartProfiles(route);
 	const defaultPrice = useDefaultTournamentPrice();
 
 	return divisions.flatMap((division) =>
@@ -249,24 +254,22 @@ export function useTeamItems(checkout?: boolean) {
 	);
 }
 
-export function useCartItems(checkout?: boolean) {
-	const membershipItems = useMembershipItems(checkout);
-	const teamItems = useTeamItems(checkout);
+export function useCartItems(route?: CartRoute) {
+	const membershipItems = useMembershipItems(route);
+	const teamItems = useTeamItems(route);
 
 	return [...membershipItems, ...teamItems];
 }
 
-export function useCartTotal(checkout?: boolean) {
-	const items = useCartItems(checkout);
+export function useCartTotal(route?: CartRoute) {
+	const items = useCartItems(route);
 
 	return sum(items.map(({ price }) => price));
 }
 
-export function useCartValidation(checkout?: boolean) {
+export function useCartValidation(route?: CartRoute) {
 	const { memberships, teams } = useSearch({
-		from: checkout
-			? "/account/registrations/checkout"
-			: "/account/registrations/",
+		from: getRouteFrom(route),
 	});
 
 	// Transform teams to match cartSchema (remove the id field)
