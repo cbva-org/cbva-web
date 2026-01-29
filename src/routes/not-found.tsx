@@ -14,7 +14,7 @@ export const Route = createFileRoute("/not-found")({
 function RouteComponent() {
 	return (
 		<DefaultLayout>
-			<div className="text-center flex flex-col space-y-6 max-w-xl mx-auto py-16">
+			<div className="text-center flex flex-col space-y-8 max-w-xl mx-auto py-16">
 				<div className="flex justify-center">
 					<SearchXIcon className="w-16 h-16 text-gray-400" />
 				</div>
