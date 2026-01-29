@@ -54,6 +54,8 @@ describe("getTournaments", () => {
 				divisions: [],
 				genders: [],
 				past: true,
+				startDate: null,
+				endDate: null,
 			},
 			undefined,
 		);

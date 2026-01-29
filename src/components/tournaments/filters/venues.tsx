@@ -41,7 +41,7 @@ export function FilterVenues({ values }: FilterVenuesProps) {
 			<ComboBox
 				selectedKeys={values}
 				items={options}
-				placeholder="Locations"
+				placeholder="All locations"
 				multi={true}
 			/>
 		</div>

@@ -26,7 +26,7 @@ export const Route = createFileRoute("/tournaments/")({
 	validateSearch: zodValidator(tournamentListFilterSchema),
 	loaderDeps: ({ search }) => search,
 	loader: async ({
-		deps: { page, pageSize, divisions, venues, genders, past },
+		deps: { page, pageSize, divisions, venues, genders, past, startDate, endDate },
 		context: { queryClient },
 	}) => {
 		await queryClient.ensureQueryData(
@@ -37,6 +37,8 @@ export const Route = createFileRoute("/tournaments/")({
 				venues,
 				genders,
 				past,
+				startDate,
+				endDate,
 			}),
 		);
 	},
@@ -45,7 +47,7 @@ export const Route = createFileRoute("/tournaments/")({
 function RouteComponent() {
 	const search = Route.useSearch();
 
-	const { page, pageSize, divisions, venues, genders, past } = search;
+	const { page, pageSize, divisions, venues, genders, past, startDate, endDate } = search;
 
 	const { data } = useSuspenseQuery(
 		tournamentsQueryOptions({
@@ -55,6 +57,8 @@ function RouteComponent() {
 			venues,
 			genders,
 			past,
+			startDate,
+			endDate,
 		}),
 	);
 
