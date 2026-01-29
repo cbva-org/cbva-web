@@ -60,14 +60,12 @@ const resizerStyles = tv({
 export function TableColumn(
 	props: ColumnProps & VariantProps<typeof columnStyles>,
 ) {
-	console.log(props.width);
-
 	return (
 		<AriaColumn
 			{...props}
 			className={composeTailwindRenderProps(
 				props.className,
-				"[&:hover]:z-20 focus-within:z-20 text-start text-sm font-semibold text-gray-700 dark:text-zinc-300 cursor-default",
+				"[&:hover]:z-20 focus-within:z-20 text-start text-sm font-semibold text-navbar-foreground cursor-default",
 			)}
 		>
 			{composeRenderProps(
@@ -89,7 +87,7 @@ export function TableColumn(
 									{sortDirection && (
 										<ArrowUp
 											aria-hidden
-											className="w-4 h-4 text-gray-500 dark:text-zinc-400 forced-colors:text-[ButtonText]"
+											className="w-4 h-4 text-navbar-foreground forced-colors:text-[ButtonText]"
 										/>
 									)}
 								</span>
@@ -162,7 +160,7 @@ export function TableRow<T extends object>({
 
 const cellStyles = tv({
 	extend: focusRing,
-	base: "border-b border-b-gray-200 dark:border-b-zinc-700 group-last/row:border-b-0 [--selected-border:var(--color-blue-200)] dark:[--selected-border:var(--color-blue-900)] group-selected/row:border-(--selected-border) in-[:has(+[data-selected])]:border-(--selected-border) p-2 truncate -outline-offset-2",
+	base: "border-b border-b-gray-200 group-last/row:border-b-0 [--selected-border:var(--color-blue-200)] group-selected/row:border-(--selected-border) in-[:has(+[data-selected])]:border-(--selected-border) p-2 truncate -outline-offset-2",
 });
 
 export function TableCell(props: CellProps) {

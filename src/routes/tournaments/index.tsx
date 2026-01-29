@@ -26,7 +26,16 @@ export const Route = createFileRoute("/tournaments/")({
 	validateSearch: zodValidator(tournamentListFilterSchema),
 	loaderDeps: ({ search }) => search,
 	loader: async ({
-		deps: { page, pageSize, divisions, venues, genders, past, startDate, endDate },
+		deps: {
+			page,
+			pageSize,
+			divisions,
+			venues,
+			genders,
+			past,
+			startDate,
+			endDate,
+		},
 		context: { queryClient },
 	}) => {
 		await queryClient.ensureQueryData(
@@ -47,7 +56,16 @@ export const Route = createFileRoute("/tournaments/")({
 function RouteComponent() {
 	const search = Route.useSearch();
 
-	const { page, pageSize, divisions, venues, genders, past, startDate, endDate } = search;
+	const {
+		page,
+		pageSize,
+		divisions,
+		venues,
+		genders,
+		past,
+		startDate,
+		endDate,
+	} = search;
 
 	const { data } = useSuspenseQuery(
 		tournamentsQueryOptions({
@@ -69,7 +87,7 @@ function RouteComponent() {
 			<div className="py-8 w-full bg-slate-300 scroll-ref">
 				<TournamentListFilters {...search} />
 			</div>
-			<div className="flex flex-col space-y-6 max-w-xl mx-auto pb-6">
+			<div className="flex flex-col space-y-6 max-w-xl mx-auto pb-6 px-2">
 				{tournaments.length ? (
 					tournaments.map((tournament) => (
 						<TournamentListItem key={tournament.id} {...tournament} />
