@@ -19,7 +19,7 @@ function RouteComponent() {
 					<SearchXIcon className="w-16 h-16 text-gray-400" />
 				</div>
 				<h1 className={title({ size: "lg" })}>Page Not Found</h1>
-				<p className="text-gray-600">
+				<p className="text-gray-600 max-w-sm mx-auto text-center">
 					The page you're looking for doesn't exist or has been moved.
 				</p>
 				<div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
