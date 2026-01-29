@@ -1,0 +1,1 @@
+ALTER TYPE "type" RENAME TO "settings_type";

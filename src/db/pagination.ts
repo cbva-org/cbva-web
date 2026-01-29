@@ -20,7 +20,7 @@ export function getLimitAndOffset({ page, size }: PagingOptions) {
 	};
 }
 
-type TableNames = keyof typeof db._query;
+type TableNames = keyof typeof db.query;
 type Schema = NonNullable<typeof db._.schema>;
 type Relations = NonNullable<typeof db._.relations>;
 

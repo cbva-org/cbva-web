@@ -60,6 +60,8 @@ const resizerStyles = tv({
 export function TableColumn(
 	props: ColumnProps & VariantProps<typeof columnStyles>,
 ) {
+	console.log(props.width);
+
 	return (
 		<AriaColumn
 			{...props}

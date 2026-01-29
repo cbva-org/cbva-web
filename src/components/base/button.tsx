@@ -1,4 +1,4 @@
-import { forwardRef, type ReactNode, type Ref, RefObject } from "react";
+import { forwardRef, type ReactNode, type Ref } from "react";
 import {
 	composeRenderProps,
 	Button as RACButton,
@@ -59,7 +59,7 @@ export const button = tv({
 		},
 		isDisabled: {
 			false: ["cursor-pointer"],
-			true: ["opacity-50", "cursor-not-allowed"],
+			true: ["opacity-50", "cursor-not-allowed", "pointer-events-none"],
 		},
 		isHovered: {
 			false: [],

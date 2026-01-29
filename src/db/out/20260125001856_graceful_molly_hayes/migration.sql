@@ -1,0 +1,1 @@
+ALTER TYPE "settings_type" ADD VALUE 'money' BEFORE 'float';

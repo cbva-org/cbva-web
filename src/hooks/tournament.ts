@@ -10,6 +10,8 @@ import type {
 import { isDefined } from "@/utils/types";
 import { DateFormatter, parseDate } from "@internationalized/date";
 import { getDefaultTimeZone } from "@/lib/dates";
+import { Gender } from "@/db/schema/shared";
+import { match, P } from "ts-pattern";
 
 export function getLevelDisplay(level: Level | null, min?: number) {
 	if (isDefined(min) && (!level || level.order <= min)) {
@@ -23,20 +25,68 @@ const dateFormatter = new DateFormatter("EN-US", {
 	dateStyle: "short",
 });
 
-export function getTournamentDisplay({
-	name,
-	date,
-	venue,
-}: Pick<Tournament, "name" | "date"> & {
-	venue: Pick<Venue, "name" | "city">;
-}) {
+export function getTournamentDisplay(
+	{
+		name,
+		date,
+		venue,
+	}: Pick<Tournament, "name" | "date"> & {
+		venue: Pick<Venue, "name" | "city" | "slug">;
+	},
+	short = false,
+) {
 	return [
 		name?.trim(),
 		dateFormatter.format(parseDate(date).toDate(getDefaultTimeZone())),
-		`${venue.name}, ${venue.city}`,
+		short ? venue.slug : `${venue.name}, ${venue.city}`,
 	]
 		.filter(isDefined)
 		.join(", ");
+}
+
+export function getGenderDisplay(
+	gender: Gender,
+	maxAge: number | null | undefined,
+) {
+	return match({
+		gender,
+		maxAge,
+	})
+		.with(
+			{
+				gender: "coed",
+			},
+			() => "Coed",
+		)
+		.with(
+			{
+				gender: "male",
+				maxAge: P.nullish,
+			},
+			() => "Men's",
+		)
+		.with(
+			{
+				gender: "female",
+				maxAge: P.nullish,
+			},
+			() => "Women's",
+		)
+		.with(
+			{
+				gender: "male",
+				maxAge: P.number,
+			},
+			() => "Boy's",
+		)
+		.with(
+			{
+				gender: "female",
+				maxAge: P.number,
+			},
+			() => "Girl's",
+		)
+		.exhaustive();
 }
 
 export function getTournamentDivisionDisplay({

@@ -131,6 +131,11 @@ const getProfileOverview = createServerFn({
 			},
 			with: {
 				level: true,
+				activeMembership: {
+					columns: {
+						id: true,
+					},
+				},
 			},
 			where: { id },
 		});

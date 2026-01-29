@@ -6,19 +6,13 @@ import { eq } from "drizzle-orm";
 import { writeFileSync } from "node:fs";
 
 async function main() {
-	const juniors = await db
-		.select()
-		.from(blocks)
-		.where(eq(blocks.page, "juniors"));
+	const pages = ["prize-pool"];
 
-	writeFileSync("./.export/juniors.json", JSON.stringify(juniors));
+	for (const page of pages) {
+		const block = await db.select().from(blocks).where(eq(blocks.page, page));
 
-	const calCup = await db
-		.select()
-		.from(blocks)
-		.where(eq(blocks.page, "cal-cup"));
-
-	writeFileSync("./.export/cal-cup.json", JSON.stringify(calCup));
+		writeFileSync(`./.export/${page}.json`, JSON.stringify(block));
+	}
 
 	process.exit(0);
 }

@@ -16,6 +16,11 @@ export const getProfilesFn = createServerFn()
 	.handler(({ data: { ids, gender, query } }) => {
 		return db.query.playerProfiles.findMany({
 			with: {
+				activeMembership: {
+					columns: {
+						id: true,
+					},
+				},
 				level: true,
 			},
 			where: {

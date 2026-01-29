@@ -22,6 +22,7 @@ const titles: { [key: string]: string } = {
 };
 
 export const Route = createFileRoute("/faqs/{-$subject}")({
+	ssr: "data-only",
 	loader: async ({ params: { subject = null }, context: { queryClient } }) => {
 		if (subject !== null && !["tournaments", "waitlist"].includes(subject)) {
 			throw notFound();

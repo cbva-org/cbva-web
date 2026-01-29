@@ -1,0 +1,1 @@
+ALTER TABLE "tournaments" ALTER COLUMN "registration_open_at" SET DATA TYPE timestamp USING "registration_open_at"::timestamp;

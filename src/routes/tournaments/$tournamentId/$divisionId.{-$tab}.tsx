@@ -32,14 +32,33 @@ import { tournamentQueryOptions } from "@/data/tournaments";
 import { getTournamentDivisionDisplay } from "@/hooks/tournament";
 import { DefaultLayout } from "@/layouts/default";
 import { getDefaultTimeZone } from "@/lib/dates";
+import {
+	useDefaultTournamentPrice,
+	useIsRegistrationOpen,
+} from "@/components/registrations/context";
+import { button, Button } from "@/components/base/button";
+import { Link } from "@/components/base/link";
 
-const dateFormatter = new DateFormatter("EN-US", {
+const shortDateFormatter = new DateFormatter("EN-US", {
 	dateStyle: "short",
+	timeZone: getDefaultTimeZone(),
+});
+
+const shortDateTimeFormatter = new DateFormatter("EN-US", {
+	dateStyle: "short",
+	timeStyle: "short",
+	timeZone: getDefaultTimeZone(),
+});
+
+const moneyFormatter = new Intl.NumberFormat("EN-US", {
+	style: "currency",
+	currency: "usd",
 });
 
 export const Route = createFileRoute(
 	"/tournaments/$tournamentId/$divisionId/{-$tab}",
 )({
+	ssr: "data-only",
 	component: RouteComponent,
 	validateSearch: (
 		search: Record<string, unknown>,
@@ -82,7 +101,7 @@ export const Route = createFileRoute(
 			? [
 					{
 						title: [
-							dateFormatter.format(
+							shortDateFormatter.format(
 								parseDate(loaderData.date).toDate(getDefaultTimeZone()),
 							),
 							loaderData.name,
@@ -252,6 +271,15 @@ function RouteComponent() {
 			},
 		});
 
+	const isRegistrationOpen = useIsRegistrationOpen({
+		registrationPrice: activeDivision.registrationPrice,
+		registrationOpenAt: tournament.registrationOpenAt,
+	});
+
+	const defaultPrice = useDefaultTournamentPrice();
+
+	const price = activeDivision.registrationPrice ?? defaultPrice;
+
 	return (
 		<DefaultLayout classNames={{ content: "bg-white max-w-full" }}>
 			<VenueHeader {...venue} />
@@ -263,7 +291,7 @@ function RouteComponent() {
 				/>
 
 				<div className="py-12 max-w-full md:max-w-lg mx-auto flex flex-col space-y-6">
-					<div className="text-center flex flex-col space-y-2">
+					<div className="text-center flex flex-col items-center space-y-2">
 						{name && <h1 className={title()}>{name}</h1>}
 
 						<div className="flex flex-col">
@@ -272,6 +300,68 @@ function RouteComponent() {
 							>{`${venue.name}, ${venue.city}`}</h2>
 							<h3 className={dateClassName}>{formattedDate}</h3>
 						</div>
+
+						{match({
+							isOpen: isRegistrationOpen,
+							price,
+							openAt: tournament.registrationOpenAt,
+						})
+							.with(
+								{
+									isOpen: true,
+									price: P.number,
+								},
+								({ price }) => (
+									<Link
+										to="/account/registrations"
+										search={{
+											teams: [
+												{
+													divisionId: activeDivision.id,
+													profileIds: [],
+												},
+											],
+										}}
+										variant="alt"
+										className={button({
+											color: "primary",
+											radius: "full",
+										})}
+									>
+										Register — {moneyFormatter.format(price)}
+									</Link>
+								),
+							)
+							.with(
+								{
+									isOpen: false,
+									openAt: P.when(
+										(ts: Date | null): ts is Date =>
+											ts !== null && ts > new Date(),
+									),
+								},
+								({ openAt }) => (
+									<div
+										className={button({
+											radius: "full",
+											isDisabled: true,
+										})}
+									>
+										Registration Opens {shortDateTimeFormatter.format(openAt)}
+									</div>
+								),
+							)
+							// .exhaustive()
+							.otherwise(() => (
+								<div
+									className={button({
+										radius: "full",
+										isDisabled: true,
+									})}
+								>
+									Registration Closed
+								</div>
+							))}
 					</div>
 
 					<DropdownMenu

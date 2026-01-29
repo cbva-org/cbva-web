@@ -1,0 +1,1 @@
+ALTER TABLE "settings" ADD COLUMN "label" text NOT NULL;

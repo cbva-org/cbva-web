@@ -36,6 +36,7 @@ import { venueDirectorRelations, venueDirectors } from "./venue-directors";
 import { venuesRelations, venues } from "./venues";
 import { faqs } from "./faqs";
 import { blogs } from "./blogs";
+import { memberships } from "./payments";
 import type { relations } from "./relations";
 
 export * from "./relations";
@@ -65,6 +66,7 @@ export * from "./venue-directors";
 export * from "./venues";
 export * from "./faqs";
 export * from "./blogs";
+export * from "./payments";
 
 export const tables = {
 	blocks,
@@ -94,6 +96,7 @@ export const tables = {
 	rateLimiterFlexibleSchema,
 	faqs,
 	blogs,
+	memberships,
 };
 
 export const relationships = {

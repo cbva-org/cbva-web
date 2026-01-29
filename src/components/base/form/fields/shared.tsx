@@ -41,7 +41,7 @@ export const fieldBorderStyles = tv({
 			true: "border-red-600 forced-colors:border-[Mark]",
 		},
 		isDisabled: {
-			true: "text-gray-400 cursor-not-allowed forced-colors:border-[GrayText]",
+			true: "border-gray-300 text-gray-400 cursor-not-allowed forced-colors:border-[GrayText]",
 		},
 		isHovered: {
 			true: "bg-gray-100",
@@ -131,5 +131,5 @@ export const fieldGroupStyles = tv({
 });
 
 export function Group(props: GroupProps) {
-	return <RACGroup {...props} className={fieldGroupStyles} />;
+	return <RACGroup {...props} className={fieldGroupStyles(props)} />;
 }

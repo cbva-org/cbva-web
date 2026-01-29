@@ -14,7 +14,12 @@ import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./auth";
 import { levels } from "./levels";
-import { genderEnum, playerRoleEnum, rightLeftEnum } from "./shared";
+import {
+	genderEnum,
+	playerRoleEnum,
+	rightLeftEnum,
+	timestamps,
+} from "./shared";
 
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({ zodInstance: z });
@@ -49,6 +54,7 @@ export const playerProfiles = pgTable(
 		collegeTeam: text(),
 		collegeTeamYearsParticipated: integer(),
 		externalRef: uuid().unique().notNull().defaultRandom(),
+		...timestamps,
 	},
 	(table) => [
 		check(

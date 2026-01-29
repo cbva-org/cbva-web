@@ -1,25 +1,43 @@
 import { queryOptions } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/auth/shared";
 import { db } from "@/db/connection";
 import { unauthorized } from "@/lib/responses";
+import { Viewer } from "@/auth";
 
-const getViewerProfiles = createServerFn({
+export const getViewerProfilesHandler = createServerOnlyFn(
+	async (viewerId: Viewer["id"]) => {
+		return await db.query.playerProfiles.findMany({
+			with: {
+				activeMembership: {
+					columns: {
+						id: true,
+					},
+				},
+				level: true,
+			},
+			where: { userId: viewerId },
+			orderBy: {
+				createdAt: "asc",
+			},
+		});
+	},
+);
+
+const getViewerProfilesFn = createServerFn({
 	method: "GET",
 })
 	.middleware([authMiddleware])
-	.handler(async ({ context: { viewer } }) => {
+	.handler(({ context: { viewer } }) => {
 		if (!viewer) {
 			throw unauthorized();
 		}
 
-		return await db.query.playerProfiles.findMany({
-			where: { userId: viewer.id },
-		});
+		return getViewerProfilesHandler(viewer.id);
 	});
 
 export const getViewerProfilesQueryOptions = () =>
 	queryOptions({
 		queryKey: ["viewer_profiles"],
-		queryFn: () => getViewerProfiles(),
+		queryFn: () => getViewerProfilesFn(),
 	});

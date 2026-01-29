@@ -34,6 +34,8 @@ export function ProfileName({
 	abbreviateLast = true,
 	link = true,
 }: ProfileNameProps) {
+	const name = `${preferredName ? preferredName : firstName} ${lastName}`;
+
 	const content = (
 		<>
 			{showFirst ? `${preferredName ? preferredName : firstName} ` : null}
@@ -54,11 +56,16 @@ export function ProfileName({
 				className={clsx("hover:underline", className)}
 				to="/profile/$profileId"
 				params={{ profileId: id.toString() }}
+				title={name}
 			>
 				{content}
 			</Link>
 		);
 	}
 
-	return <span className={className}>{content}</span>;
+	return (
+		<span className={className} title={name}>
+			{content}
+		</span>
+	);
 }

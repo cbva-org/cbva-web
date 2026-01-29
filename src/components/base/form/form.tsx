@@ -22,7 +22,10 @@ import { TimeField } from "./fields/time";
 import { RadioGroupField } from "./fields/radio-group";
 import { RichTextField } from "./fields/rich-text";
 import { ProfilePickerField } from "./fields/profile-picker";
-import { dbg } from "@/utils/dbg";
+import { PaymentCardField } from "./fields/payment-card";
+import { ExpiryField } from "./fields/expiry";
+import { PaymentKeyField } from "./fields/payment-key";
+import { DivisionPickerField } from "./fields/division-picker";
 
 function Alert({ className, ...props }: AlertProps) {
 	return <BaseAlert className={className} {...props} />;
@@ -65,10 +68,12 @@ function SubmitButton({
 	className,
 	children = <>Submit</>,
 	requireChange = true,
+	allowInvalid = false,
 	...props
 }: Omit<ButtonProps, "type" | "children"> & {
 	children?: ReactNode;
 	requireChange?: boolean;
+	allowInvalid?: boolean;
 }) {
 	const form = useFormContext();
 
@@ -84,11 +89,18 @@ function SubmitButton({
 					type="submit"
 					color="primary"
 					className={clsx(className)}
+					data-can-submit={canSubmit}
+					data-is-submitting={isSubmitting}
+					data-is-disabled={isDisabled}
+					data-require-change={requireChange}
+					data-is-default-value={isDefaultValue}
 					isDisabled={
-						!canSubmit ||
-						isSubmitting ||
-						isDisabled ||
-						(requireChange && isDefaultValue)
+						allowInvalid
+							? isDisabled
+							: !canSubmit ||
+								isSubmitting ||
+								isDisabled ||
+								(requireChange && isDefaultValue)
 					}
 					{...props}
 				>
@@ -181,10 +193,10 @@ function StateDebugger({ className }: { className?: string }) {
 
 	return (
 		<form.Subscribe
-			selector={({ values, errors }) => [values, errors]}
-			children={([values, errors]) => (
+			selector={({ values, errors, ...rest }) => [values, errors, rest]}
+			children={([values, errors, rest]) => (
 				<pre className={clsx("col-span-full", className)}>
-					{JSON.stringify({ values, errors }, null, 2)}
+					{JSON.stringify({ values, errors, ...rest }, null, 2)}
 				</pre>
 			)}
 		/>
@@ -210,6 +222,10 @@ export const { useAppForm } = createFormHook({
 		MultiSelect: MultiSelectField,
 		ProfilePicker: ProfilePickerField,
 		RichText: RichTextField,
+		PaymentCard: PaymentCardField,
+		Expiry: ExpiryField,
+		PaymentKey: PaymentKeyField,
+		DivisionPicker: DivisionPickerField,
 	},
 	formComponents: {
 		Alert,

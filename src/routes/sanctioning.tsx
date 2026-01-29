@@ -16,6 +16,7 @@ import type { LexicalState } from "@/db/schema/shared";
 import { DefaultLayout } from "@/layouts/default";
 
 export const Route = createFileRoute("/sanctioning")({
+	ssr: "data-only",
 	loader: async ({ context: { queryClient } }) => {
 		await queryClient.ensureQueryData(
 			contentPageBlocksQueryOptions("sanctioning"),

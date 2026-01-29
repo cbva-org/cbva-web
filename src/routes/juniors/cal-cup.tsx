@@ -16,6 +16,7 @@ import type { LexicalState } from "@/db/schema/shared";
 import { DefaultLayout } from "@/layouts/default";
 
 export const Route = createFileRoute("/juniors/cal-cup")({
+	ssr: "data-only",
 	loader: async ({ context: { queryClient } }) => {
 		await Promise.all([
 			queryClient.ensureQueryData(contentPageBlocksQueryOptions("cal-cup")),

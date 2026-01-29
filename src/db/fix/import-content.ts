@@ -5,7 +5,7 @@ import { blocks, pages, type Block } from "../schema";
 import { db } from "../connection";
 
 async function main() {
-	const keys = ["juniors", "cal-cup"];
+	const keys = ["prize-pool"];
 
 	await db
 		.insert(pages)

@@ -3,7 +3,7 @@ import { useDateFormatter } from "@react-aria/i18n";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { round } from "lodash-es";
-import { CircleCheckIcon, EditIcon } from "lucide-react";
+import { CircleCheckIcon, EditIcon, XCircleIcon } from "lucide-react";
 import { Suspense } from "react";
 import { titleCase } from "title-case";
 import { useViewer, useViewerHasPermission } from "@/auth/shared";
@@ -34,6 +34,7 @@ import { useVenueFilterOptions } from "@/data/venues";
 import { DefaultLayout } from "@/layouts/default";
 import { getDefaultTimeZone } from "@/lib/dates";
 import { isNotNullOrUndefined } from "@/utils/types";
+import { tagStyles } from "@/components/base/tag-group";
 
 export const Route = createFileRoute("/profile/$profileId/")({
 	validateSearch: (
@@ -204,9 +205,22 @@ function RouteComponent() {
 								<ProfileName {...profile} link={false} />
 							</h1>
 
-							<span className={pill({ class: "font-semibold", size: "sm" })}>
-								<CircleCheckIcon size={16} /> <span>Active Member</span>
-							</span>
+							{profile.activeMembership ? (
+								<span className={tagStyles({ color: "blue" })}>
+									<CircleCheckIcon size={16} /> <span>Active Member</span>
+								</span>
+							) : (
+								<Link
+									variant="alt"
+									to="/account/registrations"
+									search={{
+										memberships: [{ profileId: profile.id, tshirtSize: undefined }],
+									}}
+									className={tagStyles({ color: "red" })}
+								>
+									Purchase Membership
+								</Link>
+							)}
 						</div>
 
 						<div className="mx-auto md:mx-0 max-w-fit grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 sm:gap-12 sm:w-full">
