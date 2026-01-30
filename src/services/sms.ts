@@ -9,12 +9,17 @@ export async function sendSms(to: string, message: string) {
 	if (process.env.TWILIO_ACCOUNT_SID !== "no-send") {
 		const client = twilio(authTokenSid, authToken, { accountSid: accountSid });
 
-		const res = await client.messages.create({
-			body: message,
-			to,
-			messagingServiceSid,
-		});
+		client.messages
+			.create({
+				body: message,
+				to,
+				messagingServiceSid,
+			})
+			.then((res) => {
+				console.log("message", res.sid);
+			})
+			.catch((error) => {
+				console.error(`error sending sms message: ${error.toString()}`);
+			});
 	}
-
-	console.log("message", res.sid);
 }

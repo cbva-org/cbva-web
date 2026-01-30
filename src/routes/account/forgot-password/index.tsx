@@ -35,7 +35,7 @@ function RouteComponent() {
 					Receive an email
 				</Link>
 				<Link
-					to="/account/forgot-password/email"
+					to="/account/forgot-password/phone"
 					className={button({ radius: "full", color: "primary" })}
 				>
 					Receive a text message
