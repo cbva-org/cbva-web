@@ -1,5 +1,4 @@
 import { createMiddleware } from "@tanstack/react-start";
-import { drizzle } from "drizzle-orm/node-postgres";
 import {
 	type IRateLimiterOptions,
 	RateLimiterDrizzle,

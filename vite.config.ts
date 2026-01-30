@@ -15,7 +15,7 @@ const config = defineConfig({
 	},
 	ssr: {
 		noExternal: [/^@?lexical/],
-		external: ["jsdom"],
+		external: ["jsdom", "rate-limiter-flexible"],
 	},
 	plugins: [
 		devtools(),
@@ -41,7 +41,7 @@ const config = defineConfig({
 		compatibilityDate: "latest",
 		preset: "vercel",
 		rollupConfig: {
-			external: ["jsdom"],
+			external: ["jsdom", "rate-limiter-flexible"],
 		},
 	},
 });

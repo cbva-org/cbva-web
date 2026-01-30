@@ -52,7 +52,7 @@ export function internalServerError(message: string) {
 	setResponseStatus(500);
 
 	// Error message is for internal usage.
-	console.log("INTERNAL_SERVER_ERROR:", message);
+	console.error("INTERNAL_SERVER_ERROR:", message);
 
 	throw makeError(ErrorKind.INTERNAL_SERVER_ERROR);
 }
