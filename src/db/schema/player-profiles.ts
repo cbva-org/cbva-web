@@ -111,7 +111,6 @@ export const publicProfileColumns = {
 	highSchoolGraduationYear: true,
 	collegeTeam: true,
 	collegeTeamYearsParticipated: true,
-	externalRef: true,
 } as const;
 
 export const playerProfileRelations = relations(playerProfiles, ({ one }) => ({
