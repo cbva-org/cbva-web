@@ -6,6 +6,7 @@ import z from "zod";
 import { requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
+	publicProfileColumns,
 	selectTournamentSchema,
 	tournamentDirectors,
 	tournamentDivisions,
@@ -31,7 +32,9 @@ export const getTournament = createServerFn({
 					with: {
 						director: {
 							with: {
-								profile: true,
+								profile: {
+									columns: publicProfileColumns,
+								},
 							},
 						},
 					},

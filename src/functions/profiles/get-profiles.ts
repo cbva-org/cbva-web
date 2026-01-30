@@ -1,4 +1,5 @@
 import { db } from "@/db/connection";
+import { publicProfileColumns } from "@/db/schema";
 import { genderSchema } from "@/db/schema/shared";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
@@ -15,6 +16,7 @@ export const getProfilesFn = createServerFn()
 	.inputValidator(getProfilesSchema)
 	.handler(({ data: { ids, gender, query } }) => {
 		return db.query.playerProfiles.findMany({
+			columns: publicProfileColumns,
 			with: {
 				activeMembership: {
 					columns: {

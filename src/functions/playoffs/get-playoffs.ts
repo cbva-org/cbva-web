@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/db/connection";
+import { publicProfileColumns } from "@/db/schema";
 import z from "zod";
 
 async function readPlayoffs({
@@ -29,6 +30,7 @@ async function readPlayoffs({
 							players: {
 								with: {
 									profile: {
+										columns: publicProfileColumns,
 										with: {
 											level: true,
 										},
@@ -51,6 +53,7 @@ async function readPlayoffs({
 							players: {
 								with: {
 									profile: {
+										columns: publicProfileColumns,
 										with: {
 											level: true,
 										},
@@ -63,7 +66,9 @@ async function readPlayoffs({
 			},
 			refs: {
 				with: {
-					profile: true,
+					profile: {
+						columns: publicProfileColumns,
+					},
 				},
 				where: {
 					abandoned: {

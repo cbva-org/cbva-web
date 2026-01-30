@@ -169,7 +169,9 @@ export const handleCompletedPlayoffMatchSet = createServerOnlyFn(
 				with: {
 					players: {
 						with: {
-							profile: true,
+							profile: {
+								columns: { id: true },
+							},
 						},
 					},
 				},

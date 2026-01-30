@@ -2,6 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 
 import { db } from "@/db/connection";
+import { publicProfileColumns } from "@/db/schema";
 
 async function readPools({
 	tournamentDivisionId,
@@ -27,6 +28,7 @@ async function readPools({
 									players: {
 										with: {
 											profile: {
+												columns: publicProfileColumns,
 												with: {
 													level: true,
 												},
@@ -49,6 +51,7 @@ async function readPools({
 									players: {
 										with: {
 											profile: {
+												columns: publicProfileColumns,
 												with: {
 													level: true,
 												},
@@ -61,7 +64,9 @@ async function readPools({
 					},
 					refs: {
 						with: {
-							profile: true,
+							profile: {
+								columns: publicProfileColumns,
+							},
 						},
 						where: {
 							abandoned: {
@@ -80,6 +85,7 @@ async function readPools({
 									players: {
 										with: {
 											profile: {
+												columns: publicProfileColumns,
 												with: {
 													level: true,
 												},

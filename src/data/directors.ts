@@ -7,6 +7,7 @@ import { db } from "@/db/connection";
 import {
 	createTournamentDirectorSchema,
 	createVenueDirectorSchema,
+	publicProfileColumns,
 	selectTournamentDirectorSchema,
 	selectVenueDirectorSchema,
 	tournamentDirectors,
@@ -16,7 +17,9 @@ import {
 async function readDirectors() {
 	return await db._query.directors.findMany({
 		with: {
-			profile: true,
+			profile: {
+				columns: publicProfileColumns,
+			},
 		},
 	});
 }
@@ -50,7 +53,9 @@ export const insertTournamentDirectorFn = createServerFn({ method: "POST" })
 			with: {
 				director: {
 					with: {
-						profile: true,
+						profile: {
+							columns: publicProfileColumns,
+						},
 					},
 				},
 			},
@@ -121,7 +126,9 @@ export const insertVenueDirectorFn = createServerFn({ method: "POST" })
 			with: {
 				director: {
 					with: {
-						profile: true,
+						profile: {
+							columns: publicProfileColumns,
+						},
 					},
 				},
 			},

@@ -100,7 +100,6 @@ export const getJuniorsLeaderboardFn = createServerFn()
 						firstName: playerProfiles.firstName,
 						preferredName: playerProfiles.preferredName,
 						lastName: playerProfiles.lastName,
-						birthdate: playerProfiles.birthdate,
 						gender: playerProfiles.gender,
 						levelId: playerProfiles.levelId,
 						ratedPoints: playerProfiles.ratedPoints,

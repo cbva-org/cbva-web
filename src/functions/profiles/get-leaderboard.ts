@@ -1,5 +1,6 @@
 import { db } from "@/db/connection";
 import { findPaged } from "@/db/pagination";
+import { publicProfileColumns } from "@/db/schema";
 import { genderSchema } from "@/db/schema/shared";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
@@ -60,6 +61,7 @@ export const getLeaderboardFn = createServerFn()
 			},
 			countColumn: "id",
 			query: {
+				columns: publicProfileColumns,
 				with: {
 					level: true,
 				},

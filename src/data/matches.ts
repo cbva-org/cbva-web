@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { eq } from "drizzle-orm";
 import { db } from "@/db/connection";
-import { poolMatches } from "@/db/schema";
+import { poolMatches, publicProfileColumns } from "@/db/schema";
 
 export const getPoolMatch = createServerFn({
 	method: "GET",
@@ -22,7 +22,9 @@ export const getPoolMatch = createServerFn({
 							with: {
 								players: {
 									with: {
-										profile: true,
+										profile: {
+											columns: publicProfileColumns,
+										},
 									},
 								},
 							},
@@ -35,7 +37,9 @@ export const getPoolMatch = createServerFn({
 							with: {
 								players: {
 									with: {
-										profile: true,
+										profile: {
+											columns: publicProfileColumns,
+										},
 									},
 								},
 							},
@@ -44,7 +48,9 @@ export const getPoolMatch = createServerFn({
 				},
 				refs: {
 					with: {
-						profile: true,
+						profile: {
+							columns: publicProfileColumns,
+						},
 					},
 				},
 				pool: {
@@ -78,7 +84,9 @@ export const getPoolMatchSet = createServerFn({
 									with: {
 										players: {
 											with: {
-												profile: true,
+												profile: {
+													columns: publicProfileColumns,
+												},
 											},
 										},
 									},
@@ -91,7 +99,9 @@ export const getPoolMatchSet = createServerFn({
 									with: {
 										players: {
 											with: {
-												profile: true,
+												profile: {
+													columns: publicProfileColumns,
+												},
 											},
 										},
 									},
@@ -128,7 +138,9 @@ export const getPlayoffMatch = createServerFn({
 							with: {
 								players: {
 									with: {
-										profile: true,
+										profile: {
+											columns: publicProfileColumns,
+										},
 									},
 								},
 							},
@@ -141,7 +153,9 @@ export const getPlayoffMatch = createServerFn({
 							with: {
 								players: {
 									with: {
-										profile: true,
+										profile: {
+											columns: publicProfileColumns,
+										},
 									},
 								},
 							},
@@ -156,7 +170,9 @@ export const getPlayoffMatch = createServerFn({
 									with: {
 										players: {
 											with: {
-												profile: true,
+												profile: {
+													columns: publicProfileColumns,
+												},
 											},
 										},
 									},
