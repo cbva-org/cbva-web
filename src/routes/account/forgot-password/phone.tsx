@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@/components/base/link";
 import { title } from "@/components/base/primitives";
-import { ForgotPasswordForm } from "@/components/users/forgot-password-form";
 import { DefaultLayout } from "@/layouts/default";
+import { ForgotPasswordPhoneForm } from "@/components/users/forgot-password-phone-form";
 
-export const Route = createFileRoute("/account/forgot-password")({
+export const Route = createFileRoute("/account/forgot-password/phone")({
 	head: () => ({
 		meta: [{ title: "Forgot Password" }],
 	}),
@@ -17,12 +18,18 @@ function RouteComponent() {
 				<h1 className={title({ size: "lg" })}>Forgot your password?</h1>
 
 				<p className="max-w-md mx-auto">
-					Fill out the form below and we'll send you a link to reset your
-					password.
+					Fill out the form below and we'll send you text message with a
+					verification code.
 				</p>
 			</div>
 
-			<ForgotPasswordForm className="bg-white rounded-lg p-8 w-full max-w-sm mx-auto" />
+			<ForgotPasswordPhoneForm className="bg-white rounded-lg p-8 w-full max-w-sm mx-auto" />
+
+			<p className="text-center text-gray-600 mt-4">
+				<Link to="/account/forgot-password/email">
+					Receive an email instead
+				</Link>
+			</p>
 		</DefaultLayout>
 	);
 }

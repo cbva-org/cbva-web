@@ -11,26 +11,43 @@ export type LoginFormProps = {
 	next?: string;
 };
 
+// Accepts either email or E.164 phone number
+const emailOrPhoneSchema = z.union([z.email(), z.e164()]);
+
 const schema = z.object({
-	email: z.email(),
+	identifier: emailOrPhoneSchema,
 	password: z.string().nonempty({
 		message: "This field is required",
 	}),
-	next: z.string().optional().nullable(),
 });
+
+function isEmail(value: string): boolean {
+	return value.includes("@");
+}
 
 export function LoginForm({ className, next }: LoginFormProps) {
 	const navigate = useNavigate();
 
 	const { mutate: login, failureReason } = useMutation({
-		mutationFn: async ({ email, password, next }: z.infer<typeof schema>) => {
-			const { error } = await authClient.signIn.email({
-				email,
-				password,
-			});
+		mutationFn: async ({ identifier, password }: z.infer<typeof schema>) => {
+			if (isEmail(identifier)) {
+				const { error } = await authClient.signIn.email({
+					email: identifier,
+					password,
+				});
 
-			if (error) {
-				throw error;
+				if (error) {
+					throw error;
+				}
+			} else {
+				const { error } = await authClient.signIn.phoneNumber({
+					phoneNumber: identifier,
+					password,
+				});
+
+				if (error) {
+					throw error;
+				}
 			}
 
 			navigate({
@@ -43,7 +60,7 @@ export function LoginForm({ className, next }: LoginFormProps) {
 
 	const form = useAppForm({
 		defaultValues: {
-			email: "",
+			identifier: "",
 			password: "",
 		},
 		validators: {
@@ -51,7 +68,7 @@ export function LoginForm({ className, next }: LoginFormProps) {
 			onChange: schema,
 		},
 		onSubmit: ({ value }) => {
-			login({ ...value, next });
+			login(value);
 		},
 	});
 
@@ -74,13 +91,12 @@ export function LoginForm({ className, next }: LoginFormProps) {
 				)}
 
 				<form.AppField
-					name="email"
+					name="identifier"
 					children={(field) => (
 						<field.Text
 							isRequired
-							label="Email"
-							placeholder="Enter your email"
-							type="email"
+							label="Email or Phone"
+							placeholder="Enter your email or phone number"
 							field={field}
 						/>
 					)}

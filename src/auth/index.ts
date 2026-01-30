@@ -17,6 +17,9 @@ export const auth = betterAuth({
 			sendOTP: async ({ phoneNumber, code }) => {
 				await sendSms(phoneNumber, `CBVA verification code: ${code}`);
 			},
+			sendPasswordResetOTP: async ({ phoneNumber, code }) => {
+				await sendSms(phoneNumber, `CBVA password reset code: ${code}`);
+			},
 		}),
 		adminPlugin({
 			ac,
