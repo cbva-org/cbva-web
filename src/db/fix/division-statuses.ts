@@ -5,23 +5,34 @@ import { db } from "../connection";
 
 /**
  * Script to set tournament_division.status for tournaments before 2026:
- * - If there is a tournament_division_team with a finish of 1st, then it is complete
+ * - Tournaments before 2024 are all considered complete (old data)
+ * - Tournaments in 2024-2025: complete if there is a team with any finish
  * - Otherwise it remains closed (default)
  */
 async function main() {
 	console.log("Updating tournament division statuses...");
 
-	// Set status to 'complete' for divisions that have a team with finish = 1
-	const result = await db.execute(sql`
+	// Set status to 'complete' for all divisions before 2024 (old data)
+	await db.execute(sql`
 		UPDATE tournament_divisions td
 		SET status = 'complete'
 		FROM tournaments t
 		WHERE td.tournament_id = t.id
+		AND t.date < '2024-01-01'
+	`);
+
+	// Set status to 'complete' for 2024-2025 divisions that have a team with any finish
+	await db.execute(sql`
+		UPDATE tournament_divisions td
+		SET status = 'complete'
+		FROM tournaments t
+		WHERE td.tournament_id = t.id
+		AND t.date >= '2024-01-01'
 		AND t.date < '2026-01-01'
 		AND EXISTS (
 			SELECT 1 FROM tournament_division_teams tdt
 			WHERE tdt.tournament_division_id = td.id
-			AND tdt.finish = 1
+			AND tdt.finish IS NOT NULL
 		)
 	`);
 
