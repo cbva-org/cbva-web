@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { db } from "@/db/connection";
-import { playerProfiles, tournamentDivisionTeams } from "@/db/schema";
+import {
+	playerProfiles,
+	tournamentDivisionTeams,
+	tournamentDivisions,
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { bootstrapTournament } from "@/tests/utils/tournaments";
 import { createProfiles } from "@/tests/utils/users";
@@ -15,43 +19,43 @@ import {
 
 describe("calculateDecayedOrder", () => {
 	test("no decay in same year", () => {
-		// AA (order 4) earned in 2024, checked in 2024 = no decay
-		expect(calculateDecayedOrder(4, 2024, 2024)).toBe(4);
+		// AA (order 3) earned in 2024, checked in 2024 = no decay
+		expect(calculateDecayedOrder(3, 2024, 2024)).toBe(3);
 	});
 
 	test("no decay in following year", () => {
-		// AA (order 4) earned in 2024, checked in 2025 = no decay (grace year)
-		expect(calculateDecayedOrder(4, 2024, 2025)).toBe(4);
+		// AA (order 3) earned in 2024, checked in 2025 = no decay (grace year)
+		expect(calculateDecayedOrder(3, 2024, 2025)).toBe(3);
 	});
 
 	test("one tier decay after grace period", () => {
-		// AA (order 4) earned in 2024, checked in 2026 = drops to A (order 3)
-		expect(calculateDecayedOrder(4, 2024, 2026)).toBe(3);
+		// AA (order 3) earned in 2024, checked in 2026 = drops to A (order 2)
+		expect(calculateDecayedOrder(3, 2024, 2026)).toBe(2);
 	});
 
 	test("two tiers decay", () => {
-		// AA (order 4) earned in 2024, checked in 2027 = drops to B (order 2)
-		expect(calculateDecayedOrder(4, 2024, 2027)).toBe(2);
+		// AA (order 3) earned in 2024, checked in 2027 = drops to B (order 1)
+		expect(calculateDecayedOrder(3, 2024, 2027)).toBe(1);
 	});
 
-	test("decay floors at 1 (unrated)", () => {
-		// AA (order 4) earned in 2024, checked in 2030 = floors at unrated (order 1)
-		expect(calculateDecayedOrder(4, 2024, 2030)).toBe(1);
+	test("decay floors at 0 (unrated)", () => {
+		// AA (order 3) earned in 2024, checked in 2030 = floors at unrated (order 0)
+		expect(calculateDecayedOrder(3, 2024, 2030)).toBe(0);
 	});
 
 	test("unrated stays unrated", () => {
-		// Unrated (order 1) earned in 2020, checked in 2025 = still unrated
-		expect(calculateDecayedOrder(1, 2020, 2025)).toBe(1);
+		// Unrated (order 0) earned in 2020, checked in 2025 = still unrated
+		expect(calculateDecayedOrder(0, 2020, 2025)).toBe(0);
 	});
 
 	test("AAA decays through all tiers", () => {
-		// AAA (order 5) earned in 2020
-		expect(calculateDecayedOrder(5, 2020, 2021)).toBe(5); // grace year
-		expect(calculateDecayedOrder(5, 2020, 2022)).toBe(4); // AA
-		expect(calculateDecayedOrder(5, 2020, 2023)).toBe(3); // A
-		expect(calculateDecayedOrder(5, 2020, 2024)).toBe(2); // B
-		expect(calculateDecayedOrder(5, 2020, 2025)).toBe(1); // Unrated
-		expect(calculateDecayedOrder(5, 2020, 2026)).toBe(1); // Still unrated
+		// AAA (order 4) earned in 2020
+		expect(calculateDecayedOrder(4, 2020, 2021)).toBe(4); // grace year
+		expect(calculateDecayedOrder(4, 2020, 2022)).toBe(3); // AA
+		expect(calculateDecayedOrder(4, 2020, 2023)).toBe(2); // A
+		expect(calculateDecayedOrder(4, 2020, 2024)).toBe(1); // B
+		expect(calculateDecayedOrder(4, 2020, 2025)).toBe(0); // Unrated
+		expect(calculateDecayedOrder(4, 2020, 2026)).toBe(0); // Still unrated
 	});
 });
 
@@ -103,6 +107,12 @@ describe("rollupRatings", () => {
 			.update(tournamentDivisionTeams)
 			.set({ levelEarnedId: aaLevel.id })
 			.where(eq(tournamentDivisionTeams.id, targetTeam.id));
+
+		// Mark the division as complete
+		await db
+			.update(tournamentDivisions)
+			.set({ status: "complete" })
+			.where(eq(tournamentDivisions.id, tournamentDivisionId));
 
 		// Get a player from that team
 		const player = targetTeam.team.players[0].profile;
@@ -165,6 +175,12 @@ describe("rollupRatings", () => {
 			.update(tournamentDivisionTeams)
 			.set({ levelEarnedId: aaLevel.id })
 			.where(eq(tournamentDivisionTeams.id, targetTeam.id));
+
+		// Mark the division as complete
+		await db
+			.update(tournamentDivisions)
+			.set({ status: "complete" })
+			.where(eq(tournamentDivisions.id, tournamentDivisionId));
 
 		const player = targetTeam.team.players[0].profile;
 
@@ -230,6 +246,12 @@ describe("rollupRatings", () => {
 			.set({ levelEarnedId: aaaLevel.id })
 			.where(eq(tournamentDivisionTeams.id, oldTeams[0].id));
 
+		// Mark the division as complete
+		await db
+			.update(tournamentDivisions)
+			.set({ status: "complete" })
+			.where(eq(tournamentDivisions.id, oldTournament.divisions[0]));
+
 		// Create a recent tournament where the same player earned A
 		const recentTournament = await bootstrapTournament(db, {
 			date: "2025-01-01",
@@ -265,6 +287,12 @@ describe("rollupRatings", () => {
 			.update(tournamentDivisionTeams)
 			.set({ levelEarnedId: aLevel.id })
 			.where(eq(tournamentDivisionTeams.id, recentTeams[0].id));
+
+		// Mark the division as complete
+		await db
+			.update(tournamentDivisions)
+			.set({ status: "complete" })
+			.where(eq(tournamentDivisions.id, recentTournament.divisions[0]));
 
 		// The player from recent tournament should have A (recent, no decay)
 		// which is better than the AAA from 2020 that would have fully decayed
@@ -319,6 +347,12 @@ describe("rollupRatedPoints", () => {
 			.update(tournamentDivisionTeams)
 			.set({ pointsEarned: 100 })
 			.where(eq(tournamentDivisionTeams.id, teams[0].id));
+
+		// Mark the division as complete
+		await db
+			.update(tournamentDivisions)
+			.set({ status: "complete" })
+			.where(eq(tournamentDivisions.id, tournamentDivisionId));
 
 		const player = teams[0].team.players[0].profile;
 

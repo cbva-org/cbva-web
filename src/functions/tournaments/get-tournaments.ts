@@ -72,7 +72,10 @@ export const getTournamentsHandler = createServerOnlyFn(
 						orderBy: (t, { asc }) => [asc(t.name)],
 					},
 				},
-				where: (tournaments, { sql, gt, lt, gte, lte, and, eq, inArray, exists }) => {
+				where: (
+					tournaments,
+					{ sql, gt, lt, gte, lte, and, eq, inArray, exists },
+				) => {
 					const filters = [
 						eq(tournaments.demo, false),
 						viewer?.role === "admin" ? null : eq(tournaments.visible, true),

@@ -19,7 +19,8 @@ export function RadioGroupField({
 	const isMounted = useIsMounted();
 
 	// Convert value to string for react-aria RadioGroup (expects string values)
-	const value = field.state.value != null ? String(field.state.value) : undefined;
+	const value =
+		field.state.value != null ? String(field.state.value) : undefined;
 
 	return (
 		<RadioGroup

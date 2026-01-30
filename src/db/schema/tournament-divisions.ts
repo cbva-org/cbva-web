@@ -14,7 +14,7 @@ import { z } from "zod";
 
 import { divisions } from "./divisions";
 import { pools } from "./pools";
-import { genderEnum } from "./shared";
+import { genderEnum, tournamentStatusEnum } from "./shared";
 import { tournamentDivisionRequirements } from "./tournament-division-requirements";
 import { tournamentDivisionTeams } from "./tournament-division-teams";
 import { tournaments } from "./tournaments";
@@ -43,6 +43,7 @@ export const tournamentDivisions = pgTable(
 		displayGender: boolean(),
 		displayDivision: boolean(),
 		registrationPrice: numeric({ mode: "number" }),
+		status: tournamentStatusEnum().notNull().default("closed"),
 		externalRef: uuid().unique(),
 	},
 	(table) => [

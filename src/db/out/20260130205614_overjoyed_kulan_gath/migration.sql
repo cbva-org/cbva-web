@@ -1,0 +1,1 @@
+ALTER TABLE "tournament_divisions" ADD COLUMN "status" "tournament_status" DEFAULT 'closed'::"tournament_status" NOT NULL;

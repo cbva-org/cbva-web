@@ -53,11 +53,7 @@ export function TournamentListFilters({
 				}}
 				label={<>Past Tournaments Only</>}
 			/>
-			<Link
-				to="/tournaments"
-				className={button({ class: "mt-2" })}
-				search={{}}
-			>
+			<Link to="/tournaments" className={button({ class: "mt-2" })} search={{}}>
 				Clear Filters
 			</Link>
 		</div>
