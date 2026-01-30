@@ -51,50 +51,56 @@ export async function rollupRatings(
 	const unratedLevel = allLevels.find((l) => l.name === "unrated");
 	const unratedLevelId = unratedLevel?.id;
 
-	// Get all player profiles with their tournament history
-	const profiles = await db.query.playerProfiles.findMany({
-		where: { gender },
-		columns: { id: true, levelId: true },
-	});
+	const fiveYearsAgo = new Date();
+	fiveYearsAgo.setFullYear(currentYear - 5);
 
-	for (const profile of profiles) {
-		// Get all tournament participations for this player in the last 5 years
-		// that have an earned level
-		const fiveYearsAgo = new Date();
-		fiveYearsAgo.setFullYear(currentYear - 5);
+	// Fetch ALL participations for ALL players of this gender in a single query
+	const allParticipations = await db
+		.select({
+			playerProfileId: teamPlayers.playerProfileId,
+			levelEarnedId: tournamentDivisionTeams.levelEarnedId,
+			tournamentDate: tournaments.date,
+		})
+		.from(teamPlayers)
+		.innerJoin(playerProfiles, eq(playerProfiles.id, teamPlayers.playerProfileId))
+		.innerJoin(
+			tournamentDivisionTeams,
+			eq(tournamentDivisionTeams.teamId, teamPlayers.teamId),
+		)
+		.innerJoin(
+			tournamentDivisions,
+			eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisions.id),
+		)
+		.innerJoin(tournaments, eq(tournamentDivisions.tournamentId, tournaments.id))
+		.where(
+			and(
+				eq(playerProfiles.gender, gender),
+				isNotNull(tournamentDivisionTeams.levelEarnedId),
+				inArray(tournamentDivisionTeams.status, ["confirmed"]),
+				gte(tournaments.date, fiveYearsAgo.toISOString().split("T")[0]),
+			),
+		);
 
-		const participations = await db
-			.select({
-				levelEarnedId: tournamentDivisionTeams.levelEarnedId,
-				tournamentDate: tournaments.date,
-			})
-			.from(teamPlayers)
-			.innerJoin(
-				tournamentDivisionTeams,
-				eq(tournamentDivisionTeams.teamId, teamPlayers.teamId),
-			)
-			.innerJoin(
-				tournamentDivisions,
-				eq(
-					tournamentDivisionTeams.tournamentDivisionId,
-					tournamentDivisions.id,
-				),
-			)
-			.innerJoin(
-				tournaments,
-				eq(tournamentDivisions.tournamentId, tournaments.id),
-			)
-			.where(
-				and(
-					eq(teamPlayers.playerProfileId, profile.id),
-					isNotNull(tournamentDivisionTeams.levelEarnedId),
-					inArray(tournamentDivisionTeams.status, ["confirmed"]),
-					gte(tournaments.date, fiveYearsAgo.toISOString().split("T")[0]),
-				),
-			);
+	// Group participations by player
+	const participationsByPlayer = new Map<
+		number,
+		{ levelEarnedId: number | null; tournamentDate: string }[]
+	>();
 
-		// Calculate the best current rating after decay
-		let bestCurrentOrder = 0; // Start with no rating
+	for (const p of allParticipations) {
+		const existing = participationsByPlayer.get(p.playerProfileId) ?? [];
+		existing.push({
+			levelEarnedId: p.levelEarnedId,
+			tournamentDate: p.tournamentDate,
+		});
+		participationsByPlayer.set(p.playerProfileId, existing);
+	}
+
+	// Calculate best decayed rating for each player
+	const playerNewLevels = new Map<number, number | undefined>();
+
+	for (const [playerId, participations] of participationsByPlayer) {
+		let bestCurrentOrder = 0;
 
 		for (const participation of participations) {
 			if (!participation.levelEarnedId) continue;
@@ -102,33 +108,57 @@ export async function rollupRatings(
 			const earnedOrder = levelOrderMap.get(participation.levelEarnedId);
 			if (earnedOrder === undefined) continue;
 
-			// Calculate years since the tournament
-			const tournamentYear = new Date(
-				participation.tournamentDate,
-			).getFullYear();
-			// Decay starts after 1 full year (the rest of that season + following season)
-			const yearsOfDecay = Math.max(0, currentYear - tournamentYear - 1);
+			const tournamentYear = new Date(participation.tournamentDate).getFullYear();
+			const decayedOrder = calculateDecayedOrder(
+				earnedOrder,
+				tournamentYear,
+				currentYear,
+			);
 
-			// Each year of decay drops the rating by 1 order
-			const decayedOrder = Math.max(1, earnedOrder - yearsOfDecay);
-
-			// Keep the best (highest order) rating
 			if (decayedOrder > bestCurrentOrder) {
 				bestCurrentOrder = decayedOrder;
 			}
 		}
 
-		// Convert order back to level id
 		const newLevelId = orderToLevelId.get(bestCurrentOrder) ?? unratedLevelId;
-
-		// Update the player's level if it changed
-		if (newLevelId !== profile.levelId) {
-			await db
-				.update(playerProfiles)
-				.set({ levelId: newLevelId })
-				.where(eq(playerProfiles.id, profile.id));
-		}
+		playerNewLevels.set(playerId, newLevelId);
 	}
+
+	// Batch update all players using a single SQL statement with CASE
+	if (playerNewLevels.size > 0) {
+		const playerIds = Array.from(playerNewLevels.keys());
+
+		// Build CASE expression for the update
+		const caseFragments = Array.from(playerNewLevels.entries()).map(
+			([playerId, levelId]) =>
+				sql`WHEN ${playerId} THEN ${levelId ?? null}::integer`,
+		);
+
+		await db.execute(sql`
+			UPDATE player_profiles
+			SET level_id = CASE id
+				${sql.join(caseFragments, sql` `)}
+			END
+			WHERE id IN (${sql.join(playerIds, sql`, `)})
+		`);
+	}
+
+	// Set unrated for players with no participations in the last 5 years
+	await db.execute(sql`
+		UPDATE player_profiles pp
+		SET level_id = ${unratedLevelId ?? null}
+		WHERE pp.gender = ${gender}
+		AND pp.id NOT IN (
+			SELECT DISTINCT tp.player_profile_id
+			FROM team_players tp
+			INNER JOIN tournament_division_teams tdt ON tdt.team_id = tp.team_id
+			INNER JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
+			INNER JOIN tournaments t ON t.id = td.tournament_id
+			WHERE tdt.level_earned_id IS NOT NULL
+			AND tdt.status = 'confirmed'
+			AND t.date >= ${fiveYearsAgo.toISOString().split("T")[0]}
+		)
+	`);
 
 	console.log(`Finished rolling up ratings for ${gender}`);
 }
