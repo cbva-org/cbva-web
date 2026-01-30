@@ -43,6 +43,7 @@ const config = defineConfig({
 		rollupConfig: {
 			external: ["jsdom"],
 		},
+		serverDependencies: ["rate-limiter-flexible", "drizzle-orm"],
 	},
 });
 
