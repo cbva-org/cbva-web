@@ -25,7 +25,7 @@ const { checkoutHandler } = await import("./checkout");
 function createCheckoutInput(
 	profileIds: number[],
 	teams: { divisionId: number; profileIds: number[] }[] = [],
-	options?: { includeTshirtSize?: boolean }
+	options?: { includeTshirtSize?: boolean },
 ) {
 	const tshirtSizes = ["xs", "sm", "m", "l", "xl", "xxl"] as const;
 	const includeTshirtSize = options?.includeTshirtSize ?? true;
@@ -42,7 +42,9 @@ function createCheckoutInput(
 		cart: {
 			memberships: profileIds.map((profileId, index) => ({
 				profileId,
-				tshirtSize: includeTshirtSize ? tshirtSizes[index % tshirtSizes.length] : undefined
+				tshirtSize: includeTshirtSize
+					? tshirtSizes[index % tshirtSizes.length]
+					: undefined,
 			})),
 			teams,
 		},
@@ -150,10 +152,14 @@ describe("checkout", () => {
 		);
 		// Verify tshirt sizes were saved correctly
 		const tshirtSizes = ["xs", "sm", "m", "l", "xl", "xxl"] as const;
-		const createdMembershipsMap = new Map(createdMemberships.map(m => [m.profileId, m]));
+		const createdMembershipsMap = new Map(
+			createdMemberships.map((m) => [m.profileId, m]),
+		);
 		profileIds.forEach((profileId, index) => {
 			const membership = createdMembershipsMap.get(profileId);
-			expect(membership?.tshirtSize).toBe(tshirtSizes[index % tshirtSizes.length]);
+			expect(membership?.tshirtSize).toBe(
+				tshirtSizes[index % tshirtSizes.length],
+			);
 		});
 	});
 
@@ -443,10 +449,14 @@ describe("checkout", () => {
 		expect(createdMemberships).toHaveLength(2);
 		// Verify tshirt sizes were saved correctly
 		const tshirtSizes = ["xs", "sm", "m", "l", "xl", "xxl"] as const;
-		const createdMembershipsMap = new Map(createdMemberships.map(m => [m.profileId, m]));
+		const createdMembershipsMap = new Map(
+			createdMemberships.map((m) => [m.profileId, m]),
+		);
 		profileIds.forEach((profileId, index) => {
 			const membership = createdMembershipsMap.get(profileId);
-			expect(membership?.tshirtSize).toBe(tshirtSizes[index % tshirtSizes.length]);
+			expect(membership?.tshirtSize).toBe(
+				tshirtSizes[index % tshirtSizes.length],
+			);
 		});
 
 		// Verify team was registered

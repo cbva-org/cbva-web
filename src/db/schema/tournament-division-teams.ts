@@ -31,7 +31,9 @@ export const tournamentDivisionTeams = pgTable(
 		teamId: integer()
 			.notNull()
 			.references(() => teams.id),
-		invoiceId: integer().references(() => invoices.id, { onDelete: "set null" }),
+		invoiceId: integer().references(() => invoices.id, {
+			onDelete: "set null",
+		}),
 		pricePaid: numeric({ mode: "number" }),
 		seed: integer(),
 		finish: integer(),

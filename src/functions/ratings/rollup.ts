@@ -27,7 +27,7 @@ export async function runAllRollups() {
  * - If not earned again, it drops one tier every January 1st
  * - Example: earning AA in 2024 lasts through all of 2025, dropping to A in 2026, B in 2027, Unrated after
  *
- * Level order (from levels table): unrated=1, b=2, a=3, aa=4, aaa=5
+ * Level order (from levels table): unrated=0, b=1, a=2, aa=3, aaa=4
  * Higher order = better rating
  */
 export async function rollupRatings(
@@ -56,6 +56,7 @@ export async function rollupRatings(
 	fiveYearsAgo.setFullYear(currentYear - 5);
 
 	// Fetch ALL participations for ALL players of this gender in a single query
+	// Only include completed tournament divisions
 	const allParticipations = await db
 		.select({
 			playerProfileId: teamPlayers.playerProfileId,
@@ -63,7 +64,10 @@ export async function rollupRatings(
 			tournamentDate: tournaments.date,
 		})
 		.from(teamPlayers)
-		.innerJoin(playerProfiles, eq(playerProfiles.id, teamPlayers.playerProfileId))
+		.innerJoin(
+			playerProfiles,
+			eq(playerProfiles.id, teamPlayers.playerProfileId),
+		)
 		.innerJoin(
 			tournamentDivisionTeams,
 			eq(tournamentDivisionTeams.teamId, teamPlayers.teamId),
@@ -72,11 +76,16 @@ export async function rollupRatings(
 			tournamentDivisions,
 			eq(tournamentDivisionTeams.tournamentDivisionId, tournamentDivisions.id),
 		)
-		.innerJoin(tournaments, eq(tournamentDivisions.tournamentId, tournaments.id))
+		.innerJoin(
+			tournaments,
+			eq(tournamentDivisions.tournamentId, tournaments.id),
+		)
 		.where(
 			and(
 				eq(playerProfiles.gender, gender),
 				isNotNull(tournamentDivisionTeams.levelEarnedId),
+				eq(tournamentDivisions.status, "complete"),
+				eq(tournaments.demo, false),
 				inArray(tournamentDivisionTeams.status, ["confirmed"]),
 				gte(tournaments.date, fiveYearsAgo.toISOString().split("T")[0]),
 			),
@@ -109,7 +118,9 @@ export async function rollupRatings(
 			const earnedOrder = levelOrderMap.get(participation.levelEarnedId);
 			if (earnedOrder === undefined) continue;
 
-			const tournamentYear = new Date(participation.tournamentDate).getFullYear();
+			const tournamentYear = new Date(
+				participation.tournamentDate,
+			).getFullYear();
 			const decayedOrder = calculateDecayedOrder(
 				earnedOrder,
 				tournamentYear,
@@ -157,14 +168,17 @@ export async function rollupRatings(
 				AND tdt.level_earned_id IS NOT NULL
 				AND tdt.status = 'confirmed'
 			LEFT JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
+				AND td.status = 'complete'
 			LEFT JOIN tournaments t ON t.id = td.tournament_id
 				AND t.date >= ${fiveYearsAgo.toISOString().split("T")[0]}
+				AND t.demo = false
 			WHERE pp2.gender = ${gender}
 			GROUP BY pp2.id
 			HAVING COUNT(t.id) = 0
 		) inactive
 		WHERE pp.id = inactive.id
 	`);
+
 
 	console.log(
 		`Finished rolling up ratings for ${gender} in ${(performance.now() - startTime).toFixed(0)}ms`,
@@ -213,6 +227,8 @@ export async function rollupRatedPoints(
 			INNER JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
 			INNER JOIN tournaments t ON t.id = td.tournament_id
 			WHERE tdt.status = 'confirmed'
+			AND td.status = 'complete'
+			AND t.demo = false
 			AND tdt.points_earned IS NOT NULL
 			AND t.date >= ${oneYearAgo.toISOString().split("T")[0]}
 			AND td.division_id IN (${sql.join(ratedDivisionIds, sql`, `)})
@@ -276,6 +292,8 @@ export async function rollupJuniorsPoints(
 			INNER JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
 			INNER JOIN tournaments t ON t.id = td.tournament_id
 			WHERE tdt.status = 'confirmed'
+			AND td.status = 'complete'
+			AND t.demo = false
 			AND tdt.points_earned IS NOT NULL
 			AND t.date >= ${oneYearAgo.toISOString().split("T")[0]}
 			AND td.division_id IN (${sql.join(juniorsDivisionIds, sql`, `)})
@@ -379,6 +397,6 @@ export function calculateDecayedOrder(
 ): number {
 	// Decay starts after 1 full year (the rest of that season + following season)
 	const yearsOfDecay = Math.max(0, currentYear - tournamentYear - 1);
-	// Each year of decay drops the rating by 1 order, minimum of 1 (unrated)
-	return Math.max(1, earnedOrder - yearsOfDecay);
+	// Each year of decay drops the rating by 1 order, minimum of 0 (unrated)
+	return Math.max(0, earnedOrder - yearsOfDecay);
 }

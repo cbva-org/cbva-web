@@ -158,11 +158,7 @@ export function ForgotPasswordPhoneForm({
 
 						<form.AppField name="newPassword">
 							{(field) => (
-								<field.Password
-									isRequired
-									label="New Password"
-									field={field}
-								/>
+								<field.Password isRequired label="New Password" field={field} />
 							)}
 						</form.AppField>
 
@@ -195,7 +191,10 @@ export function ForgotPasswordPhoneForm({
 								<form.SubmitButton
 									className="flex-1"
 									isDisabled={
-										!canSubmit || isSubmitting || isSendingOtp || isResettingPassword
+										!canSubmit ||
+										isSubmitting ||
+										isSendingOtp ||
+										isResettingPassword
 									}
 								>
 									{sentTo ? "Reset Password" : "Send Code"}

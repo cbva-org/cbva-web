@@ -13,13 +13,7 @@ import {
 } from "@/functions/blogs/update-blog";
 import { LexicalState } from "@/db/schema/shared";
 
-export function UpdateBlogForm({
-	id,
-	tag,
-}: {
-	id: number;
-	tag: string;
-}) {
+export function UpdateBlogForm({ id, tag }: { id: number; tag: string }) {
 	const [isOpen, setOpen] = useState(false);
 
 	const queryClient = useQueryClient();
@@ -41,13 +35,17 @@ export function UpdateBlogForm({
 			imageSource: data?.imageSource ?? null,
 			link: data?.link ?? "",
 			title: data?.title ?? "",
-			summary: data?.summary ?? ({ root: undefined } as unknown as LexicalState),
+			summary:
+				data?.summary ?? ({ root: undefined } as unknown as LexicalState),
 		},
 		validators: {
 			onMount: updateBlogSchema,
 			onChange: updateBlogSchema,
 		},
-		onSubmit: async ({ value: { imageSource, link, title, summary }, formApi }) => {
+		onSubmit: async ({
+			value: { imageSource, link, title, summary },
+			formApi,
+		}) => {
 			await updateBlog({ id, imageSource, link, title, summary });
 			formApi.reset();
 			setOpen(false);

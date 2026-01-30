@@ -214,7 +214,9 @@ function RouteComponent() {
 									variant="alt"
 									to="/account/registrations"
 									search={{
-										memberships: [{ profileId: profile.id, tshirtSize: undefined }],
+										memberships: [
+											{ profileId: profile.id, tshirtSize: undefined },
+										],
 									}}
 									className={tagStyles({ color: "red" })}
 								>
