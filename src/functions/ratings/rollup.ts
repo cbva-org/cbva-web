@@ -155,28 +155,60 @@ export async function rollupRatings(
 		`);
 	}
 
-	// Set unrated for players with no participations in the last 5 years
-	// Using LEFT JOIN ... IS NULL pattern instead of NOT IN for better performance
+	// Set unrated for players who have participated but have no rating from last 5 years
+	// Novice (null) = never participated in any completed tournament
+	// Unrated = has participated but no recent rating or fully decayed
 	await db.execute(sql`
 		UPDATE player_profiles pp
 		SET level_id = ${unratedLevelId ?? null}::integer
 		FROM (
 			SELECT pp2.id
 			FROM player_profiles pp2
-			LEFT JOIN team_players tp ON tp.player_profile_id = pp2.id
-			LEFT JOIN tournament_division_teams tdt ON tdt.team_id = tp.team_id
-				AND tdt.level_earned_id IS NOT NULL
-				AND tdt.status = 'confirmed'
-			LEFT JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
-				AND td.status = 'complete'
-			LEFT JOIN tournaments t ON t.id = td.tournament_id
-				AND t.date >= ${fiveYearsAgo.toISOString().split("T")[0]}
-				AND t.demo = false
+			-- Must have at least one completed tournament participation (lifetime)
 			WHERE pp2.gender = ${gender}
-			GROUP BY pp2.id
-			HAVING COUNT(t.id) = 0
+			AND EXISTS (
+				SELECT 1 FROM team_players tp2
+				INNER JOIN tournament_division_teams tdt2 ON tdt2.team_id = tp2.team_id
+					AND tdt2.status = 'confirmed'
+				INNER JOIN tournament_divisions td2 ON td2.id = tdt2.tournament_division_id
+					AND td2.status = 'complete'
+				INNER JOIN tournaments t2 ON t2.id = td2.tournament_id
+					AND t2.demo = false
+				WHERE tp2.player_profile_id = pp2.id
+			)
+			-- But no level earned in last 5 years
+			AND NOT EXISTS (
+				SELECT 1 FROM team_players tp3
+				INNER JOIN tournament_division_teams tdt3 ON tdt3.team_id = tp3.team_id
+					AND tdt3.level_earned_id IS NOT NULL
+					AND tdt3.status = 'confirmed'
+				INNER JOIN tournament_divisions td3 ON td3.id = tdt3.tournament_division_id
+					AND td3.status = 'complete'
+				INNER JOIN tournaments t3 ON t3.id = td3.tournament_id
+					AND t3.date >= ${fiveYearsAgo.toISOString().split("T")[0]}
+					AND t3.demo = false
+				WHERE tp3.player_profile_id = pp2.id
+			)
 		) inactive
 		WHERE pp.id = inactive.id
+	`);
+
+	// Set null (Novice) for players who have NEVER participated in any completed tournament
+	await db.execute(sql`
+		UPDATE player_profiles pp
+		SET level_id = NULL
+		WHERE pp.gender = ${gender}
+		AND pp.level_id IS NOT NULL
+		AND NOT EXISTS (
+			SELECT 1 FROM team_players tp
+			INNER JOIN tournament_division_teams tdt ON tdt.team_id = tp.team_id
+				AND tdt.status = 'confirmed'
+			INNER JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
+				AND td.status = 'complete'
+			INNER JOIN tournaments t ON t.id = td.tournament_id
+				AND t.demo = false
+			WHERE tp.player_profile_id = pp.id
+		)
 	`);
 
 
