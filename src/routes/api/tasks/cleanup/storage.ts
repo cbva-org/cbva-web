@@ -4,6 +4,7 @@ import { db } from "@/db/connection";
 import { internalServerError } from "@/lib/responses";
 import { getSupabaseServerClient } from "@/supabase/server";
 import { isNotNullOrUndefined } from "@/utils/types";
+import { withTiming } from "@/middlewares/with-timing";
 
 async function walk(
 	supabase: ReturnType<typeof getSupabaseServerClient>,
@@ -100,11 +101,9 @@ async function cleanupBucket<TTableName extends ConfiguredBuckets>(
 
 export const Route = createFileRoute("/api/tasks/cleanup/storage")({
 	server: {
-		middleware: [requireRole(["admin"])],
+		middleware: [requireRole(["admin"]), withTiming("cleanup/storage")],
 		handlers: {
 			POST: async () => {
-				console.log("START /api/tasks/cleanup/storage");
-
 				const supabase = getSupabaseServerClient();
 
 				const result = await supabase.storage.listBuckets();
@@ -125,8 +124,6 @@ export const Route = createFileRoute("/api/tasks/cleanup/storage")({
 						paths,
 					);
 				}
-
-				console.log("STOP /api/tasks/cleanup/storage");
 
 				return new Response(JSON.stringify({ success: true }), {
 					headers: {

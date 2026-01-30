@@ -33,6 +33,7 @@ import { Route as InfoCedarsRouteImport } from './routes/info/cedars'
 import { Route as FaqsChar123SubjectChar125RouteImport } from './routes/faqs.{-$subject}'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminSystemTasksRouteImport } from './routes/admin/system-tasks'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
 import { Route as AdminInvoicesRouteImport } from './routes/admin/invoices'
@@ -56,6 +57,7 @@ import { Route as AccountForgotPasswordEmailRouteImport } from './routes/account
 import { Route as MatchesPoolMatchIdIndexRouteImport } from './routes/matches/pool/$matchId/index'
 import { Route as MatchesPlayoffMatchIdIndexRouteImport } from './routes/matches/playoff/$matchId/index'
 import { Route as TournamentsTournamentIdDivisionIdChar123TabChar125RouteImport } from './routes/tournaments/$tournamentId/$divisionId.{-$tab}'
+import { Route as ApiTasksRatingsRollupRouteImport } from './routes/api/tasks/ratings/rollup'
 import { Route as ApiTasksCleanupStorageRouteImport } from './routes/api/tasks/cleanup/storage'
 
 const SignUpRoute = SignUpRouteImport.update({
@@ -178,6 +180,11 @@ const ApiPingRoute = ApiPingRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSystemTasksRoute = AdminSystemTasksRouteImport.update({
+  id: '/admin/system-tasks',
+  path: '/admin/system-tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -306,6 +313,11 @@ const TournamentsTournamentIdDivisionIdChar123TabChar125Route =
     path: '/tournaments/$tournamentId/$divisionId/{-$tab}',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiTasksRatingsRollupRoute = ApiTasksRatingsRollupRouteImport.update({
+  id: '/api/tasks/ratings/rollup',
+  path: '/api/tasks/ratings/rollup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTasksCleanupStorageRoute = ApiTasksCleanupStorageRouteImport.update({
   id: '/api/tasks/cleanup/storage',
   path: '/api/tasks/cleanup/storage',
@@ -329,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -358,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/profile/$profileId': typeof ProfileProfileIdIndexRoute
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdIndexRoute
   '/api/tasks/cleanup/storage': typeof ApiTasksCleanupStorageRoute
+  '/api/tasks/ratings/rollup': typeof ApiTasksRatingsRollupRoute
   '/tournaments/$tournamentId/$divisionId/{-$tab}': typeof TournamentsTournamentIdDivisionIdChar123TabChar125Route
   '/matches/playoff/$matchId': typeof MatchesPlayoffMatchIdIndexRoute
   '/matches/pool/$matchId': typeof MatchesPoolMatchIdIndexRoute
@@ -379,6 +393,7 @@ export interface FileRoutesByTo {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -408,6 +423,7 @@ export interface FileRoutesByTo {
   '/profile/$profileId': typeof ProfileProfileIdIndexRoute
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdIndexRoute
   '/api/tasks/cleanup/storage': typeof ApiTasksCleanupStorageRoute
+  '/api/tasks/ratings/rollup': typeof ApiTasksRatingsRollupRoute
   '/tournaments/$tournamentId/$divisionId/{-$tab}': typeof TournamentsTournamentIdDivisionIdChar123TabChar125Route
   '/matches/playoff/$matchId': typeof MatchesPlayoffMatchIdIndexRoute
   '/matches/pool/$matchId': typeof MatchesPoolMatchIdIndexRoute
@@ -430,6 +446,7 @@ export interface FileRoutesById {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -459,6 +476,7 @@ export interface FileRoutesById {
   '/profile/$profileId/': typeof ProfileProfileIdIndexRoute
   '/tournaments/$tournamentId/': typeof TournamentsTournamentIdIndexRoute
   '/api/tasks/cleanup/storage': typeof ApiTasksCleanupStorageRoute
+  '/api/tasks/ratings/rollup': typeof ApiTasksRatingsRollupRoute
   '/tournaments/$tournamentId/$divisionId/{-$tab}': typeof TournamentsTournamentIdDivisionIdChar123TabChar125Route
   '/matches/playoff/$matchId/': typeof MatchesPlayoffMatchIdIndexRoute
   '/matches/pool/$matchId/': typeof MatchesPoolMatchIdIndexRoute
@@ -482,6 +500,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/system-tasks'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -511,6 +530,7 @@ export interface FileRouteTypes {
     | '/profile/$profileId'
     | '/tournaments/$tournamentId'
     | '/api/tasks/cleanup/storage'
+    | '/api/tasks/ratings/rollup'
     | '/tournaments/$tournamentId/$divisionId/{-$tab}'
     | '/matches/playoff/$matchId'
     | '/matches/pool/$matchId'
@@ -532,6 +552,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/system-tasks'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -561,6 +582,7 @@ export interface FileRouteTypes {
     | '/profile/$profileId'
     | '/tournaments/$tournamentId'
     | '/api/tasks/cleanup/storage'
+    | '/api/tasks/ratings/rollup'
     | '/tournaments/$tournamentId/$divisionId/{-$tab}'
     | '/matches/playoff/$matchId'
     | '/matches/pool/$matchId'
@@ -582,6 +604,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/system-tasks'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -611,6 +634,7 @@ export interface FileRouteTypes {
     | '/profile/$profileId/'
     | '/tournaments/$tournamentId/'
     | '/api/tasks/cleanup/storage'
+    | '/api/tasks/ratings/rollup'
     | '/tournaments/$tournamentId/$divisionId/{-$tab}'
     | '/matches/playoff/$matchId/'
     | '/matches/pool/$matchId/'
@@ -633,6 +657,7 @@ export interface RootRouteChildren {
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminScheduleRoute: typeof AdminScheduleRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSystemTasksRoute: typeof AdminSystemTasksRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ApiPingRoute: typeof ApiPingRoute
   FaqsChar123SubjectChar125Route: typeof FaqsChar123SubjectChar125Route
@@ -662,6 +687,7 @@ export interface RootRouteChildren {
   ProfileProfileIdIndexRoute: typeof ProfileProfileIdIndexRoute
   TournamentsTournamentIdIndexRoute: typeof TournamentsTournamentIdIndexRoute
   ApiTasksCleanupStorageRoute: typeof ApiTasksCleanupStorageRoute
+  ApiTasksRatingsRollupRoute: typeof ApiTasksRatingsRollupRoute
   TournamentsTournamentIdDivisionIdChar123TabChar125Route: typeof TournamentsTournamentIdDivisionIdChar123TabChar125Route
   MatchesPlayoffMatchIdIndexRoute: typeof MatchesPlayoffMatchIdIndexRoute
   MatchesPoolMatchIdIndexRoute: typeof MatchesPoolMatchIdIndexRoute
@@ -837,6 +863,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/system-tasks': {
+      id: '/admin/system-tasks'
+      path: '/admin/system-tasks'
+      fullPath: '/admin/system-tasks'
+      preLoaderRoute: typeof AdminSystemTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/admin/settings'
@@ -998,6 +1031,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TournamentsTournamentIdDivisionIdChar123TabChar125RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tasks/ratings/rollup': {
+      id: '/api/tasks/ratings/rollup'
+      path: '/api/tasks/ratings/rollup'
+      fullPath: '/api/tasks/ratings/rollup'
+      preLoaderRoute: typeof ApiTasksRatingsRollupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tasks/cleanup/storage': {
       id: '/api/tasks/cleanup/storage'
       path: '/api/tasks/cleanup/storage'
@@ -1025,6 +1065,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminScheduleRoute: AdminScheduleRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSystemTasksRoute: AdminSystemTasksRoute,
   AdminUsersRoute: AdminUsersRoute,
   ApiPingRoute: ApiPingRoute,
   FaqsChar123SubjectChar125Route: FaqsChar123SubjectChar125Route,
@@ -1055,6 +1096,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileProfileIdIndexRoute: ProfileProfileIdIndexRoute,
   TournamentsTournamentIdIndexRoute: TournamentsTournamentIdIndexRoute,
   ApiTasksCleanupStorageRoute: ApiTasksCleanupStorageRoute,
+  ApiTasksRatingsRollupRoute: ApiTasksRatingsRollupRoute,
   TournamentsTournamentIdDivisionIdChar123TabChar125Route:
     TournamentsTournamentIdDivisionIdChar123TabChar125Route,
   MatchesPlayoffMatchIdIndexRoute: MatchesPlayoffMatchIdIndexRoute,
