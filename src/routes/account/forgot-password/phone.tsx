@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@/components/base/link";
 import { title } from "@/components/base/primitives";
 import { DefaultLayout } from "@/layouts/default";
 import { ForgotPasswordPhoneForm } from "@/components/users/forgot-password-phone-form";
@@ -23,6 +24,16 @@ function RouteComponent() {
 			</div>
 
 			<ForgotPasswordPhoneForm className="bg-white rounded-lg p-8 w-full max-w-sm mx-auto" />
+
+			<p className="text-center text-gray-600 mt-4">
+				Or{" "}
+				<Link
+					to="/account/forgot-password/email"
+					className="text-primary underline hover:no-underline"
+				>
+					receive an email instead
+				</Link>
+			</p>
 		</DefaultLayout>
 	);
 }
