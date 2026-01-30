@@ -26,10 +26,7 @@ function RouteComponent() {
 			<ForgotPasswordPhoneForm className="bg-white rounded-lg p-8 w-full max-w-sm mx-auto" />
 
 			<p className="text-center text-gray-600 mt-4">
-				<Link
-					to="/account/forgot-password/email"
-					className="text-primary underline hover:no-underline"
-				>
+				<Link to="/account/forgot-password/email">
 					Receive an email instead
 				</Link>
 			</p>
