@@ -2,8 +2,6 @@ import { useState } from "react";
 import { Button } from "../base/button";
 import { UploadImageModal, type UploadImageModalProps } from "./upload-image";
 
-const STORAGE_URL = `${import.meta.env.VITE_SUPABASE_STORAGE_URL}/storage/v1/object/public`;
-
 export type EditableImageProps = UploadImageModalProps & {
 	source: string;
 	alt?: string;

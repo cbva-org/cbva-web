@@ -7,6 +7,7 @@ import { Modal, ModalHeading } from "../modal";
 import "@uppy/core/css/style.min.css";
 import "@uppy/dashboard/css/style.min.css";
 import { Uploader, type UploaderProps } from "./uploader";
+import { useState } from "react";
 
 export type UploadImageModalProps = Pick<
 	UploaderProps,
@@ -14,8 +15,10 @@ export type UploadImageModalProps = Pick<
 >;
 
 export function UploadImageModal(props: UploadImageModalProps) {
+	const [isOpen, setIsOpen] = useState(false);
+
 	return (
-		<DialogTrigger>
+		<DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
 			<Button
 				variant="icon"
 				className="absolute top-3 right-3"
@@ -27,7 +30,7 @@ export function UploadImageModal(props: UploadImageModalProps) {
 				<div className="p-3 flex flex-col space-y-8">
 					<ModalHeading>Upload Image</ModalHeading>
 
-					<Uploader {...props} />
+					<Uploader {...props} onCancel={() => setIsOpen(false)} />
 				</div>
 			</Modal>
 		</DialogTrigger>

@@ -11,7 +11,6 @@ import {
 	DropdownMenuItem,
 } from "@/components/base/dropdown-menu";
 import { updateVenueMutationOptions, venuesQueryOptions } from "@/data/venues";
-import { getStorageUrl } from "@/supabase/storage";
 import { EditableImage } from "../base/editable-image";
 
 export function VenuesList() {
@@ -39,13 +38,13 @@ export function VenuesList() {
 						<br /> Tournaments
 					</h2>
 
-					{canCreateVenue && (
-						<DropdownMenu>
-							<DropdownMenuItem href="/venue/create">
-								Create New
-							</DropdownMenuItem>
-						</DropdownMenu>
-					)}
+					{/* {canCreateVenue && ( */}
+					{/* 	<DropdownMenu> */}
+					{/* 		<DropdownMenuItem href="/venue/create"> */}
+					{/* 			Create New */}
+					{/* 		</DropdownMenuItem> */}
+					{/* 	</DropdownMenu> */}
+					{/* )} */}
 				</div>
 
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">

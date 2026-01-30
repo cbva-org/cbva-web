@@ -240,7 +240,9 @@ export function Uploader({
 				proudlyDisplayPoweredByUppy={false}
 			/>
 			<div className="flex flex-row gap-2 justify-end">
-				<Button onPress={onCancel}>Cancel</Button>
+				<Button slot={onCancel ? "close" : undefined} onPress={onCancel}>
+					Cancel
+				</Button>
 				<Button
 					color="primary"
 					isDisabled={!hasEdited || isUploading}
