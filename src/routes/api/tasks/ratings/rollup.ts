@@ -1,18 +1,15 @@
 import { requireRole } from "@/auth/shared";
 import { runAllRollups } from "@/functions/ratings/rollup";
+import { withTiming } from "@/middlewares/with-timing";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/tasks/ratings/rollup")({
 	server: {
-		middleware: [requireRole(["admin"])],
+		middleware: [requireRole(["admin"]), withTiming("ratings/rollup")],
 		handlers: {
 			POST: async () => {
-				console.log("START /api/tasks/ratings/rollup");
-
 				try {
 					await runAllRollups();
-
-					console.log("STOP /api/tasks/ratings/rollup - SUCCESS");
 
 					return new Response(JSON.stringify({ success: true }), {
 						headers: { "Content-Type": "application/json" },

@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm/_relations";
 import {
 	boolean,
 	doublePrecision,
+	index,
 	integer,
 	numeric,
 	pgTable,
@@ -20,27 +21,34 @@ import { tournamentDivisions } from "./tournament-divisions";
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({ zodInstance: z });
 
-export const tournamentDivisionTeams = pgTable("tournament_division_teams", {
-	id: serial().primaryKey(),
-	tournamentDivisionId: integer()
-		.notNull()
-		.references(() => tournamentDivisions.id, { onDelete: "cascade" }),
-	teamId: integer()
-		.notNull()
-		.references(() => teams.id),
-	invoiceId: integer().references(() => invoices.id, { onDelete: "set null" }),
-	pricePaid: numeric({ mode: "number" }),
-	seed: integer(),
-	finish: integer(),
-	playoffsSeed: integer(),
-	wildcard: boolean(),
-	pointsEarned: doublePrecision(),
-	levelEarnedId: integer().references(() => levels.id),
-	status: teamStatusEnum().notNull().default("registered"),
-	externalRef: uuid().unique(),
-	order: integer(),
-	...timestamps,
-});
+export const tournamentDivisionTeams = pgTable(
+	"tournament_division_teams",
+	{
+		id: serial().primaryKey(),
+		tournamentDivisionId: integer()
+			.notNull()
+			.references(() => tournamentDivisions.id, { onDelete: "cascade" }),
+		teamId: integer()
+			.notNull()
+			.references(() => teams.id),
+		invoiceId: integer().references(() => invoices.id, { onDelete: "set null" }),
+		pricePaid: numeric({ mode: "number" }),
+		seed: integer(),
+		finish: integer(),
+		playoffsSeed: integer(),
+		wildcard: boolean(),
+		pointsEarned: doublePrecision(),
+		levelEarnedId: integer().references(() => levels.id),
+		status: teamStatusEnum().notNull().default("registered"),
+		externalRef: uuid().unique(),
+		order: integer(),
+		...timestamps,
+	},
+	(table) => [
+		index("tdt_team_id_idx").on(table.teamId),
+		index("tdt_status_idx").on(table.status),
+	],
+);
 
 export const selectTournamentDivisionTeamSchema = createSelectSchema(
 	tournamentDivisionTeams,

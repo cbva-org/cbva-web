@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm/_relations";
 import {
 	boolean,
 	date,
+	index,
 	integer,
 	pgTable,
 	serial,
@@ -18,20 +19,24 @@ import { venues } from "./venues";
 const { createInsertSchema, createSelectSchema, createUpdateSchema } =
 	createSchemaFactory({ zodInstance: z });
 
-export const tournaments = pgTable("tournaments", {
-	id: serial().primaryKey(),
-	name: text(),
-	date: date().notNull(),
-	startTime: time().notNull(),
-	visible: boolean().notNull().default(false),
-	demo: boolean().notNull().default(false),
-	registrationOpenDate: date(),
-	registrationOpenAt: timestamp(),
-	venueId: integer()
-		.notNull()
-		.references(() => venues.id),
-	externalRef: text(),
-});
+export const tournaments = pgTable(
+	"tournaments",
+	{
+		id: serial().primaryKey(),
+		name: text(),
+		date: date().notNull(),
+		startTime: time().notNull(),
+		visible: boolean().notNull().default(false),
+		demo: boolean().notNull().default(false),
+		registrationOpenDate: date(),
+		registrationOpenAt: timestamp(),
+		venueId: integer()
+			.notNull()
+			.references(() => venues.id),
+		externalRef: text(),
+	},
+	(table) => [index("tournaments_date_idx").on(table.date)],
+);
 
 export const selectTournamentSchema = createSelectSchema(tournaments);
 export const createTournamentSchema = createInsertSchema(tournaments).omit({

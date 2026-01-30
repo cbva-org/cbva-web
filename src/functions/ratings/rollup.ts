@@ -34,6 +34,7 @@ export async function rollupRatings(
 	gender: Gender,
 	currentYear: number = new Date().getFullYear(),
 ) {
+	const startTime = performance.now();
 	console.log(`Rolling up ratings for ${gender}...`);
 
 	// Get all levels ordered by their order field
@@ -144,23 +145,30 @@ export async function rollupRatings(
 	}
 
 	// Set unrated for players with no participations in the last 5 years
+	// Using LEFT JOIN ... IS NULL pattern instead of NOT IN for better performance
 	await db.execute(sql`
 		UPDATE player_profiles pp
-		SET level_id = ${unratedLevelId ?? null}
-		WHERE pp.gender = ${gender}
-		AND pp.id NOT IN (
-			SELECT DISTINCT tp.player_profile_id
-			FROM team_players tp
-			INNER JOIN tournament_division_teams tdt ON tdt.team_id = tp.team_id
-			INNER JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
-			INNER JOIN tournaments t ON t.id = td.tournament_id
-			WHERE tdt.level_earned_id IS NOT NULL
-			AND tdt.status = 'confirmed'
-			AND t.date >= ${fiveYearsAgo.toISOString().split("T")[0]}
-		)
+		SET level_id = ${unratedLevelId ?? null}::integer
+		FROM (
+			SELECT pp2.id
+			FROM player_profiles pp2
+			LEFT JOIN team_players tp ON tp.player_profile_id = pp2.id
+			LEFT JOIN tournament_division_teams tdt ON tdt.team_id = tp.team_id
+				AND tdt.level_earned_id IS NOT NULL
+				AND tdt.status = 'confirmed'
+			LEFT JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
+			LEFT JOIN tournaments t ON t.id = td.tournament_id
+				AND t.date >= ${fiveYearsAgo.toISOString().split("T")[0]}
+			WHERE pp2.gender = ${gender}
+			GROUP BY pp2.id
+			HAVING COUNT(t.id) = 0
+		) inactive
+		WHERE pp.id = inactive.id
 	`);
 
-	console.log(`Finished rolling up ratings for ${gender}`);
+	console.log(
+		`Finished rolling up ratings for ${gender} in ${(performance.now() - startTime).toFixed(0)}ms`,
+	);
 }
 
 /**
@@ -173,6 +181,7 @@ export async function rollupRatedPoints(
 	gender: Gender,
 	asOfDate: Date = new Date(),
 ) {
+	const startTime = performance.now();
 	console.log(`Rolling up rated points for ${gender}...`);
 
 	const oneYearAgo = new Date(asOfDate);
@@ -193,25 +202,36 @@ export async function rollupRatedPoints(
 		return;
 	}
 
-	// Update rated points for all players of this gender
+	// Pre-aggregate points in a CTE, then join to update (faster than correlated subquery)
 	await db.execute(sql`
-		UPDATE player_profiles pp
-		SET rated_points = COALESCE((
-			SELECT SUM(tdt.points_earned)
+		WITH aggregated_points AS (
+			SELECT
+				tp.player_profile_id,
+				SUM(tdt.points_earned) as total_points
 			FROM team_players tp
 			INNER JOIN tournament_division_teams tdt ON tdt.team_id = tp.team_id
 			INNER JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
 			INNER JOIN tournaments t ON t.id = td.tournament_id
-			WHERE tp.player_profile_id = pp.id
-			AND tdt.status = 'confirmed'
+			WHERE tdt.status = 'confirmed'
 			AND tdt.points_earned IS NOT NULL
 			AND t.date >= ${oneYearAgo.toISOString().split("T")[0]}
 			AND td.division_id IN (${sql.join(ratedDivisionIds, sql`, `)})
-		), 0)
-		WHERE pp.gender = ${gender}
+			GROUP BY tp.player_profile_id
+		)
+		UPDATE player_profiles pp
+		SET rated_points = COALESCE(ap.total_points, 0)
+		FROM (
+			SELECT pp2.id, ap.total_points
+			FROM player_profiles pp2
+			LEFT JOIN aggregated_points ap ON ap.player_profile_id = pp2.id
+			WHERE pp2.gender = ${gender}
+		) ap
+		WHERE pp.id = ap.id
 	`);
 
-	console.log(`Finished rolling up rated points for ${gender}`);
+	console.log(
+		`Finished rolling up rated points for ${gender} in ${(performance.now() - startTime).toFixed(0)}ms`,
+	);
 }
 
 /**
@@ -223,6 +243,7 @@ export async function rollupJuniorsPoints(
 	gender: Gender,
 	asOfDate: Date = new Date(),
 ) {
+	const startTime = performance.now();
 	console.log(`Rolling up juniors points for ${gender}...`);
 
 	const oneYearAgo = new Date(asOfDate);
@@ -244,25 +265,36 @@ export async function rollupJuniorsPoints(
 		return;
 	}
 
-	// Update juniors points for all players of this gender
+	// Pre-aggregate points in a CTE, then join to update (faster than correlated subquery)
 	await db.execute(sql`
-		UPDATE player_profiles pp
-		SET juniors_points = COALESCE((
-			SELECT SUM(tdt.points_earned)
+		WITH aggregated_points AS (
+			SELECT
+				tp.player_profile_id,
+				SUM(tdt.points_earned) as total_points
 			FROM team_players tp
 			INNER JOIN tournament_division_teams tdt ON tdt.team_id = tp.team_id
 			INNER JOIN tournament_divisions td ON td.id = tdt.tournament_division_id
 			INNER JOIN tournaments t ON t.id = td.tournament_id
-			WHERE tp.player_profile_id = pp.id
-			AND tdt.status = 'confirmed'
+			WHERE tdt.status = 'confirmed'
 			AND tdt.points_earned IS NOT NULL
 			AND t.date >= ${oneYearAgo.toISOString().split("T")[0]}
 			AND td.division_id IN (${sql.join(juniorsDivisionIds, sql`, `)})
-		), 0)
-		WHERE pp.gender = ${gender}
+			GROUP BY tp.player_profile_id
+		)
+		UPDATE player_profiles pp
+		SET juniors_points = COALESCE(ap.total_points, 0)
+		FROM (
+			SELECT pp2.id, ap.total_points
+			FROM player_profiles pp2
+			LEFT JOIN aggregated_points ap ON ap.player_profile_id = pp2.id
+			WHERE pp2.gender = ${gender}
+		) ap
+		WHERE pp.id = ap.id
 	`);
 
-	console.log(`Finished rolling up juniors points for ${gender}`);
+	console.log(
+		`Finished rolling up juniors points for ${gender} in ${(performance.now() - startTime).toFixed(0)}ms`,
+	);
 }
 
 /**
@@ -271,6 +303,7 @@ export async function rollupJuniorsPoints(
  * - Only rank players who have participated in tournaments or have points
  */
 export async function updateRanks(gender: Gender) {
+	const startTime = performance.now();
 	console.log(`Updating ranks for ${gender}...`);
 
 	// Use a window function to calculate ranks
@@ -306,7 +339,9 @@ export async function updateRanks(gender: Gender) {
 		AND level_id IS NULL
 	`);
 
-	console.log(`Finished updating ranks for ${gender}`);
+	console.log(
+		`Finished updating ranks for ${gender} in ${(performance.now() - startTime).toFixed(0)}ms`,
+	);
 }
 
 /**
