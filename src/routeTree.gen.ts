@@ -33,6 +33,7 @@ import { Route as InfoCedarsRouteImport } from './routes/info/cedars'
 import { Route as FaqsChar123SubjectChar125RouteImport } from './routes/faqs.{-$subject}'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminSystemTasksRouteImport } from './routes/admin/system-tasks'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
 import { Route as AdminInvoicesRouteImport } from './routes/admin/invoices'
@@ -179,6 +180,11 @@ const ApiPingRoute = ApiPingRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSystemTasksRoute = AdminSystemTasksRouteImport.update({
+  id: '/admin/system-tasks',
+  path: '/admin/system-tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -335,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -386,6 +393,7 @@ export interface FileRoutesByTo {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -438,6 +446,7 @@ export interface FileRoutesById {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
@@ -491,6 +500,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/system-tasks'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/system-tasks'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -593,6 +604,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/system-tasks'
     | '/admin/users'
     | '/api/ping'
     | '/faqs/{-$subject}'
@@ -645,6 +657,7 @@ export interface RootRouteChildren {
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminScheduleRoute: typeof AdminScheduleRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSystemTasksRoute: typeof AdminSystemTasksRoute
   AdminUsersRoute: typeof AdminUsersRoute
   ApiPingRoute: typeof ApiPingRoute
   FaqsChar123SubjectChar125Route: typeof FaqsChar123SubjectChar125Route
@@ -850,6 +863,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/system-tasks': {
+      id: '/admin/system-tasks'
+      path: '/admin/system-tasks'
+      fullPath: '/admin/system-tasks'
+      preLoaderRoute: typeof AdminSystemTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/admin/settings'
@@ -1045,6 +1065,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminScheduleRoute: AdminScheduleRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSystemTasksRoute: AdminSystemTasksRoute,
   AdminUsersRoute: AdminUsersRoute,
   ApiPingRoute: ApiPingRoute,
   FaqsChar123SubjectChar125Route: FaqsChar123SubjectChar125Route,
