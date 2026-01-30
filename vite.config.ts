@@ -14,7 +14,7 @@ const config = defineConfig({
 		sourcemap: true, // Source map generation must be turned on
 	},
 	ssr: {
-		noExternal: [/^@?lexical/, "rate-limiter-flexible", "drizzle-orm"],
+		noExternal: [/^@?lexical/],
 		external: ["jsdom"],
 	},
 	plugins: [
