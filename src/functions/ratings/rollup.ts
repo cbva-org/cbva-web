@@ -329,6 +329,30 @@ export async function updateRanks(gender: Gender) {
 		WHERE pp.id = ranked.id
 	`);
 
+	// Clamp ranks: players with very high ranks get clamped to worst_active_rank + 500
+	// This prevents inactive players from having arbitrarily high rank numbers
+	const unratedLevel = await db.query.levels.findFirst({
+		where: { name: "unrated" },
+	});
+
+	if (unratedLevel) {
+		await db.execute(sql`
+			WITH worst_active_rank AS (
+				SELECT MAX(pp.rank) as max_rank
+				FROM player_profiles pp
+				WHERE pp.gender = ${gender}
+				AND pp.level_id = ${unratedLevel.id}
+				AND pp.rated_points > 0
+			)
+			UPDATE player_profiles pp
+			SET rank = (SELECT max_rank + 500 FROM worst_active_rank)
+			FROM worst_active_rank
+			WHERE pp.gender = ${gender}
+			AND pp.rank > (SELECT max_rank + 500 FROM worst_active_rank)
+			AND worst_active_rank.max_rank IS NOT NULL
+		`);
+	}
+
 	// Set rank to NULL for players with no activity
 	await db.execute(sql`
 		UPDATE player_profiles
