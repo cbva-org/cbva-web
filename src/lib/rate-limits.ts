@@ -1,13 +1,13 @@
 import { createMiddleware } from "@tanstack/react-start";
 import {
 	type IRateLimiterOptions,
-	RateLimiterDrizzle,
 	type RateLimiterRes,
 } from "rate-limiter-flexible";
 import { getViewer } from "@/auth/server";
 import { rateLimiterFlexibleSchema } from "@/db/schema";
 import { internalServerError, tooManyRequests } from "./responses";
 import { db } from "@/db/connection";
+import { RateLimiterDrizzle } from "./rate-limiter-drizzle";
 
 // Limit example: allow 10 signed upload URLs per minute, with burst up to 5 at once.
 
