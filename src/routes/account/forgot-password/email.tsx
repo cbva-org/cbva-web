@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { title } from "@/components/base/primitives";
-import { ForgotPasswordForm } from "@/components/users/forgot-password-form";
+import { ForgotPasswordEmailForm } from "@/components/users/forgot-password-email-form";
 import { DefaultLayout } from "@/layouts/default";
 
-export const Route = createFileRoute("/account/forgot-password")({
+export const Route = createFileRoute("/account/forgot-password/email")({
 	head: () => ({
 		meta: [{ title: "Forgot Password" }],
 	}),
@@ -22,7 +22,7 @@ function RouteComponent() {
 				</p>
 			</div>
 
-			<ForgotPasswordForm className="bg-white rounded-lg p-8 w-full max-w-sm mx-auto" />
+			<ForgotPasswordEmailForm className="bg-white rounded-lg p-8 w-full max-w-sm mx-auto" />
 		</DefaultLayout>
-	);
+	)
 }

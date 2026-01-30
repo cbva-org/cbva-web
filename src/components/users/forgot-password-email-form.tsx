@@ -1,11 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import z from "zod/v4";
 import { authClient } from "@/auth/client";
 import { useAppForm } from "@/components/base/form";
 import { useLoggedInRedirect } from "@/hooks/auth";
-import { Link } from "../base/link";
 
 export type ForgotPasswordFormProps = {
 	className?: string;
@@ -15,7 +13,9 @@ const schema = z.object({
 	email: z.email(),
 });
 
-export function ForgotPasswordForm({ className }: ForgotPasswordFormProps) {
+export function ForgotPasswordEmailForm({
+	className,
+}: ForgotPasswordFormProps) {
 	const [sentTo, setSentTo] = useState<string | undefined>();
 
 	const { mutate: sendReset, failureReason } = useMutation({
