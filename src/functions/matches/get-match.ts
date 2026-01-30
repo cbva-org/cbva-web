@@ -1,11 +1,12 @@
 import { db } from "@/db/connection";
-import type {
-	MatchRef,
-	MatchSet,
-	PlayerProfile,
-	Team,
-	TeamPlayer,
-	TournamentDivisionTeam,
+import {
+	publicProfileColumns,
+	type MatchRef,
+	type MatchSet,
+	type PlayerProfile,
+	type Team,
+	type TeamPlayer,
+	type TournamentDivisionTeam,
 } from "@/db/schema";
 import type { MatchStatus } from "@/db/schema/shared";
 import { assertFound, badRequest } from "@/lib/responses";
@@ -61,7 +62,9 @@ export const getMatch = createServerFn({
 									with: {
 										players: {
 											with: {
-												profile: true,
+												profile: {
+													columns: publicProfileColumns,
+												},
 											},
 										},
 									},
@@ -74,7 +77,9 @@ export const getMatch = createServerFn({
 									with: {
 										players: {
 											with: {
-												profile: true,
+												profile: {
+													columns: publicProfileColumns,
+												},
 											},
 										},
 									},
@@ -83,7 +88,9 @@ export const getMatch = createServerFn({
 						},
 						refs: {
 							with: {
-								profile: true,
+								profile: {
+									columns: publicProfileColumns,
+								},
 							},
 						},
 					},
@@ -121,7 +128,9 @@ export const getMatch = createServerFn({
 									with: {
 										players: {
 											with: {
-												profile: true,
+												profile: {
+													columns: publicProfileColumns,
+												},
 											},
 										},
 									},
@@ -134,7 +143,9 @@ export const getMatch = createServerFn({
 									with: {
 										players: {
 											with: {
-												profile: true,
+												profile: {
+													columns: publicProfileColumns,
+												},
 											},
 										},
 									},
@@ -143,7 +154,9 @@ export const getMatch = createServerFn({
 						},
 						refs: {
 							with: {
-								profile: true,
+								profile: {
+									columns: publicProfileColumns,
+								},
 							},
 						},
 						pool: {

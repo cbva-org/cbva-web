@@ -23,6 +23,7 @@ import {
 	type CreatePlayerProfile,
 	createPlayerProfileSchema,
 	playerProfiles,
+	publicProfileColumns,
 	selectPlayerProfileSchema,
 	updatePlayerProfileSchema,
 } from "@/db/schema/player-profiles";
@@ -475,10 +476,13 @@ export const searchProfiles = createServerFn({
 })
 	.inputValidator(searchProfilesSchema)
 	.handler(async ({ data: { name, gender, levels } }) => {
-		const profiles = await db._query.playerProfiles.findMany({
+		const profiles = await db.query.playerProfiles.findMany({
+			columns: publicProfileColumns,
 			limit: 25,
-			where: (t, { and, ilike, eq, inArray, sql }) => {
-				const filters = [
+			where: {
+				gender,
+				levelId: levels ? { in: levels } : undefined,
+				RAW: (t, { ilike, sql }) =>
 					ilike(
 						sql`
             CASE
@@ -489,11 +493,6 @@ export const searchProfiles = createServerFn({
             `,
 						`%${name}%`,
 					),
-					gender ? eq(t.gender, gender) : null,
-					levels ? inArray(t.levelId, levels) : null,
-				].filter(isNotNull);
-
-				return and(...filters);
 			},
 		});
 

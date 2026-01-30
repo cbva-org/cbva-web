@@ -46,7 +46,9 @@ export async function setMatchRefsHandler({
 			with: {
 				players: {
 					with: {
-						profile: true,
+						profile: {
+							columns: { id: true },
+						},
 					},
 				},
 			},

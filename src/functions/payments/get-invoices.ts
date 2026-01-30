@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/db/connection";
+import { publicProfileColumns } from "@/db/schema";
 import { isDefined } from "@/utils/types";
 import z from "zod";
 import { findPaged, pagingOptionsSchema } from "@/db/pagination";
@@ -32,7 +33,9 @@ export const getInvoices = createServerFn({
 					purchaser: true,
 					memberships: {
 						with: {
-							profile: true,
+							profile: {
+								columns: publicProfileColumns,
+							},
 						},
 					},
 					tournamentRegistrations: true,
@@ -42,7 +45,9 @@ export const getInvoices = createServerFn({
 								with: {
 									players: {
 										with: {
-											profile: true,
+											profile: {
+												columns: publicProfileColumns,
+											},
 										},
 									},
 								},

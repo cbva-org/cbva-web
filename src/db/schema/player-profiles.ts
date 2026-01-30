@@ -86,6 +86,34 @@ export type PlayerProfile = z.infer<typeof selectPlayerProfileSchema>;
 export type CreatePlayerProfile = z.infer<typeof createPlayerProfileSchema>;
 export type UpdatePlayerProfile = z.infer<typeof updatePlayerProfileSchema>;
 
+/**
+ * Public profile columns - excludes sensitive data like birthdate and userId.
+ * Use this in relational queries when returning profiles to clients.
+ */
+export const publicProfileColumns = {
+	id: true,
+	firstName: true,
+	preferredName: true,
+	lastName: true,
+	gender: true,
+	levelId: true,
+	ratedPoints: true,
+	juniorsPoints: true,
+	rank: true,
+	bio: true,
+	imageSource: true,
+	heightFeet: true,
+	heightInches: true,
+	dominantArm: true,
+	preferredRole: true,
+	preferredSide: true,
+	club: true,
+	highSchoolGraduationYear: true,
+	collegeTeam: true,
+	collegeTeamYearsParticipated: true,
+	externalRef: true,
+} as const;
+
 export const playerProfileRelations = relations(playerProfiles, ({ one }) => ({
 	user: one(users, {
 		fields: [playerProfiles.userId],

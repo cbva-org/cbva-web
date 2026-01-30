@@ -9,7 +9,12 @@ import { eq } from "drizzle-orm";
 import z from "zod";
 import { authMiddleware, requirePermissions } from "@/auth/shared";
 import { db } from "@/db/connection";
-import { selectVenueSchema, updateVenueSchema, venues } from "@/db/schema";
+import {
+	publicProfileColumns,
+	selectVenueSchema,
+	updateVenueSchema,
+	venues,
+} from "@/db/schema";
 
 async function readVenues() {
 	return await db._query.venues.findMany({
@@ -100,7 +105,9 @@ export const getVenue = createServerFn({
 					with: {
 						director: {
 							with: {
-								profile: true,
+								profile: {
+									columns: publicProfileColumns,
+								},
 							},
 						},
 					},
