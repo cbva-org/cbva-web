@@ -73,17 +73,20 @@ export class RateLimiterDrizzle {
 		changedPoints: number,
 		result: { points: number; expire: Date | null },
 	): RateLimiterRes {
-		const res = new RateLimiterRes();
-
-		res.isFirstInDuration = result.points === changedPoints;
-		res.consumedPoints = result.points;
-		res.remainingPoints = Math.max(this.points - res.consumedPoints, 0);
-		res.msBeforeNext =
+		const consumedPoints = result.points;
+		const remainingPoints = Math.max(this.points - consumedPoints, 0);
+		const msBeforeNext =
 			result.expire !== null
 				? Math.max(new Date(result.expire).getTime() - Date.now(), 0)
 				: -1;
+		const isFirstInDuration = result.points === changedPoints;
 
-		return res;
+		return new RateLimiterRes(
+			remainingPoints,
+			msBeforeNext,
+			consumedPoints,
+			isFirstInDuration,
+		);
 	}
 
 	/**
@@ -176,7 +179,7 @@ export class RateLimiterDrizzle {
 		const msDuration = this.duration * 1000;
 
 		const storeResult = await this._upsert(rlKey, pointsToConsume, msDuration);
-		const res = this._getRateLimiterRes(pointsToConsume, storeResult);
+		let res = this._getRateLimiterRes(pointsToConsume, storeResult);
 
 		if (res.consumedPoints > this.points) {
 			// Block if blockDuration is set and this is the first time exceeding
@@ -185,7 +188,12 @@ export class RateLimiterDrizzle {
 				res.consumedPoints <= this.points + pointsToConsume
 			) {
 				const msBlockDuration = this.blockDuration * 1000;
-				res.msBeforeNext = msBlockDuration;
+				res = new RateLimiterRes(
+					res.remainingPoints,
+					msBlockDuration,
+					res.consumedPoints,
+					res.isFirstInDuration,
+				);
 				await this._upsert(rlKey, res.consumedPoints, msBlockDuration, true);
 			}
 
