@@ -26,6 +26,11 @@ export const relations = defineRelations(tables, (r) => ({
 			to: r.playerProfiles.id,
 			optional: false,
 		}),
+		user: r.one.users({
+			from: r.memberships.profileId.through(r.playerProfiles.id),
+			to: r.users.id.through(r.playerProfiles.userId),
+			optional: false,
+		}),
 		invoice: r.one.invoices({
 			from: r.memberships.invoiceId,
 			to: r.invoices.id,

@@ -4,6 +4,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	linkOptions,
+	notFound,
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
@@ -36,7 +37,7 @@ import {
 	useDefaultTournamentPrice,
 	useIsRegistrationOpen,
 } from "@/components/registrations/context";
-import { button, Button } from "@/components/base/button";
+import { button } from "@/components/base/button";
 import { Link } from "@/components/base/link";
 
 const shortDateFormatter = new DateFormatter("EN-US", {
@@ -80,7 +81,7 @@ export const Route = createFileRoute(
 		);
 
 		if (!tournament) {
-			throw new Error("not found");
+			throw notFound();
 		}
 
 		const divisionId = Number.parseInt(divisionIdStr, 10);

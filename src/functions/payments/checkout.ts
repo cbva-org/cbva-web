@@ -16,6 +16,7 @@ import {
 } from "@/db/schema";
 import { settings } from "@/db/schema/settings";
 import { getDefaultTimeZone } from "@/lib/dates";
+import { sendEmail } from "@/services/email";
 import { postSale } from "@/services/usaepay";
 import { today } from "@internationalized/date";
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
@@ -72,7 +73,10 @@ const createInvoice = createServerOnlyFn(
 const createMemberships = createServerOnlyFn(
 	async (
 		invoiceId: number,
-		membershipItems: Array<{ profileId: number; tshirtSize?: TshirtSize }>,
+		membershipItems: Array<{
+			profileId: number;
+			tshirtSize?: TshirtSize | null;
+		}>,
 	) => {
 		const validUntil = today(getDefaultTimeZone())
 			.set({
@@ -82,16 +86,66 @@ const createMemberships = createServerOnlyFn(
 			.add({ years: 1 })
 			.toString();
 
-		await Promise.all(
-			membershipItems.map((item) =>
-				db.insert(memberships).values({
+		const results = await db
+			.insert(memberships)
+			.values(
+				membershipItems.map((item) => ({
 					profileId: item.profileId,
 					invoiceId,
 					validUntil,
 					tshirtSize: item.tshirtSize ?? null,
-				}),
-			),
-		);
+				})),
+			)
+			.returning({
+				id: memberships.id,
+				profileId: memberships.profileId,
+			});
+
+		// await Promise.all(
+		// 	membershipItems.map((item) =>
+		// 		db.insert(memberships).values({
+		// 			profileId: item.profileId,
+		// 			invoiceId,
+		// 			validUntil,
+		// 			tshirtSize: item.tshirtSize ?? null,
+		// 		}),
+		// 	),
+		// );
+
+		const created = await db.query.memberships.findMany({
+			where: {
+				id: {
+					in: results.map(({ id }) => id),
+				},
+			},
+			with: {
+				profile: {
+					columns: {
+						firstName: true,
+						preferredName: true,
+					},
+				},
+				user: {
+					columns: {
+						email: true,
+					},
+				},
+			},
+		});
+
+		for (const {
+			user: { email },
+			profile: { firstName, preferredName },
+		} of created) {
+			sendEmail({
+				to: email,
+				from: "info@cbva.com",
+				templateId: "d-5c0b0d796ec549509e07a16e2f8d05f0",
+				dynamicTemplateData: {
+					first_name: preferredName || firstName,
+				},
+			});
+		}
 	},
 );
 
