@@ -318,7 +318,12 @@ function RouteComponent() {
 									</TableColumn>
 								</TableHeader>
 
-								<TableBody items={resultData.data}>
+								<TableBody
+									items={resultData.data}
+									renderEmptyState={() => (
+										<div className="p-2 text-center">No results yet.</div>
+									)}
+								>
 									{({
 										id,
 										tournamentId,

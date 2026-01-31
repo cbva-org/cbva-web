@@ -15,56 +15,65 @@ import {
 	DisclosurePanel,
 } from "@/components/base/disclosure";
 
-const schema = z.object({
-	firstName: z
-		.string({
-			message: "This field is required",
-		})
-		.nonempty({
+const schema = z
+	.object({
+		firstName: z
+			.string({
+				message: "This field is required",
+			})
+			.nonempty({
+				message: "This field is required",
+			}),
+		preferredName: z.string().optional().nullable(),
+		lastName: z
+			.string({
+				message: "This field is required",
+			})
+			.nonempty({
+				message: "This field is required",
+			}),
+		birthdate: z
+			.any()
+			.refine((value) => Boolean(value), {
+				message: "This field is required",
+			})
+			.refine(
+				(value: CalendarDate) => {
+					if (!value) {
+						return true;
+					}
+
+					const todayDate = today(getDefaultTimeZone());
+
+					return value < todayDate;
+				},
+				{
+					message: "Player must have already been born to play",
+				},
+			),
+		gender: z.enum(["female", "male"], {
 			message: "This field is required",
 		}),
-	preferredName: z.string().optional().nullable(),
-	lastName: z
-		.string({
-			message: "This field is required",
-		})
-		.nonempty({
-			message: "This field is required",
-		}),
-	birthdate: z
-		.any()
-		.refine((value) => Boolean(value), {
-			message: "This field is required",
-		})
-		.refine(
-			(value: CalendarDate) => {
-				if (!value) {
-					return true;
-				}
-
-				const todayDate = today(getDefaultTimeZone());
-
-				return value < todayDate;
-			},
-			{
-				message: "Player must have already been born to play",
-			},
-		),
-	gender: z.enum(["female", "male"], {
-		message: "This field is required",
-	}),
-	imageSource: z.string().optional().nullable(),
-	bio: z.string().optional().nullable(),
-	heightFeet: z.number().optional().nullable(),
-	heightInches: z.number().optional().nullable(),
-	dominantArm: z.enum(["right", "left"]).optional().nullable(),
-	preferredRole: z.enum(["blocker", "defender", "split"]).optional().nullable(),
-	preferredSide: z.enum(["right", "left"]).optional().nullable(),
-	club: z.string().optional().nullable(),
-	highSchoolGraduationYear: z.number().optional().nullable(),
-	college_team: z.string().optional().nullable(),
-	collegeTeamYearsParticipated: z.number().optional().nullable(),
-});
+		imageSource: z.string().optional().nullable(),
+		bio: z.string().optional().nullable(),
+		heightFeet: z.number().optional().nullable(),
+		heightInches: z.number().optional().nullable(),
+		dominantArm: z.enum(["right", "left"]).optional().nullable(),
+		preferredRole: z
+			.enum(["blocker", "defender", "split"])
+			.optional()
+			.nullable(),
+		preferredSide: z.enum(["right", "left"]).optional().nullable(),
+		club: z.string().optional().nullable(),
+		notJuniorsEligible: z.boolean().optional().nullable(),
+		highSchoolGraduationYear: z.number().optional().nullable(),
+		college_team: z.string().optional().nullable(),
+		collegeTeamYearsParticipated: z.number().optional().nullable(),
+	})
+	.refine((data) => data.notJuniorsEligible || data.highSchoolGraduationYear, {
+		message: "If juniors eligible, High School Graduation Year is required",
+		path: ["highSchoolGraduationYear"],
+	});
 
 export function ProfileForm({
 	className,
@@ -94,11 +103,10 @@ export function ProfileForm({
 	const queryClient = useQueryClient();
 
 	const form = useAppForm({
-		defaultValues:
-			initialValues ??
-			({} as Partial<
-				Omit<CreatePlayerProfile, "birthdate"> & { birthdate: CalendarDate }
-			>),
+		defaultValues: (initialValues ?? {}) as z.infer<typeof schema>,
+		// ({} as Partial<
+		// 	Omit<CreatePlayerProfile, "birthdate"> & { birthdate: CalendarDate }
+		// >)),
 		validators: {
 			onMount: schema,
 			onBlur: schema,
@@ -186,7 +194,7 @@ export function ProfileForm({
 					children={(field) => (
 						<field.Text
 							isRequired
-							className="col-span-full sm:col-span-3"
+							className="col-span-full"
 							label="Last Name"
 							field={field}
 							isDisabled={isDisabledExceptAdmin}
@@ -212,7 +220,7 @@ export function ProfileForm({
 					children={(field) => (
 						<field.Select
 							isRequired
-							className="col-span-full"
+							className="col-span-full sm:col-span-3"
 							label="Gender"
 							field={field}
 							options={[
@@ -230,15 +238,40 @@ export function ProfileForm({
 					)}
 				/>
 
+				<form.Subscribe
+					selector={(state) => state.values.notJuniorsEligible}
+					children={(notJuniorsEligible) => (
+						<form.AppField
+							name="highSchoolGraduationYear"
+							children={(field) => (
+								<field.Number
+									className="col-span-3"
+									label="HS Graduation Year"
+									placeholder={notJuniorsEligible ? "N/a" : "2030"}
+									minValue={1900}
+									formatOptions={{ useGrouping: false }}
+									field={field}
+									isRequired={!notJuniorsEligible}
+									isDisabled={notJuniorsEligible ?? undefined}
+								/>
+							)}
+						/>
+					)}
+				/>
+
 				<form.AppField
-					name="highSchoolGraduationYear"
+					name="notJuniorsEligible"
+					listeners={{
+						onChange: ({ value }) => {
+							if (value) {
+								form.setFieldValue("highSchoolGraduationYear", null);
+							}
+						},
+					}}
 					children={(field) => (
-						<field.Number
-							className="col-span-full"
-							label="High School Graduation Year"
-							placeholder="2030"
-							minValue={1900}
-							formatOptions={{ useGrouping: false }}
+						<field.Checkbox
+							className="col-span-3 col-start-1"
+							label="Not juniors eligible"
 							field={field}
 						/>
 					)}
