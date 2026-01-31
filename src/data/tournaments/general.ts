@@ -20,8 +20,8 @@ export const getTournament = createServerFn({
 })
 	.inputValidator(selectTournamentSchema.pick({ id: true }))
 	.handler(async ({ data: { id } }) => {
-		const res = await db._query.tournaments.findFirst({
-			where: (table, { eq }) => eq(table.id, id),
+		const res = await db.query.tournaments.findFirst({
+			where: { id },
 			with: {
 				venue: {
 					with: {
@@ -38,7 +38,7 @@ export const getTournament = createServerFn({
 							},
 						},
 					},
-					orderBy: (t, { asc }) => asc(t.order),
+					orderBy: { order: "asc" },
 				},
 				tournamentDivisions: {
 					with: {
