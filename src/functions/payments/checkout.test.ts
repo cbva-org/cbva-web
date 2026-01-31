@@ -14,9 +14,14 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { TransactionResponse } from "@/services/usaepay";
 
 const mockPostSale = vi.fn<() => Promise<TransactionResponse>>();
+const mockSendEmail = vi.fn();
 
 vi.mock("@/services/usaepay", () => ({
 	postSale: (...args: unknown[]) => mockPostSale(...args),
+}));
+
+vi.mock("@/services/email", () => ({
+	sendEmail: (...args: unknown[]) => mockSendEmail(...args),
 }));
 
 // Import after mocking

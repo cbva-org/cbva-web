@@ -1,11 +1,6 @@
 import { assert, describe, expect, test } from "vitest";
 import { db } from "@/db/connection";
-import {
-	createDirectors,
-	createProfiles,
-	createTeams,
-	createUsers,
-} from "./users";
+import { createDirectors, createProfiles, createTeams } from "./users";
 
 describe("createTeams", () => {
 	test("can create random teams with levels", async () => {
@@ -15,24 +10,31 @@ describe("createTeams", () => {
 			gender: "female",
 		});
 
-		const teams = await db.query.teams.findMany({
-			with: {
-				players: {
+		const teams = await Promise.all(
+			created.map(({ id }) =>
+				db.query.teams.findFirst({
 					with: {
-						profile: {
+						players: {
 							with: {
-								level: true,
+								profile: {
+									with: {
+										level: true,
+									},
+								},
 							},
 						},
 					},
-				},
-			},
-			where: { id: { inArray: created.map(({ id }) => id) } },
-		});
+					where: { id },
+				}),
+			),
+		);
 
-		expect(teams).toHaveLength(10);
+		const validTeams = teams.filter(
+			(t): t is NonNullable<typeof t> => t !== undefined,
+		);
+		expect(validTeams).toHaveLength(10);
 
-		const players = teams.flatMap(({ players }) => players);
+		const players = validTeams.flatMap(({ players }) => players);
 
 		expect(players).toHaveLength(20);
 
@@ -59,18 +61,23 @@ describe("createTeams", () => {
 			},
 		]);
 
-		const teams = await db.query.teams.findMany({
-			with: {
-				players: {
+		const [team] = await Promise.all(
+			created.map(({ id }) =>
+				db.query.teams.findFirst({
 					with: {
-						profile: true,
+						players: {
+							with: {
+								profile: true,
+							},
+						},
 					},
-				},
-			},
-			where: { id: { inArray: created.map(({ id }) => id) } },
-		});
+					where: { id },
+				}),
+			),
+		);
 
-		expect(teams).toHaveLength(1);
+		expect(team).toBeDefined();
+		const teams = [team!];
 
 		const players = teams.flatMap(({ players }) => players);
 
@@ -89,22 +96,28 @@ describe("createDirectors", () => {
 	test("can create random directors", async () => {
 		const created = await createDirectors(db, 4);
 
-		const directors = await db.query.directors.findMany({
-			with: {
-				profile: {
-					with: {
-						user: true,
-					},
-				},
-			},
-			where: { id: { inArray: created.map(({ id }) => id) } },
-		});
+		const directors = (
+			await Promise.all(
+				created.map(({ id }) =>
+					db.query.directors.findFirst({
+						with: {
+							profile: {
+								with: {
+									user: true,
+								},
+							},
+						},
+						where: { id },
+					}),
+				),
+			)
+		).filter((d): d is NonNullable<typeof d> => d !== undefined);
 
 		expect(directors).toHaveLength(4);
-		expect(directors.map(({ profile }) => profile?.user)).not.toBeNull();
+		expect(directors.map((d) => d.profile?.user)).not.toBeNull();
 
 		assert(
-			directors.every(({ profile }) => profile?.user?.role === "td"),
+			directors.every((d) => d.profile?.user?.role === "td"),
 			"each user has director role",
 		);
 	});

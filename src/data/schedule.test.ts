@@ -12,6 +12,7 @@ describe("duplicateTournamentFn", () => {
 		const [venue] = await createVenues(db, 1);
 
 		const directors = await createDirectors(db, 2);
+
 		const input = {
 			date: "2025-01-01",
 			startTime: "09:00:00",
@@ -175,24 +176,30 @@ describe("duplicateScheduleFn", () => {
 			data: { startDate: "2025-01-01", endDate: "2025-12-31", addDays: 364 },
 		});
 
-		const dbResult = await db.query.tournaments.findMany({
+		// Query each venue separately
+		const [venue1Tournament] = await db.query.tournaments.findMany({
 			with: {
 				tournamentDivisions: true,
 				venue: true,
 				directors: true,
 			},
-			where: {
-				venueId: { inArray: [venue1.id, venue2.id] },
-				date: "2025-12-31",
-			},
+			where: { venueId: venue1.id, date: "2025-12-31" },
 		});
 
-		expect(dbResult.length).toBe(2);
-		assert(dbResult.every(({ visible }) => !visible));
+		const [venue2Tournament] = await db.query.tournaments.findMany({
+			with: {
+				tournamentDivisions: true,
+				venue: true,
+				directors: true,
+			},
+			where: { venueId: venue2.id, date: "2025-12-31" },
+		});
 
-		// Sort results by venue ID for consistent testing
-		const sortedResults = dbResult.sort((a, b) => a.venueId - b.venueId);
-		const [venue1Tournament, venue2Tournament] = sortedResults;
+		expect(venue1Tournament).toBeDefined();
+		expect(venue2Tournament).toBeDefined();
+		assert(!venue1Tournament.visible);
+		assert(!venue2Tournament.visible);
+
 		const [input1, input2] = inputs;
 
 		// Assert first tournament (venue1) was copied correctly

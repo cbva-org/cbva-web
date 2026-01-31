@@ -7,6 +7,31 @@ vi.mock("@/db/connection", async () => {
 	return await getMockDb();
 });
 
+vi.mock("@tanstack/react-start/server", () => {
+	return {
+		getRequestHeaders: () => new Headers(),
+		setResponseStatus: () => {},
+		getCookies: () => ({}),
+		setCookie: () => {},
+	};
+});
+
+vi.mock("@/auth/server", () => {
+	return {
+		getViewer: async () => ({
+			id: "test-user-id",
+			name: "Test User",
+			role: "admin",
+			email: "test@example.com",
+			emailVerified: true,
+			phoneNumber: null,
+			phoneNumberVerified: false,
+			needsPasswordChange: false,
+			impersonatedBy: undefined,
+		}),
+	};
+});
+
 vi.mock("@/services/email", () => {
 	return {
 		sendSms: (message: MailDataRequired) => {
