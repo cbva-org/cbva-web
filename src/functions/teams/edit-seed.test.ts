@@ -137,7 +137,7 @@ describe("pool seeds", () => {
 				where: { tournamentDivisionId },
 				orderBy: (t, { asc }) => [asc(t.seed)],
 			}),
-			[(t) => t.poolTeam.seed],
+			[(t) => t.poolTeam?.seed],
 			["asc"],
 		);
 

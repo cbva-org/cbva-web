@@ -5,7 +5,7 @@ import { tournamentDivisions, tournamentDivisionTeams } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { createTeams } from "@/tests/utils/users";
 import { getQualifiedLevels } from "@/tests/utils/divisions";
-import { promoteFromWaitlist } from "./promote-from-waitlist";
+import { promoteFromWaitlistHandler } from "./promote-from-waitlist";
 
 describe("promoteFromWaitlist", () => {
 	test("raises division capacity when promoting exceeds current capacity", async () => {
@@ -71,14 +71,13 @@ describe("promoteFromWaitlist", () => {
 		);
 
 		// Promote the waitlisted team
-		await promoteFromWaitlist({
-			data: {
-				id: insertedWaitlistedTeam.id,
-				seed: null,
-				poolId: null,
-				poolSeed: null,
-				automatic: false,
-			},
+		await promoteFromWaitlistHandler({
+			id: insertedWaitlistedTeam.id,
+			seed: null,
+			poolId: null,
+			poolSeed: null,
+			automatic: false,
+			tournamentId: tournamentInfo.id,
 		});
 
 		// Verify that the capacity was automatically increased to 4
