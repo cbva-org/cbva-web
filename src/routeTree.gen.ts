@@ -32,6 +32,7 @@ import { Route as JuniorsCalCupRouteImport } from './routes/juniors/cal-cup'
 import { Route as InfoCedarsRouteImport } from './routes/info/cedars'
 import { Route as FaqsChar123SubjectChar125RouteImport } from './routes/faqs.{-$subject}'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
+import { Route as AdminVenuesRouteImport } from './routes/admin/venues'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemTasksRouteImport } from './routes/admin/system-tasks'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -175,6 +176,11 @@ const FaqsChar123SubjectChar125Route =
 const ApiPingRoute = ApiPingRouteImport.update({
   id: '/api/ping',
   path: '/api/ping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminVenuesRoute = AdminVenuesRouteImport.update({
+  id: '/admin/venues',
+  path: '/admin/venues',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -343,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/venues': typeof AdminVenuesRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
   '/info/cedars': typeof InfoCedarsRoute
@@ -395,6 +402,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/venues': typeof AdminVenuesRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
   '/info/cedars': typeof InfoCedarsRoute
@@ -448,6 +456,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/system-tasks': typeof AdminSystemTasksRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/venues': typeof AdminVenuesRoute
   '/api/ping': typeof ApiPingRoute
   '/faqs/{-$subject}': typeof FaqsChar123SubjectChar125Route
   '/info/cedars': typeof InfoCedarsRoute
@@ -502,6 +511,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-tasks'
     | '/admin/users'
+    | '/admin/venues'
     | '/api/ping'
     | '/faqs/{-$subject}'
     | '/info/cedars'
@@ -554,6 +564,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-tasks'
     | '/admin/users'
+    | '/admin/venues'
     | '/api/ping'
     | '/faqs/{-$subject}'
     | '/info/cedars'
@@ -606,6 +617,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/system-tasks'
     | '/admin/users'
+    | '/admin/venues'
     | '/api/ping'
     | '/faqs/{-$subject}'
     | '/info/cedars'
@@ -659,6 +671,7 @@ export interface RootRouteChildren {
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSystemTasksRoute: typeof AdminSystemTasksRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminVenuesRoute: typeof AdminVenuesRoute
   ApiPingRoute: typeof ApiPingRoute
   FaqsChar123SubjectChar125Route: typeof FaqsChar123SubjectChar125Route
   InfoCedarsRoute: typeof InfoCedarsRoute
@@ -854,6 +867,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ping'
       fullPath: '/api/ping'
       preLoaderRoute: typeof ApiPingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/venues': {
+      id: '/admin/venues'
+      path: '/admin/venues'
+      fullPath: '/admin/venues'
+      preLoaderRoute: typeof AdminVenuesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/users': {
@@ -1067,6 +1087,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSystemTasksRoute: AdminSystemTasksRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AdminVenuesRoute: AdminVenuesRoute,
   ApiPingRoute: ApiPingRoute,
   FaqsChar123SubjectChar125Route: FaqsChar123SubjectChar125Route,
   InfoCedarsRoute: InfoCedarsRoute,

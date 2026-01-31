@@ -7,7 +7,7 @@ import { useAppForm } from "@/components/base/form/form";
 import { Modal } from "@/components/base/modal";
 import { OrderingList } from "@/components/base/ordering-list";
 import { title } from "@/components/base/primitives";
-import { venuesQueryOptions } from "@/data/venues";
+import { adminVenuesQueryOptions, venuesQueryOptions } from "@/data/venues";
 import { setVenuesOrderMutationOptions } from "@/functions/venues/set-venues-order";
 
 export function ReorderVenuesForm() {
@@ -19,16 +19,19 @@ export function ReorderVenuesForm() {
 		...setVenuesOrderMutationOptions(),
 		onSuccess: () => {
 			queryClient.invalidateQueries(venuesQueryOptions());
+			queryClient.invalidateQueries(adminVenuesQueryOptions());
 		},
 	});
 
 	const { data: items } = useQuery({
-		...venuesQueryOptions(),
+		...adminVenuesQueryOptions(),
 		select: (data) =>
-			data.map(({ id, name, city }) => ({
-				value: id,
-				display: `${name}, ${city}`,
-			})),
+			data
+				.filter((venue) => venue.status === "active")
+				.map(({ id, name, city }) => ({
+					value: id,
+					display: `${name}, ${city}`,
+				})),
 	});
 
 	const form = useAppForm({
@@ -44,14 +47,18 @@ export function ReorderVenuesForm() {
 
 	return (
 		<DialogTrigger isOpen={isOpen} onOpenChange={setOpen}>
-			<Button variant="icon" color="secondary" tooltip="Reorder Venues">
+			<Button
+				variant="icon"
+				color="secondary"
+				tooltip="Reorder Active Locations"
+			>
 				<ListOrderedIcon size={16} />
 			</Button>
 
 			<Modal size="md" isDismissable isOpen={isOpen} onOpenChange={setOpen}>
 				<div className="p-4 flex flex-col space-y-4">
 					<Heading className={title({ size: "sm" })} slot="title">
-						Reorder Venues
+						Reorder Active Locations
 					</Heading>
 
 					<form

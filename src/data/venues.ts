@@ -5,9 +5,9 @@ import {
 } from "@tanstack/react-query";
 import { linkOptions, notFound, useRouterState } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import z from "zod";
-import { authMiddleware, requirePermissions } from "@/auth/shared";
+import { authMiddleware, requirePermissions, requireRole } from "@/auth/shared";
 import { db } from "@/db/connection";
 import {
 	publicProfileColumns,
@@ -17,8 +17,8 @@ import {
 } from "@/db/schema";
 
 async function readVenues() {
-	return await db._query.venues.findMany({
-		where: (venues, { eq }) => eq(venues.status, "active"),
+	return await db.query.venues.findMany({
+		where: { status: "active" },
 		orderBy: (venues, { asc }) => [asc(venues.order), asc(venues.name)],
 	});
 }
@@ -136,4 +136,58 @@ export const venueQueryOptions = (id: number) =>
 	queryOptions({
 		queryKey: ["venue", id],
 		queryFn: () => getVenue({ data: { id } }),
+	});
+
+const getAdminVenues = createServerFn({
+	method: "GET",
+})
+	.middleware([requireRole(["admin"])])
+	.handler(async () => {
+		return await db._query.venues.findMany({
+			columns: {
+				id: true,
+				name: true,
+				city: true,
+				status: true,
+				order: true,
+			},
+			orderBy: (v, { asc }) => [
+				// Active venues with order set come first
+				asc(
+					sql`CASE WHEN ${v.status} = 'active' AND ${v.order} > 0 THEN 0 ELSE 1 END`,
+				),
+				// Then by order value for active ordered venues
+				asc(
+					sql`CASE WHEN ${v.status} = 'active' AND ${v.order} > 0 THEN ${v.order} ELSE NULL END`,
+				),
+				// Then alphabetically
+				asc(v.name),
+			],
+		});
+	});
+
+export const adminVenuesQueryOptions = () =>
+	queryOptions({
+		queryKey: ["admin", "venues"],
+		queryFn: () => getAdminVenues(),
+	});
+
+export const adminUpdateVenueStatusSchema = z.object({
+	id: z.number(),
+	status: z.enum(["active", "hidden"]),
+});
+
+export const adminUpdateVenueStatusFn = createServerFn({ method: "POST" })
+	.middleware([requireRole(["admin"])])
+	.inputValidator(adminUpdateVenueStatusSchema)
+	.handler(async ({ data: { id, status } }) => {
+		await db.update(venues).set({ status }).where(eq(venues.id, id));
+		return { success: true };
+	});
+
+export const adminUpdateVenueStatusMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof adminUpdateVenueStatusSchema>) => {
+			return adminUpdateVenueStatusFn({ data });
+		},
 	});
