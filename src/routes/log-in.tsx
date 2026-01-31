@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Alert } from "@/components/base/alert";
 import { Link } from "@/components/base/link";
 import { title } from "@/components/base/primitives";
 import { LoginForm } from "@/components/users/login-form";
@@ -30,7 +31,25 @@ function RouteComponent() {
 				</p>
 			</div>
 
-			<div className="px-3 w-full max-w-md mx-auto">
+			<div className="px-3 w-full max-w-md mx-auto flex flex-col space-y-4">
+				<Alert
+					color="info"
+					title="Important: Password Reset Required"
+					description={
+						<>
+							We've recently migrated to a new system. To access your existing
+							account, please use the{" "}
+							<Link
+								to="/account/forgot-password"
+								className="underline font-medium"
+							>
+								Forgot Password
+							</Link>{" "}
+							option to set a new password.
+						</>
+					}
+				/>
+
 				<LoginForm next={next} className="bg-white rounded-lg p-8 w-full" />
 			</div>
 		</DefaultLayout>
