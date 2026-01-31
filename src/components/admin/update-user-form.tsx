@@ -10,11 +10,11 @@ import {
 } from "@/data/users";
 import type { User } from "@/db/schema";
 import { ImpersonateButton } from "../impersonator/impersonate-button";
-import { SetTemporaryPasswordForm } from "./controls/set-temporary-password";
 
 export type UpdateUserFormProps = Pick<User, "id" | "name" | "role"> & {
 	refetch: () => void;
 	queryKey: QueryKey;
+	onSuccess?: () => void;
 };
 
 export function UpdateUserForm({
@@ -22,6 +22,7 @@ export function UpdateUserForm({
 	name,
 	role,
 	queryKey,
+	onSuccess,
 }: UpdateUserFormProps) {
 	const queryClient = useQueryClient();
 
@@ -62,6 +63,7 @@ export function UpdateUserForm({
 						});
 
 						formApi.reset();
+						onSuccess?.();
 					},
 				},
 			);
@@ -70,42 +72,24 @@ export function UpdateUserForm({
 
 	return (
 		<form
-			className="bg-white rounded-lg px-2 py-2 border border-gray-700 grid grid-cols-10 gap-2"
+			className="flex flex-col space-y-4"
 			onSubmit={(e) => {
 				e.preventDefault();
-
 				form.handleSubmit();
 			}}
 		>
-			<div className="col-span-8 flex flex-row items-center justify-between">
-				<div className="flex flex-row gap-2 items-center">
-					<span>{name}</span>
-					<div className="flex flex-row gap-1">
-						<ImpersonateButton
-							className="ml-2"
-							variant="icon"
-							color="default"
-							userId={id}
-						/>
-						<SetTemporaryPasswordForm id={id} name={name} />
-					</div>
-				</div>
-
-				<form.AppForm>
-					<form.Subscribe
-						selector={(state) => [state.isDirty]}
-						children={([isDirty]) =>
-							isDirty ? <form.SubmitButton>Save</form.SubmitButton> : null
-						}
-					/>
-				</form.AppForm>
+			<div className="flex flex-col space-y-1">
+				<span className="text-sm text-gray-500">Name</span>
+				<span className="font-medium">{name}</span>
 			</div>
+
+			<ImpersonateButton variant="outline" color="default" userId={id} />
 
 			<form.AppField
 				name="role"
 				children={(field) => (
 					<field.Select
-						className="col-span-2"
+						label="Role"
 						field={field}
 						options={[
 							{
@@ -124,6 +108,12 @@ export function UpdateUserForm({
 					/>
 				)}
 			/>
+
+			<form.AppForm>
+				<form.Footer>
+					<form.SubmitButton>Save Changes</form.SubmitButton>
+				</form.Footer>
+			</form.AppForm>
 		</form>
 	);
 }

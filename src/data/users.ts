@@ -133,3 +133,53 @@ export const adminUpdateUserMutationOptions = () =>
 			return adminUpdateUserFn({ data });
 		},
 	});
+
+export const adminVerifyEmailSchema = z.object({
+	id: z.string(),
+});
+
+export const adminVerifyEmailFn = createServerFn({ method: "POST" })
+	.middleware([requireRole(["admin"])])
+	.inputValidator(adminVerifyEmailSchema)
+	.handler(async ({ data: { id } }) => {
+		await db
+			.update(users)
+			.set({
+				emailVerified: true,
+			})
+			.where(eq(users.id, id));
+
+		return { success: true };
+	});
+
+export const adminVerifyEmailMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof adminVerifyEmailSchema>) => {
+			return adminVerifyEmailFn({ data });
+		},
+	});
+
+export const adminVerifyPhoneSchema = z.object({
+	id: z.string(),
+});
+
+export const adminVerifyPhoneFn = createServerFn({ method: "POST" })
+	.middleware([requireRole(["admin"])])
+	.inputValidator(adminVerifyPhoneSchema)
+	.handler(async ({ data: { id } }) => {
+		await db
+			.update(users)
+			.set({
+				phoneNumberVerified: true,
+			})
+			.where(eq(users.id, id));
+
+		return { success: true };
+	});
+
+export const adminVerifyPhoneMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof adminVerifyPhoneSchema>) => {
+			return adminVerifyPhoneFn({ data });
+		},
+	});
