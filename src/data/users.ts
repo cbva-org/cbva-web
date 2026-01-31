@@ -8,24 +8,20 @@ import { selectUserSchema, updateUserSchema, users } from "@/db/schema";
 import { forbidden } from "@/lib/responses";
 
 export const searchUsersSchema = z.object({
-	query: z.string(),
-	searchType: z.enum(["name", "email", "phone"]),
+	name: z.string().optional(),
+	email: z.string().optional(),
+	phone: z.string().optional(),
 });
 
 export const getUsersFn = createServerFn()
 	.middleware([requireRole(["admin"])])
 	.inputValidator(searchUsersSchema)
-	.handler(async ({ data: { query, searchType } }) => {
-		return await db._query.users.findMany({
-			where: (t, { ilike, eq }) => {
-				switch (searchType) {
-					case "name":
-						return ilike(t.name, `%${query}%`);
-					case "email":
-						return ilike(t.email, `%${query}%`);
-					case "phone":
-						return ilike(t.phoneNumber, `%${query}%`);
-				}
+	.handler(async ({ data: { name, email, phone } }) => {
+		return await db.query.users.findMany({
+			where: {
+				name: name ? { ilike: `%${name}%` } : undefined,
+				email: email ? { ilike: `%${email}%` } : undefined,
+				phoneNumber: phone ? { ilike: `%${phone}%` } : undefined,
 			},
 			limit: 10,
 			orderBy: (t, { asc }) => asc(t.name),
@@ -33,17 +29,23 @@ export const getUsersFn = createServerFn()
 	});
 
 export const usersQueryOptions = ({
-	query,
-	searchType,
+	name,
+	email,
+	phone,
 }: z.infer<typeof searchUsersSchema>) =>
 	queryOptions({
-		queryKey: ["users", searchType, query],
+		queryKey: ["users", { name, email, phone }],
 		queryFn: async () => {
-			if (query.length < 3) {
+			const hasSearch =
+				(name && name.length >= 2) ||
+				(email && email.length >= 2) ||
+				(phone && phone.length >= 2);
+
+			if (!hasSearch) {
 				return { users: [] };
 			}
 
-			const data = await getUsersFn({ data: { query, searchType } });
+			const data = await getUsersFn({ data: { name, email, phone } });
 
 			return { users: data };
 		},

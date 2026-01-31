@@ -6,12 +6,15 @@ import {
 	DialogTrigger,
 	Header,
 	Heading,
-	type Key,
 	TableBody,
 } from "react-aria-components";
 import { authClient } from "@/auth/client";
 import type { Role } from "@/auth/permissions";
-import { impersonatorQueryOptions, viewerQueryOptions } from "@/auth/shared";
+import {
+	impersonatorQueryOptions,
+	useViewer,
+	viewerQueryOptions,
+} from "@/auth/shared";
 import { UpdateUserForm } from "@/components/admin/update-user-form";
 import { Button } from "@/components/base/button";
 import { CopyButton } from "@/components/base/copy-button";
@@ -20,7 +23,6 @@ import {
 	DropdownMenuItem,
 } from "@/components/base/dropdown-menu";
 import { Modal } from "@/components/base/modal";
-import { SearchField } from "@/components/base/search-field";
 import {
 	Table,
 	TableCell,
@@ -28,13 +30,13 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/base/table";
-import { Tab, TabList, Tabs } from "@/components/base/tabs";
 import {
 	adminVerifyEmailMutationOptions,
 	adminVerifyPhoneMutationOptions,
 	usersQueryOptions,
 } from "@/data/users";
 import type { User } from "@/db/schema";
+import { TextField } from "@/components/base/text-field";
 import { title } from "../base/primitives";
 
 function secureRandom() {
@@ -58,8 +60,6 @@ function generatePassword() {
 	return password;
 }
 
-type SearchType = "name" | "email" | "phone";
-
 const roleLabels: Record<string, string> = {
 	user: "User",
 	td: "Director",
@@ -67,56 +67,58 @@ const roleLabels: Record<string, string> = {
 };
 
 export function UsersList() {
-	const [query, setQuery] = useState("");
-	const [searchType, setSearchType] = useState<SearchType>("name");
+	const [name, setName] = useState("");
+	const [email, setEmail] = useState("");
+	const [phone, setPhone] = useState("");
 
-	const debouncedQuery = useDebounce(query, {
-		wait: query.length <= 3 ? 0 : 500,
-	});
+	const debouncedName = useDebounce(name, { wait: 300 });
+	const debouncedEmail = useDebounce(email, { wait: 300 });
+	const debouncedPhone = useDebounce(phone, { wait: 300 });
 
 	const searchOptions = usersQueryOptions({
-		query: debouncedQuery,
-		searchType,
+		name: debouncedName,
+		email: debouncedEmail,
+		phone: debouncedPhone,
 	});
+
+	const hasSearch =
+		debouncedName.length >= 2 ||
+		debouncedEmail.length >= 2 ||
+		debouncedPhone.length >= 2;
 
 	const { data, refetch, isLoading } = useQuery({
 		...searchOptions,
-		enabled: debouncedQuery.length >= 3,
+		enabled: hasSearch,
 	});
 
 	const users = useDebounce(data?.users, {
 		wait: data?.users.length === 0 ? 0 : 250,
 	});
 
-	const placeholders: Record<SearchType, string> = {
-		name: "Search by name...",
-		email: "Search by email...",
-		phone: "Search by phone (e.g. +1555...)",
-	};
-
 	return (
 		<section className="flex flex-col space-y-6">
 			<Header className={title({ size: "sm" })}>Users</Header>
 
-			<Tabs
-				selectedKey={searchType}
-				onSelectionChange={(key: Key) => {
-					setSearchType(key as SearchType);
-					setQuery("");
-				}}
-			>
-				<TabList>
-					<Tab id="name">Name</Tab>
-					<Tab id="email">Email</Tab>
-					<Tab id="phone">Phone</Tab>
-				</TabList>
-			</Tabs>
-
-			<SearchField
-				value={query}
-				onChange={(value) => setQuery(value)}
-				placeholder={placeholders[searchType]}
-			/>
+			<div className="grid grid-cols-3 gap-4">
+				<TextField
+					label="Name"
+					value={name}
+					onChange={setName}
+					placeholder="Search by name..."
+				/>
+				<TextField
+					label="Email"
+					value={email}
+					onChange={setEmail}
+					placeholder="Search by email..."
+				/>
+				<TextField
+					label="Phone"
+					value={phone}
+					onChange={setPhone}
+					placeholder="+1555..."
+				/>
+			</div>
 
 			<Suspense>
 				{users && users.length > 0 ? (
@@ -145,8 +147,8 @@ export function UsersList() {
 					<div className="bg-white rounded-lg px-4 py-3 border border-gray-300 text-gray-600">
 						{isLoading
 							? "Loading..."
-							: query.length < 3
-								? "Enter at least 3 characters to search."
+							: !hasSearch
+								? "Enter at least 2 characters in any field to search."
 								: "No users found."}
 					</div>
 				)}
@@ -172,6 +174,8 @@ function UserRow({
 	queryKey: unknown[];
 	refetch: () => void;
 }) {
+	const viewer = useViewer();
+
 	const [isEditOpen, setEditOpen] = useState(false);
 	const [isPasswordOpen, setPasswordOpen] = useState(false);
 	const queryClient = useQueryClient();
@@ -311,7 +315,11 @@ function UserRow({
 					>
 						{user.phoneNumberVerified ? "Phone Verified" : "Verify Phone"}
 					</DropdownMenuItem>
-					<DropdownMenuItem id="impersonate" onAction={() => impersonate()}>
+					<DropdownMenuItem
+						id="impersonate"
+						isDisabled={user.id === viewer?.id}
+						onAction={() => impersonate()}
+					>
 						Impersonate
 					</DropdownMenuItem>
 				</DropdownMenu>
