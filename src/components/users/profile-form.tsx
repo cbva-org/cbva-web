@@ -9,6 +9,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProfileMutationOptions } from "@/functions/profiles/update-profile";
 import { getViewerProfilesQueryOptions } from "@/functions/profiles/get-viewer-profiles";
 import { queue } from "../base/toast";
+import {
+	Disclosure,
+	DisclosureHeader,
+	DisclosurePanel,
+} from "@/components/base/disclosure";
 
 const schema = z.object({
 	firstName: z
@@ -151,13 +156,13 @@ export function ProfileForm({
 				form.handleSubmit(data);
 			}}
 		>
-			<div className="grid grid-cols-6 gap-4 max-w-md items-end">
+			<div className="grid grid-cols-6 gap-4 w-full max-w-md items-end">
 				<form.AppField
 					name="firstName"
 					children={(field) => (
 						<field.Text
 							isRequired
-							className="col-span-full"
+							className="col-span-full sm:col-span-3"
 							label="First Name"
 							field={field}
 							isDisabled={isDisabledExceptAdmin}
@@ -169,7 +174,7 @@ export function ProfileForm({
 					name="preferredName"
 					children={(field) => (
 						<field.Text
-							className="col-span-full"
+							className="col-span-full sm:col-span-3"
 							label="Preferred Name"
 							field={field}
 						/>
@@ -181,7 +186,7 @@ export function ProfileForm({
 					children={(field) => (
 						<field.Text
 							isRequired
-							className="col-span-full"
+							className="col-span-full sm:col-span-3"
 							label="Last Name"
 							field={field}
 							isDisabled={isDisabledExceptAdmin}
@@ -193,7 +198,7 @@ export function ProfileForm({
 					name="birthdate"
 					children={(field) => (
 						<field.Date
-							className="col-span-full"
+							className="col-span-full sm:col-span-3"
 							isRequired
 							label="Birthday"
 							field={field}
@@ -226,6 +231,20 @@ export function ProfileForm({
 				/>
 
 				<form.AppField
+					name="highSchoolGraduationYear"
+					children={(field) => (
+						<field.Number
+							className="col-span-full"
+							label="High School Graduation Year"
+							placeholder="2030"
+							minValue={1900}
+							formatOptions={{ useGrouping: false }}
+							field={field}
+						/>
+					)}
+				/>
+
+				<form.AppField
 					name="imageSource"
 					children={(field) => (
 						<field.ImageUpload
@@ -239,159 +258,155 @@ export function ProfileForm({
 					)}
 				/>
 
-				<form.AppField
-					name="bio"
-					children={(field) => (
-						<field.TextArea
-							className="col-span-full"
-							label="Bio"
-							field={field}
-							placeholder="Tell us about yourself..."
+				<Disclosure card={false} className="col-span-full w-full min-w-0">
+					<DisclosureHeader card={false} size="md">
+						Additional Info
+					</DisclosureHeader>
+					<DisclosurePanel
+						card={false}
+						contentClassName="grid grid-cols-6 gap-4 w-full items-end"
+					>
+						<form.AppField
+							name="bio"
+							children={(field) => (
+								<field.TextArea
+									className="col-span-full"
+									label="Bio"
+									field={field}
+									placeholder="Tell us about yourself..."
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<form.AppField
-					name="heightFeet"
-					children={(field) => (
-						<field.Number
-							className="col-span-3"
-							label="Height"
-							placeholder="ft"
-							minValue={0}
-							field={field}
+						<form.AppField
+							name="heightFeet"
+							children={(field) => (
+								<field.Number
+									className="col-span-3"
+									label="Height"
+									placeholder="ft"
+									minValue={0}
+									field={field}
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<form.AppField
-					name="heightInches"
-					children={(field) => (
-						<field.Number
-							className="col-span-3"
-							placeholder="in"
-							minValue={0}
-							field={field}
+						<form.AppField
+							name="heightInches"
+							children={(field) => (
+								<field.Number
+									className="col-span-3"
+									placeholder="in"
+									minValue={0}
+									field={field}
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<form.AppField
-					name="dominantArm"
-					children={(field) => (
-						<field.Select
-							className="col-span-full"
-							label="Dominant Arm"
-							field={field}
-							options={[
-								{
-									display: "Right",
-									value: "right",
-								},
-								{
-									display: "Left",
-									value: "left",
-								},
-							]}
+						<form.AppField
+							name="dominantArm"
+							children={(field) => (
+								<field.Select
+									className="col-span-full"
+									label="Dominant Arm"
+									field={field}
+									options={[
+										{
+											display: "Right",
+											value: "right",
+										},
+										{
+											display: "Left",
+											value: "left",
+										},
+									]}
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<form.AppField
-					name="preferredRole"
-					children={(field) => (
-						<field.Select
-							className="col-span-3"
-							label="Preferred Role"
-							field={field}
-							options={[
-								{
-									display: "Blocker",
-									value: "blocker",
-								},
-								{
-									display: "Defender",
-									value: "defender",
-								},
-								{
-									display: "Split",
-									value: "split",
-								},
-							]}
+						<form.AppField
+							name="preferredRole"
+							children={(field) => (
+								<field.Select
+									className="col-span-3"
+									label="Preferred Role"
+									field={field}
+									options={[
+										{
+											display: "Blocker",
+											value: "blocker",
+										},
+										{
+											display: "Defender",
+											value: "defender",
+										},
+										{
+											display: "Split",
+											value: "split",
+										},
+									]}
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<form.AppField
-					name="preferredSide"
-					children={(field) => (
-						<field.Select
-							className="col-span-3"
-							label="Preferred Side"
-							field={field}
-							options={[
-								{
-									display: "Right",
-									value: "right",
-								},
-								{
-									display: "Left",
-									value: "left",
-								},
-							]}
+						<form.AppField
+							name="preferredSide"
+							children={(field) => (
+								<field.Select
+									className="col-span-3"
+									label="Preferred Side"
+									field={field}
+									options={[
+										{
+											display: "Right",
+											value: "right",
+										},
+										{
+											display: "Left",
+											value: "left",
+										},
+									]}
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<form.AppField
-					name="highSchoolGraduationYear"
-					children={(field) => (
-						<field.Number
-							className="col-span-full"
-							label="High School Graduation year"
-							placeholder="2030"
-							minValue={1900}
-							formatOptions={{ useGrouping: false }}
-							field={field}
+						<form.AppField
+							name="club"
+							children={(field) => (
+								<field.Text
+									className="col-span-full"
+									label="Club"
+									placeholder="Clubname"
+									field={field}
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<form.AppField
-					name="club"
-					children={(field) => (
-						<field.Text
-							className="col-span-full"
-							label="Club"
-							placeholder="Clubname"
-							field={field}
+						<form.AppField
+							name="collegeTeam"
+							children={(field) => (
+								<field.Text
+									className="col-span-3"
+									label="College Team"
+									placeholder="College Name"
+									field={field}
+								/>
+							)}
 						/>
-					)}
-				/>
 
-				<form.AppField
-					name="collegeTeam"
-					children={(field) => (
-						<field.Text
-							className="col-span-3"
-							label="College Team"
-							placeholder="College Name"
-							field={field}
+						<form.AppField
+							name="collegeTeamYearsParticipated"
+							children={(field) => (
+								<field.Number
+									className="col-span-3"
+									label="Years Participated"
+									minValue={0}
+									field={field}
+								/>
+							)}
 						/>
-					)}
-				/>
-
-				<form.AppField
-					name="collegeTeamYearsParticipated"
-					children={(field) => (
-						<field.Number
-							className="col-span-3"
-							label="Number of Years Participated"
-							minValue={0}
-							field={field}
-						/>
-					)}
-				/>
+					</DisclosurePanel>
+				</Disclosure>
 
 				<form.AppForm>
 					<form.Footer className="col-span-full">
