@@ -30,16 +30,6 @@ const scoreStyles = tv({
 	},
 });
 
-// TODOs:
-//
-// - Start match
-// - Undo complete match (subtrack 1 from winning score and change status)
-// - N to switch
-// - Side switch modal
-// - Serve order tracker
-//
-// - Referees for permission
-
 export type ScoreBoardProps = {
 	poolMatchId?: number;
 	playoffMatchId?: number;
@@ -56,24 +46,15 @@ export function ScoreBoard({ poolMatchId, playoffMatchId }: ScoreBoardProps) {
 	const { data: match, isLoading } = useSuspenseQuery(queryOptions);
 
 	const { mutate, isPending } = useMutation({
-		// TODO: optimistically update score
 		...updateScoreMutationOptions(),
-		onSuccess: () => {
-			queryClient.invalidateQueries(queryOptions);
-		},
-	});
+		onMutate: async (actionPayload) => {
+			// Cancel any outgoing refetches to prevent them from overwriting our optimistic update
+			await queryClient.cancelQueries(queryOptions);
 
-	const makeUpdateScoreHandler =
-		(action: "increment" | "decrement") =>
-		(matchSetId: number, teamA: boolean) => {
-			const actionPayload = {
-				id: matchSetId,
-				action,
-				teamA,
-			};
+			// Snapshot the previous value
+			const previousMatch = queryClient.getQueryData(queryOptions.queryKey);
 
-			mutate(actionPayload);
-
+			// Optimistically update the cache
 			queryClient.setQueryData(queryOptions.queryKey, (data) => {
 				if (!data) {
 					return undefined;
@@ -81,12 +62,39 @@ export function ScoreBoard({ poolMatchId, playoffMatchId }: ScoreBoardProps) {
 
 				return {
 					...data,
-					sets: data?.sets.map((set) =>
-						set.id === matchSetId
+					sets: data.sets.map((set) =>
+						set.id === actionPayload.id
 							? applyMatchSetAction(actionPayload, set)
 							: set,
 					),
 				};
+			});
+
+			// Return context with the previous value for rollback
+			return { previousMatch };
+		},
+		onError: (_err, _actionPayload, context) => {
+			// Rollback to the previous value on error
+			if (context?.previousMatch) {
+				queryClient.setQueryData(queryOptions.queryKey, context.previousMatch);
+			}
+		},
+		onSettled: () => {
+			// Only refetch when no mutations are pending to avoid race conditions
+			// This ensures we sync with the server after all score updates complete
+			if (!queryClient.isMutating()) {
+				queryClient.invalidateQueries(queryOptions);
+			}
+		},
+	});
+
+	const makeUpdateScoreHandler =
+		(action: "increment" | "decrement") =>
+		(matchSetId: number, teamA: boolean) => {
+			mutate({
+				id: matchSetId,
+				action,
+				teamA,
 			});
 		};
 

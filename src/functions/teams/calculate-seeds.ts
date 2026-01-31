@@ -35,20 +35,22 @@ export const calculateSeedsFn = createServerFn()
 		async ({
 			data: { id: tournamentId, tournamentDivisionIds, overwrite },
 		}) => {
-			const tournament = await db._query.tournaments.findFirst({
+			const tournament = await db.query.tournaments.findFirst({
+				where: { id: tournamentId },
 				with: {
 					tournamentDivisions: {
 						with: {
 							teams: {
-								where: (t, { eq }) => eq(t.status, "confirmed"),
+								where: {
+									status: "confirmed",
+								},
 							},
 						},
 						where: tournamentDivisionIds
-							? (t, { inArray }) => inArray(t.id, tournamentDivisionIds)
+							? { id: { in: tournamentDivisionIds } }
 							: undefined,
 					},
 				},
-				where: (t, { eq }) => eq(t.id, tournamentId),
 			});
 
 			assertFound(tournament);

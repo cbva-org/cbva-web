@@ -6,7 +6,7 @@ import { EditableImage } from "../base/editable-image";
 
 export type VenueHeaderProps = Pick<
 	Venue,
-	"id" | "name" | "city" | "headerImageSource"
+	"id" | "name" | "city" | "headerImageSource" | "thumbnailImageSource"
 >;
 
 export function VenueHeader({
@@ -14,6 +14,7 @@ export function VenueHeader({
 	name,
 	city,
 	headerImageSource,
+	thumbnailImageSource,
 }: VenueHeaderProps) {
 	const canUpdate = useViewerHasPermission({
 		venues: ["update"],
@@ -35,7 +36,7 @@ export function VenueHeader({
 			editable={canUpdate}
 			className="h-[25svh] w-full object-cover"
 			alt={`${name}, ${city}`}
-			source={headerImageSource ?? ""}
+			source={headerImageSource ?? thumbnailImageSource ?? ""}
 			bucket="venues"
 			prefix={`${id}/headers`}
 			onUploadSuccess={(source) => {
