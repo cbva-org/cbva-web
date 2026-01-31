@@ -1,38 +1,49 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { eq, sql } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import z from "zod";
 import { authMiddleware, requireRole } from "@/auth/shared";
 import { db } from "@/db/connection";
 import { selectUserSchema, updateUserSchema, users } from "@/db/schema";
 import { forbidden } from "@/lib/responses";
 
-export const searchUsersSchema = selectUserSchema.pick({
-	name: true,
+export const searchUsersSchema = z.object({
+	query: z.string(),
+	searchType: z.enum(["name", "email", "phone"]),
 });
 
 export const getUsersFn = createServerFn()
 	.middleware([requireRole(["admin"])])
 	.inputValidator(searchUsersSchema)
-	.handler(async ({ data: { name } }) => {
+	.handler(async ({ data: { query, searchType } }) => {
 		return await db._query.users.findMany({
-			where: (t, { ilike }) => ilike(t.name, `%${name}%`),
+			where: (t, { ilike, eq }) => {
+				switch (searchType) {
+					case "name":
+						return ilike(t.name, `%${query}%`);
+					case "email":
+						return ilike(t.email, `%${query}%`);
+					case "phone":
+						return ilike(t.phoneNumber, `%${query}%`);
+				}
+			},
 			limit: 10,
 			orderBy: (t, { asc }) => asc(t.name),
 		});
 	});
 
 export const usersQueryOptions = ({
-	name,
+	query,
+	searchType,
 }: z.infer<typeof searchUsersSchema>) =>
 	queryOptions({
-		queryKey: ["users", name],
+		queryKey: ["users", searchType, query],
 		queryFn: async () => {
-			if (name.length < 3) {
-				return { users: [], total: 0 };
+			if (query.length < 3) {
+				return { users: [] };
 			}
 
-			const data = await getUsersFn({ data: { name } });
+			const data = await getUsersFn({ data: { query, searchType } });
 
 			return { users: data };
 		},
