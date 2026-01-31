@@ -37,8 +37,8 @@ function RouteComponent() {
 					title="Important: Password Reset Required"
 					description={
 						<>
-							We've recently migrated to a new system. To access your existing
-							account, please use the{" "}
+							We migrated to a new system in <strong>2026</strong>. To access
+							your existing account, please use the{" "}
 							<Link
 								to="/account/forgot-password"
 								className="underline font-medium"
