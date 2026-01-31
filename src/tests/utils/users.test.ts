@@ -15,7 +15,7 @@ describe("createTeams", () => {
 			gender: "female",
 		});
 
-		const teams = await db._query.teams.findMany({
+		const teams = await db.query.teams.findMany({
 			with: {
 				players: {
 					with: {
@@ -27,11 +27,7 @@ describe("createTeams", () => {
 					},
 				},
 			},
-			where: (t, { inArray }) =>
-				inArray(
-					t.id,
-					created.map(({ id }) => id),
-				),
+			where: { id: { inArray: created.map(({ id }) => id) } },
 		});
 
 		expect(teams).toHaveLength(10);
@@ -63,7 +59,7 @@ describe("createTeams", () => {
 			},
 		]);
 
-		const teams = await db._query.teams.findMany({
+		const teams = await db.query.teams.findMany({
 			with: {
 				players: {
 					with: {
@@ -71,11 +67,7 @@ describe("createTeams", () => {
 					},
 				},
 			},
-			where: (t, { inArray }) =>
-				inArray(
-					t.id,
-					created.map(({ id }) => id),
-				),
+			where: { id: { inArray: created.map(({ id }) => id) } },
 		});
 
 		expect(teams).toHaveLength(1);
@@ -97,7 +89,7 @@ describe("createDirectors", () => {
 	test("can create random directors", async () => {
 		const created = await createDirectors(db, 4);
 
-		const directors = await db._query.directors.findMany({
+		const directors = await db.query.directors.findMany({
 			with: {
 				profile: {
 					with: {
@@ -105,11 +97,7 @@ describe("createDirectors", () => {
 					},
 				},
 			},
-			where: (t, { inArray }) =>
-				inArray(
-					t.id,
-					created.map(({ id }) => id),
-				),
+			where: { id: { inArray: created.map(({ id }) => id) } },
 		});
 
 		expect(directors).toHaveLength(4);

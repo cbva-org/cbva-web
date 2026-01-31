@@ -6,7 +6,7 @@ import { editTournamentFn } from "./general";
 
 describe("Edit general info", () => {
 	test("merges divisions when changing venue", async () => {
-		const [aVenue, bVenue] = await db._query.venues.findMany({
+		const [aVenue, bVenue] = await db.query.venues.findMany({
 			limit: 2,
 		});
 
@@ -50,12 +50,12 @@ describe("Edit general info", () => {
 			],
 		});
 
-		const divs = await db._query.tournamentDivisions.findMany({
+		const divs = await db.query.tournamentDivisions.findMany({
 			with: {
 				division: true,
 				tournament: true,
 			},
-			where: (t, { inArray }) => inArray(t.tournamentId, [aId, bId]),
+			where: { tournamentId: { inArray: [aId, bId] } },
 		});
 
 		const aDivs = divs.filter(({ tournamentId }) => tournamentId === aId);
@@ -81,7 +81,7 @@ describe("Edit general info", () => {
 			},
 		});
 
-		const updated = await db._query.tournaments.findMany({
+		const updated = await db.query.tournaments.findMany({
 			columns: {
 				id: true,
 			},
@@ -92,7 +92,7 @@ describe("Edit general info", () => {
 					},
 				},
 			},
-			where: (t, { inArray }) => inArray(t.id, [aId, bId]),
+			where: { id: { inArray: [aId, bId] } },
 		});
 
 		expect(updated).toHaveLength(1);

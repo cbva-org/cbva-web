@@ -61,12 +61,11 @@ describe("removeTeam", () => {
 			.returning({ id: tournamentDivisionTeams.id });
 
 		// Get one of the confirmed teams to remove
-		const confirmedTeams = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq, and }) =>
-				and(
-					eq(t.tournamentDivisionId, tournamentDivisionId),
-					eq(t.status, "confirmed"),
-				),
+		const confirmedTeams = await db.query.tournamentDivisionTeams.findMany({
+			where: {
+				tournamentDivisionId,
+				status: "confirmed",
+			},
 		});
 
 		expect(confirmedTeams).toHaveLength(3);
@@ -80,8 +79,8 @@ describe("removeTeam", () => {
 			);
 
 		// Verify initial state: 3 confirmed, 2 waitlisted
-		const teamsBefore = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		const teamsBefore = await db.query.tournamentDivisionTeams.findMany({
+			where: { tournamentDivisionId },
 		});
 
 		expect(teamsBefore.filter((t) => t.status === "confirmed")).toHaveLength(3);
@@ -98,15 +97,15 @@ describe("removeTeam", () => {
 		});
 
 		// Verify that the team was withdrawn
-		const removedTeam = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.id, confirmedTeams[0].id),
+		const removedTeam = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id: confirmedTeams[0].id },
 		});
 
 		expect(removedTeam?.status).toBe("withdraw");
 
 		// Verify that the first waitlisted team was auto-promoted
-		const teamsAfter = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		const teamsAfter = await db.query.tournamentDivisionTeams.findMany({
+			where: { tournamentDivisionId },
 		});
 
 		expect(teamsAfter.filter((t) => t.status === "confirmed")).toHaveLength(3);
@@ -174,12 +173,11 @@ describe("removeTeam", () => {
 			.returning({ id: tournamentDivisionTeams.id });
 
 		// Get one of the confirmed teams to remove
-		const confirmedTeams = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq, and }) =>
-				and(
-					eq(t.tournamentDivisionId, tournamentDivisionId),
-					eq(t.status, "confirmed"),
-				),
+		const confirmedTeams = await db.query.tournamentDivisionTeams.findMany({
+			where: {
+				tournamentDivisionId,
+				status: "confirmed",
+			},
 		});
 
 		expect(confirmedTeams).toHaveLength(3);
@@ -193,15 +191,15 @@ describe("removeTeam", () => {
 		});
 
 		// Verify that the team was withdrawn
-		const removedTeam = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.id, confirmedTeams[0].id),
+		const removedTeam = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id: confirmedTeams[0].id },
 		});
 
 		expect(removedTeam?.status).toBe("withdraw");
 
 		// Verify that the waitlisted team was NOT auto-promoted
-		const teamsAfter = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		const teamsAfter = await db.query.tournamentDivisionTeams.findMany({
+			where: { tournamentDivisionId },
 		});
 
 		expect(teamsAfter.filter((t) => t.status === "confirmed")).toHaveLength(2);
@@ -233,12 +231,11 @@ describe("removeTeam", () => {
 		const tournamentDivisionId = tournamentInfo.divisions[0];
 
 		// Get one of the confirmed teams to remove
-		const confirmedTeams = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq, and }) =>
-				and(
-					eq(t.tournamentDivisionId, tournamentDivisionId),
-					eq(t.status, "confirmed"),
-				),
+		const confirmedTeams = await db.query.tournamentDivisionTeams.findMany({
+			where: {
+				tournamentDivisionId,
+				status: "confirmed",
+			},
 		});
 
 		expect(confirmedTeams).toHaveLength(3);
@@ -252,8 +249,8 @@ describe("removeTeam", () => {
 		});
 
 		// Verify that the team has late-withdraw status
-		const removedTeam = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.id, confirmedTeams[0].id),
+		const removedTeam = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id: confirmedTeams[0].id },
 		});
 
 		expect(removedTeam?.status).toBe("late-withdraw");
@@ -298,12 +295,11 @@ describe("removeTeam", () => {
 			.returning({ id: tournamentDivisionTeams.id });
 
 		// Get one of the confirmed teams to remove
-		const confirmedTeams = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq, and }) =>
-				and(
-					eq(t.tournamentDivisionId, tournamentDivisionId),
-					eq(t.status, "confirmed"),
-				),
+		const confirmedTeams = await db.query.tournamentDivisionTeams.findMany({
+			where: {
+				tournamentDivisionId,
+				status: "confirmed",
+			},
 		});
 
 		expect(confirmedTeams).toHaveLength(4);
@@ -311,12 +307,12 @@ describe("removeTeam", () => {
 		const teamToRemove = confirmedTeams[0];
 
 		// Get pool matches where this team participates
-		const matchesBeforeAsTeamA = await db._query.poolMatches.findMany({
-			where: (t, { eq }) => eq(t.teamAId, teamToRemove.id),
+		const matchesBeforeAsTeamA = await db.query.poolMatches.findMany({
+			where: { teamAId: teamToRemove.id },
 		});
 
-		const matchesBeforeAsTeamB = await db._query.poolMatches.findMany({
-			where: (t, { eq }) => eq(t.teamBId, teamToRemove.id),
+		const matchesBeforeAsTeamB = await db.query.poolMatches.findMany({
+			where: { teamBId: teamToRemove.id },
 		});
 
 		const totalMatchesBefore =
@@ -334,26 +330,26 @@ describe("removeTeam", () => {
 		});
 
 		// Verify that the team was withdrawn
-		const removedTeam = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.id, teamToRemove.id),
+		const removedTeam = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id: teamToRemove.id },
 		});
 
 		expect(removedTeam?.status).toBe("withdraw");
 
 		// Verify that the replacement team took over the seed
-		const replacementTeam = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.id, insertedReplacementTeam.id),
+		const replacementTeam = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id: insertedReplacementTeam.id },
 		});
 
 		expect(replacementTeam?.seed).toBe(teamToRemove.seed);
 
 		// Verify that all pool matches were updated to use the replacement team
-		const matchesAfterAsTeamA = await db._query.poolMatches.findMany({
-			where: (t, { eq }) => eq(t.teamAId, insertedReplacementTeam.id),
+		const matchesAfterAsTeamA = await db.query.poolMatches.findMany({
+			where: { teamAId: insertedReplacementTeam.id },
 		});
 
-		const matchesAfterAsTeamB = await db._query.poolMatches.findMany({
-			where: (t, { eq }) => eq(t.teamBId, insertedReplacementTeam.id),
+		const matchesAfterAsTeamB = await db.query.poolMatches.findMany({
+			where: { teamBId: insertedReplacementTeam.id },
 		});
 
 		const totalMatchesAfter =
@@ -362,26 +358,26 @@ describe("removeTeam", () => {
 		expect(totalMatchesAfter).toBe(totalMatchesBefore);
 
 		// Verify that the poolTeam was updated to reference the replacement team
-		const poolTeamBefore = await db._query.poolTeams.findFirst({
-			where: (t, { eq }) => eq(t.teamId, teamToRemove.id),
+		const poolTeamBefore = await db.query.poolTeams.findFirst({
+			where: { teamId: teamToRemove.id },
 		});
 
 		expect(poolTeamBefore).toBeUndefined();
 
-		const poolTeamAfter = await db._query.poolTeams.findFirst({
-			where: (t, { eq }) => eq(t.teamId, insertedReplacementTeam.id),
+		const poolTeamAfter = await db.query.poolTeams.findFirst({
+			where: { teamId: insertedReplacementTeam.id },
 		});
 
 		expect(poolTeamAfter).toBeDefined();
 		expect(poolTeamAfter?.teamId).toBe(insertedReplacementTeam.id);
 
 		// Verify that the original team is no longer in any pool matches
-		const originalTeamMatchesAsTeamA = await db._query.poolMatches.findMany({
-			where: (t, { eq }) => eq(t.teamAId, teamToRemove.id),
+		const originalTeamMatchesAsTeamA = await db.query.poolMatches.findMany({
+			where: { teamAId: teamToRemove.id },
 		});
 
-		const originalTeamMatchesAsTeamB = await db._query.poolMatches.findMany({
-			where: (t, { eq }) => eq(t.teamBId, teamToRemove.id),
+		const originalTeamMatchesAsTeamB = await db.query.poolMatches.findMany({
+			where: { teamBId: teamToRemove.id },
 		});
 
 		expect(originalTeamMatchesAsTeamA).toHaveLength(0);

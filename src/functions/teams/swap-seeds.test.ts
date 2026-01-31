@@ -22,9 +22,9 @@ describe("editSeed", () => {
 		const tournamentDivisionId = tournamentInfo.divisions[0];
 
 		// Get two teams with different seeds
-		const teams = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
-			orderBy: (t, { asc }) => [asc(t.seed)],
+		const teams = await db.query.tournamentDivisionTeams.findMany({
+			where: { tournamentDivisionId },
+			orderBy: (t, { asc }) => asc(t.seed),
 			limit: 2,
 		});
 
@@ -49,12 +49,12 @@ describe("editSeed", () => {
 		// expect(result.success).toBe(true);
 
 		// Verify the swap occurred
-		const updatedTeamA = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.id, teamA.id),
+		const updatedTeamA = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id: teamA.id },
 		});
 
-		const updatedTeamB = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.id, teamB.id),
+		const updatedTeamB = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id: teamB.id },
 		});
 
 		expect(updatedTeamA?.seed).toBe(teamBSeed);
@@ -79,8 +79,8 @@ describe("editSeed", () => {
 		const tournamentDivisionId = tournamentInfo.divisions[0];
 
 		// Get the first team
-		const team = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		const team = await db.query.tournamentDivisionTeams.findFirst({
+			where: { tournamentDivisionId },
 		});
 
 		expect(team).toBeDefined();
@@ -125,8 +125,8 @@ describe("editSeed", () => {
 
 		const tournamentDivisionId = tournamentInfo.divisions[0];
 
-		const team = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		const team = await db.query.tournamentDivisionTeams.findFirst({
+			where: { tournamentDivisionId },
 		});
 
 		expect(team).toBeDefined();
@@ -186,21 +186,20 @@ describe("editSeed", () => {
 		const [divisionAId, divisionBId] = tournamentInfo.divisions;
 
 		// Get teams from both divisions
-		const teamA = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, divisionAId),
-			orderBy: (t, { asc }) => [asc(t.seed)],
+		const teamA = await db.query.tournamentDivisionTeams.findFirst({
+			where: { tournamentDivisionId: divisionAId },
+			orderBy: (t, { asc }) => asc(t.seed),
 		});
 
-		const teamB = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, divisionBId),
-			orderBy: (t, { asc }) => [asc(t.seed)],
+		const teamB = await db.query.tournamentDivisionTeams.findFirst({
+			where: { tournamentDivisionId: divisionBId },
+			orderBy: (t, { asc }) => asc(t.seed),
 		});
 
 		// Get another team in division A to swap with
-		const teamA2 = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq, ne, and }) =>
-				and(eq(t.tournamentDivisionId, divisionAId), ne(t.id, teamA!.id)),
-			orderBy: (t, { asc }) => [asc(t.seed)],
+		const teamA2 = await db.query.tournamentDivisionTeams.findFirst({
+			where: { tournamentDivisionId: divisionAId, id: { ne: teamA!.id } },
+			orderBy: (t, { asc }) => asc(t.seed),
 		});
 
 		expect(teamA).toBeDefined();
@@ -218,8 +217,8 @@ describe("editSeed", () => {
 		});
 
 		// Verify teamB's seed hasn't changed (it's in a different division)
-		const updatedTeamB = await db._query.tournamentDivisionTeams.findFirst({
-			where: (t, { eq }) => eq(t.id, teamB!.id),
+		const updatedTeamB = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id: teamB!.id },
 		});
 
 		expect(updatedTeamB?.seed).toBe(teamBOriginalSeed);

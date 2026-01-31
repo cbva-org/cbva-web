@@ -248,4 +248,11 @@ export const relations = defineRelations(tables, (r) => ({
 		invoices: r.many.invoices(),
 		profiles: r.many.playerProfiles(),
 	},
+	directors: {
+		profile: r.one.playerProfiles({
+			from: r.directors.profileId,
+			to: r.playerProfiles.id,
+			optional: false,
+		}),
+	},
 }));

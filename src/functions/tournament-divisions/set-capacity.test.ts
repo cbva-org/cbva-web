@@ -55,8 +55,8 @@ describe("update waitlist teams", () => {
 			.returning({ id: tournamentDivisionTeams.id });
 
 		// Verify initial state: 3 confirmed, 2 waitlisted
-		const teamsBefore = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		const teamsBefore = await db.query.tournamentDivisionTeams.findMany({
+			where: { tournamentDivisionId },
 		});
 
 		expect(teamsBefore.filter((t) => t.status === "confirmed")).toHaveLength(3);
@@ -74,8 +74,8 @@ describe("update waitlist teams", () => {
 		});
 
 		// Verify that 2 teams were promoted from waitlist
-		const teamsAfter = await db._query.tournamentDivisionTeams.findMany({
-			where: (t, { eq }) => eq(t.tournamentDivisionId, tournamentDivisionId),
+		const teamsAfter = await db.query.tournamentDivisionTeams.findMany({
+			where: { tournamentDivisionId },
 		});
 
 		expect(teamsAfter.filter((t) => t.status === "confirmed")).toHaveLength(5);

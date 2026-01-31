@@ -55,14 +55,13 @@ describe("duplicateTournamentFn", () => {
 			data: { id, date: targetDate, demo: true },
 		});
 
-		const dbResult = await db._query.tournaments.findMany({
+		const dbResult = await db.query.tournaments.findMany({
 			with: {
 				tournamentDivisions: true,
 				venue: true,
 				directors: true,
 			},
-			where: (t, { eq, and }) =>
-				and(eq(t.venueId, venue.id), eq(t.date, targetDate)),
+			where: { venueId: venue.id, date: targetDate },
 		});
 
 		expect(dbResult.length).toBe(1);
@@ -176,17 +175,16 @@ describe("duplicateScheduleFn", () => {
 			data: { startDate: "2025-01-01", endDate: "2025-12-31", addDays: 364 },
 		});
 
-		const dbResult = await db._query.tournaments.findMany({
+		const dbResult = await db.query.tournaments.findMany({
 			with: {
 				tournamentDivisions: true,
 				venue: true,
 				directors: true,
 			},
-			where: (t, { and, inArray, eq }) =>
-				and(
-					inArray(t.venueId, [venue1.id, venue2.id]),
-					eq(t.date, "2025-12-31"),
-				),
+			where: {
+				venueId: { inArray: [venue1.id, venue2.id] },
+				date: "2025-12-31",
+			},
 		});
 
 		expect(dbResult.length).toBe(2);
