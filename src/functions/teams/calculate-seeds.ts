@@ -10,8 +10,9 @@ import {
 	tournamentDivisionTeams,
 } from "@/db/schema";
 import { assertFound, badRequest } from "@/lib/responses";
+import { assertTournamentDirector } from "@/middlewares/require-tournament-access";
 import { mutationOptions } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
@@ -24,6 +25,98 @@ export const calculateSeedsSchema = selectTournamentSchema
 		tournamentDivisionIds: z.array(z.number()).optional(),
 	});
 
+export const calculateSeedsHandler = createServerOnlyFn(
+	async ({
+		id: tournamentId,
+		tournamentDivisionIds,
+		overwrite,
+	}: z.infer<typeof calculateSeedsSchema>) => {
+		const tournament = await db.query.tournaments.findFirst({
+			where: { id: tournamentId },
+			with: {
+				tournamentDivisions: {
+					with: {
+						teams: {
+							where: {
+								status: "confirmed",
+							},
+						},
+					},
+					where: tournamentDivisionIds
+						? { id: { in: tournamentDivisionIds } }
+						: undefined,
+				},
+			},
+		});
+
+		assertFound(tournament);
+
+		const hasSeeds = tournament.tournamentDivisions.some((division) =>
+			division.teams.some((team) => team.seed !== null),
+		);
+
+		if (hasSeeds && !overwrite) {
+			throw badRequest(
+				'Seeds are already set for this tournament. If you intended to redo the seeding, select "Overwrite existing".',
+			);
+		}
+
+		const updates = await db
+			.select({
+				id: tournamentDivisionTeams.id,
+				tournamentDivisionId: tournamentDivisionTeams.tournamentDivisionId,
+				weight: sql<number>`SUM(COALESCE(${levels.order}, 0))`,
+				totalRank: sql<number>`SUM(${playerProfiles.rank})`,
+				seed: sql<number>`ROW_NUMBER() OVER (
+          PARTITION BY ${tournamentDivisionTeams.tournamentDivisionId}
+          ORDER BY SUM(COALESCE(${levels.order}, 0)) DESC, SUM(${playerProfiles.rank}) ASC
+        )`,
+			})
+			.from(tournamentDivisionTeams)
+			.innerJoin(teams, eq(tournamentDivisionTeams.teamId, teams.id))
+			.innerJoin(teamPlayers, eq(teams.id, teamPlayers.teamId))
+			.innerJoin(
+				playerProfiles,
+				eq(teamPlayers.playerProfileId, playerProfiles.id),
+			)
+			.leftJoin(levels, eq(playerProfiles.levelId, levels.id))
+			.innerJoin(
+				tournamentDivisions,
+				eq(
+					tournamentDivisionTeams.tournamentDivisionId,
+					tournamentDivisions.id,
+				),
+			)
+			.where(
+				and(
+					eq(tournamentDivisions.tournamentId, tournamentId),
+					inArray(tournamentDivisionTeams.status, ["confirmed", "registered"]),
+				),
+			)
+			.groupBy(
+				tournamentDivisionTeams.id,
+				tournamentDivisionTeams.tournamentDivisionId,
+			);
+
+		const seeded = await db.transaction(async (txn) => {
+			return await Promise.all(
+				updates.map(({ id, seed }) =>
+					txn
+						.update(tournamentDivisionTeams)
+						.set({ seed })
+						.where(eq(tournamentDivisionTeams.id, id))
+						.returning({
+							id: tournamentDivisionTeams.id,
+							seed: tournamentDivisionTeams.seed,
+						}),
+				),
+			);
+		});
+
+		return seeded.flat();
+	},
+);
+
 export const calculateSeedsFn = createServerFn()
 	.middleware([
 		requirePermissions({
@@ -31,98 +124,11 @@ export const calculateSeedsFn = createServerFn()
 		}),
 	])
 	.inputValidator(calculateSeedsSchema)
-	.handler(
-		async ({
-			data: { id: tournamentId, tournamentDivisionIds, overwrite },
-		}) => {
-			const tournament = await db.query.tournaments.findFirst({
-				where: { id: tournamentId },
-				with: {
-					tournamentDivisions: {
-						with: {
-							teams: {
-								where: {
-									status: "confirmed",
-								},
-							},
-						},
-						where: tournamentDivisionIds
-							? { id: { in: tournamentDivisionIds } }
-							: undefined,
-					},
-				},
-			});
+	.handler(async ({ data, context: { viewer } }) => {
+		await assertTournamentDirector(viewer, data.id);
 
-			assertFound(tournament);
-
-			const hasSeeds = tournament.tournamentDivisions.some((division) =>
-				division.teams.some((team) => team.seed !== null),
-			);
-
-			if (hasSeeds && !overwrite) {
-				throw badRequest(
-					'Seeds are already set for this tournament. If you intended to redo the seeding, select "Overwrite existing".',
-				);
-			}
-
-			const updates = await db
-				.select({
-					id: tournamentDivisionTeams.id,
-					tournamentDivisionId: tournamentDivisionTeams.tournamentDivisionId,
-					weight: sql<number>`SUM(COALESCE(${levels.order}, 0))`,
-					totalRank: sql<number>`SUM(${playerProfiles.rank})`,
-					seed: sql<number>`ROW_NUMBER() OVER (
-          PARTITION BY ${tournamentDivisionTeams.tournamentDivisionId}
-          ORDER BY SUM(COALESCE(${levels.order}, 0)) DESC, SUM(${playerProfiles.rank}) ASC
-        )`,
-				})
-				.from(tournamentDivisionTeams)
-				.innerJoin(teams, eq(tournamentDivisionTeams.teamId, teams.id))
-				.innerJoin(teamPlayers, eq(teams.id, teamPlayers.teamId))
-				.innerJoin(
-					playerProfiles,
-					eq(teamPlayers.playerProfileId, playerProfiles.id),
-				)
-				.leftJoin(levels, eq(playerProfiles.levelId, levels.id))
-				.innerJoin(
-					tournamentDivisions,
-					eq(
-						tournamentDivisionTeams.tournamentDivisionId,
-						tournamentDivisions.id,
-					),
-				)
-				.where(
-					and(
-						eq(tournamentDivisions.tournamentId, tournamentId),
-						inArray(tournamentDivisionTeams.status, [
-							"confirmed",
-							"registered",
-						]),
-					),
-				)
-				.groupBy(
-					tournamentDivisionTeams.id,
-					tournamentDivisionTeams.tournamentDivisionId,
-				);
-
-			const seeded = await db.transaction(async (txn) => {
-				return await Promise.all(
-					updates.map(({ id, seed }) =>
-						txn
-							.update(tournamentDivisionTeams)
-							.set({ seed })
-							.where(eq(tournamentDivisionTeams.id, id))
-							.returning({
-								id: tournamentDivisionTeams.id,
-								seed: tournamentDivisionTeams.seed,
-							}),
-					),
-				);
-			});
-
-			return seeded.flat();
-		},
-	);
+		return calculateSeedsHandler(data);
+	});
 
 export const calculateSeedsMutationOptions = () =>
 	mutationOptions({

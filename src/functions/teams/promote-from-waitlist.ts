@@ -12,10 +12,14 @@ import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { and, eq, inArray } from "drizzle-orm";
 import z from "zod";
 import { editSeedTransaction } from "./edit-seed";
-import { assertFound, notFound } from "@/lib/responses";
+import { assertFound } from "@/lib/responses";
 import { updatePoolTransaction } from "./update-pool";
-import { calculateSeedsFn } from "./calculate-seeds";
+import { calculateSeedsHandler } from "./calculate-seeds";
 import { createPoolsFn } from "../pools";
+import {
+	assertTournamentDirector,
+	requireTournamentUpdate,
+} from "@/middlewares/require-tournament-access";
 
 export const promoteFromWaitlistSchema = selectTournamentDivisionTeamSchema
 	.pick({
@@ -26,6 +30,7 @@ export const promoteFromWaitlistSchema = selectTournamentDivisionTeamSchema
 		automatic: z.boolean(),
 		poolId: z.number().optional().nullable(),
 		poolSeed: z.number().optional().nullable(),
+		tournamentId: z.number(),
 	});
 
 export const promoteFromWaitlistTransaction = createServerOnlyFn(
@@ -39,10 +44,16 @@ export const promoteFromWaitlistTransaction = createServerOnlyFn(
 	},
 );
 
-export const promoteFromWaitlist = createServerFn()
-	.inputValidator(promoteFromWaitlistSchema)
-	.handler(async ({ data: { id, automatic, seed, poolId, poolSeed } }) => {
-		const team = await db._query.tournamentDivisionTeams.findFirst({
+export const promoteFromWaitlistHandler = createServerOnlyFn(
+	async ({
+		id,
+		automatic,
+		seed,
+		poolId,
+		poolSeed,
+	}: z.infer<typeof promoteFromWaitlistSchema>) => {
+		const team = await db.query.tournamentDivisionTeams.findFirst({
+			where: { id },
 			with: {
 				poolTeam: true,
 				tournamentDivision: {
@@ -52,10 +63,9 @@ export const promoteFromWaitlist = createServerFn()
 					},
 				},
 			},
-			where: (t, { eq }) => eq(t.id, id),
 		});
 
-		assertFound(!team);
+		assertFound(team);
 
 		await db.transaction(async (txn) => {
 			await promoteFromWaitlistTransaction(txn, [team.id]);
@@ -99,12 +109,10 @@ export const promoteFromWaitlist = createServerFn()
 		});
 
 		if (automatic) {
-			await calculateSeedsFn({
-				data: {
-					id: team.tournamentDivision.tournamentId,
-					tournamentDivisionIds: [team.tournamentDivisionId],
-					overwrite: true,
-				},
+			await calculateSeedsHandler({
+				id: team.tournamentDivision.tournamentId,
+				tournamentDivisionIds: [team.tournamentDivisionId],
+				overwrite: true,
 			});
 
 			const poolCount = await db.$count(
@@ -126,6 +134,16 @@ export const promoteFromWaitlist = createServerFn()
 		return {
 			success: true,
 		};
+	},
+);
+
+export const promoteFromWaitlist = createServerFn()
+	.middleware([requireTournamentUpdate])
+	.inputValidator(promoteFromWaitlistSchema)
+	.handler(async ({ data, context: { viewer } }) => {
+		assertTournamentDirector(viewer, data.tournamentId);
+
+		return promoteFromWaitlistHandler(data);
 	});
 
 export const promoteFromWaitlistMutationOptions = () =>

@@ -9,7 +9,7 @@ import {
 	createPoolMatchesFn,
 	createPoolsFn,
 } from "@/functions/pools";
-import { calculateSeedsFn } from "@/functions/teams/calculate-seeds";
+import { calculateSeedsHandler } from "@/functions/teams/calculate-seeds";
 import {
 	type Database,
 	divisions,
@@ -172,8 +172,9 @@ export async function bootstrapTournament(
 		}
 	}
 
-	await calculateSeedsFn({
-		data: { id: tournamentId, overwrite: false },
+	await calculateSeedsHandler({
+		id: tournamentId,
+		overwrite: false,
 	});
 
 	for (const [i, { pools: poolCount }] of config.divisions.entries()) {
