@@ -41,7 +41,7 @@ function RouteComponent() {
 			<div className="py-16 px-3 md:py-12 max-w-lg mx-auto flex flex-col space-y-16 relative">
 				<h1 className={title({ className: "text-center" })}>Update Profile</h1>
 
-				<div className="rounded-lg bg-white p-8 max-w-lg mx-auto">
+				<div className="rounded-lg bg-white p-8 max-w-lg mx-auto w-full">
 					<Suspense fallback={<>Nope</>}>
 						<ProfileForm
 							profileId={data.id}
