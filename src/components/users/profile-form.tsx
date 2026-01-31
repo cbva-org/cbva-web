@@ -264,7 +264,14 @@ export function ProfileForm({
 					listeners={{
 						onChange: ({ value }) => {
 							if (value) {
-								form.setFieldValue("highSchoolGraduationYear", null);
+								form.setFieldValue("highSchoolGraduationYear", null, {
+									dontValidate: true,
+								});
+								form.setFieldMeta("highSchoolGraduationYear", (meta) => ({
+									...meta,
+									errors: [],
+									errorMap: {},
+								}));
 							}
 						},
 					}}
@@ -449,7 +456,7 @@ export function ProfileForm({
 							</form.Button>
 						)}
 
-						<form.SubmitButton>Submit</form.SubmitButton>
+						<form.SubmitButton allowInvalid={true}>Submit</form.SubmitButton>
 					</form.Footer>
 				</form.AppForm>
 			</div>

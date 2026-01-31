@@ -9,9 +9,10 @@ import {
 	CircleCheck,
 	CircleQuestionMarkIcon,
 	EditIcon,
+	PlusIcon,
 } from "lucide-react";
 import { Suspense, useState } from "react";
-import { TooltipTrigger } from "react-aria-components";
+import { DialogTrigger, Heading, TooltipTrigger } from "react-aria-components";
 import z from "zod/v4";
 import { authClient } from "@/auth/client";
 import {
@@ -22,9 +23,11 @@ import {
 import { Button } from "@/components/base/button";
 import { useAppForm } from "@/components/base/form";
 import { Link } from "@/components/base/link";
+import { Modal } from "@/components/base/modal";
 import { card, title } from "@/components/base/primitives";
 import { Tooltip } from "@/components/base/tooltip";
 import { ProfileList } from "@/components/profiles/list";
+import { ProfileForm } from "@/components/users/profile-form";
 import { VerifyPhoneForm } from "@/components/users/verify-phone-form";
 import { getViewerProfilesQueryOptions } from "@/functions/profiles/get-viewer-profiles";
 import { updateUserFnSchema, updateUserMutationOptions } from "@/data/users";
@@ -56,6 +59,7 @@ function RouteComponent() {
 	const { data: profiles } = useSuspenseQuery(getViewerProfilesQueryOptions());
 
 	const [verifyPhoneSent, setVerifyPhoneSent] = useState(false);
+	const [isCreatingProfile, setIsCreatingProfile] = useState(false);
 
 	const queryClient = useQueryClient();
 
@@ -352,6 +356,29 @@ function RouteComponent() {
 				<div className="flex flex-col space-y-6">
 					<div className="flex flex-row items-center justify-between">
 						<h2 className={title({ size: "sm" })}>Your profiles</h2>
+
+						<DialogTrigger
+							isOpen={isCreatingProfile}
+							onOpenChange={setIsCreatingProfile}
+						>
+							<Button variant="text" color="primary" size="sm">
+								<PlusIcon size={16} />
+								Add Profile
+							</Button>
+
+							<Modal isDismissable>
+								<div className="p-4 flex flex-col space-y-4">
+									<Heading className={title({ size: "sm" })} slot="title">
+										Add Profile
+									</Heading>
+
+									<ProfileForm
+										onSuccess={() => setIsCreatingProfile(false)}
+										onCancel={() => setIsCreatingProfile(false)}
+									/>
+								</div>
+							</Modal>
+						</DialogTrigger>
 					</div>
 
 					{profiles && <ProfileList className={card()} profiles={profiles} />}
