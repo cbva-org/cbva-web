@@ -6,7 +6,7 @@ import { editTournamentFn } from "./general";
 
 describe("Edit general info", () => {
 	test("merges divisions when changing venue", async () => {
-		const [aVenue, bVenue] = await db._query.venues.findMany({
+		const [aVenue, bVenue] = await db.query.venues.findMany({
 			limit: 2,
 		});
 
@@ -50,16 +50,21 @@ describe("Edit general info", () => {
 			],
 		});
 
-		const divs = await db._query.tournamentDivisions.findMany({
+		const aDivs = await db.query.tournamentDivisions.findMany({
 			with: {
 				division: true,
 				tournament: true,
 			},
-			where: (t, { inArray }) => inArray(t.tournamentId, [aId, bId]),
+			where: { tournamentId: aId },
 		});
 
-		const aDivs = divs.filter(({ tournamentId }) => tournamentId === aId);
-		const bDivs = divs.filter(({ tournamentId }) => tournamentId === bId);
+		const bDivs = await db.query.tournamentDivisions.findMany({
+			with: {
+				division: true,
+				tournament: true,
+			},
+			where: { tournamentId: bId },
+		});
 
 		expect(aDivs).toHaveLength(2);
 		expect(bDivs).toHaveLength(2);
@@ -81,7 +86,9 @@ describe("Edit general info", () => {
 			},
 		});
 
-		const updated = await db._query.tournaments.findMany({
+		// After merge, only one tournament should exist
+		// When tournament B is moved to venue A, B gets merged into A and deleted
+		const updatedA = await db.query.tournaments.findFirst({
 			columns: {
 				id: true,
 			},
@@ -92,15 +99,24 @@ describe("Edit general info", () => {
 					},
 				},
 			},
-			where: (t, { inArray }) => inArray(t.id, [aId, bId]),
+			where: { id: aId },
 		});
 
-		expect(updated).toHaveLength(1);
-		expect(updated[0].tournamentDivisions).toHaveLength(3);
+		const updatedB = await db.query.tournaments.findFirst({
+			columns: {
+				id: true,
+			},
+			where: { id: bId },
+		});
+
+		// bId tournament should be deleted after merge (it was merged into A)
+		expect(updatedB).toBeUndefined();
+		expect(updatedA).toBeDefined();
+		expect(updatedA!.tournamentDivisions).toHaveLength(3);
 
 		expect(
 			pick(
-				updated[0].tournamentDivisions.find(
+				updatedA!.tournamentDivisions.find(
 					({ division }) => division.name === "a",
 				),
 				["gender"],
@@ -111,7 +127,7 @@ describe("Edit general info", () => {
 
 		expect(
 			pick(
-				updated[0].tournamentDivisions.find(
+				updatedA!.tournamentDivisions.find(
 					({ division }) => division.name === "b",
 				),
 				["gender"],
@@ -122,7 +138,7 @@ describe("Edit general info", () => {
 
 		expect(
 			pick(
-				updated[0].tournamentDivisions.find(
+				updatedA!.tournamentDivisions.find(
 					({ division }) => division.name === "aa",
 				),
 				["gender"],

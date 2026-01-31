@@ -20,8 +20,8 @@ export const getTournament = createServerFn({
 })
 	.inputValidator(selectTournamentSchema.pick({ id: true }))
 	.handler(async ({ data: { id } }) => {
-		const res = await db._query.tournaments.findFirst({
-			where: (table, { eq }) => eq(table.id, id),
+		const res = await db.query.tournaments.findFirst({
+			where: { id },
 			with: {
 				venue: {
 					with: {
@@ -38,7 +38,7 @@ export const getTournament = createServerFn({
 							},
 						},
 					},
-					orderBy: (t, { asc }) => asc(t.order),
+					orderBy: { order: "asc" },
 				},
 				tournamentDivisions: {
 					with: {
@@ -254,9 +254,9 @@ export const editTournamentFn = createServerFn({ method: "POST" })
 					}
 				}
 
-				// If mergeDivisions is true, check for duplicate tournaments at same venue/date
+				// If mergeDivisions is true, check for existing tournament at same venue/date
 				if (mergeDivisions) {
-					const duplicates = await txn
+					const existingTournaments = await txn
 						.select({ id: tournaments.id })
 						.from(tournaments)
 						.where(
@@ -267,38 +267,38 @@ export const editTournamentFn = createServerFn({ method: "POST" })
 							),
 						);
 
-					if (duplicates.length > 0) {
-						const [duplicate] = duplicates;
+					if (existingTournaments.length > 0) {
+						const [target] = existingTournaments;
 
-						// Get existing divisions in the target tournament
-						const existingDivisions = await txn
+						// Get divisions from the existing tournament at destination (these are kept)
+						const targetDivisions = await txn
 							.select({
 								divisionId: tournamentDivisions.divisionId,
 								gender: tournamentDivisions.gender,
 							})
 							.from(tournamentDivisions)
-							.where(eq(tournamentDivisions.tournamentId, tournamentId));
+							.where(eq(tournamentDivisions.tournamentId, target.id));
 
-						// Get divisions from the duplicate tournament
-						const duplicateDivisions = await txn
+						// Get divisions from the tournament being moved (these get merged)
+						const sourceDivisions = await txn
 							.select({
 								id: tournamentDivisions.id,
 								divisionId: tournamentDivisions.divisionId,
 								gender: tournamentDivisions.gender,
 							})
 							.from(tournamentDivisions)
-							.where(eq(tournamentDivisions.tournamentId, duplicate.id));
+							.where(eq(tournamentDivisions.tournamentId, tournamentId));
 
-						// Move divisions that don't conflict (different division or gender combination)
-						for (const div of duplicateDivisions) {
-							const hasConflict = existingDivisions.some(
+						// Move divisions that don't conflict into the target tournament
+						for (const div of sourceDivisions) {
+							const hasConflict = targetDivisions.some(
 								(existing) =>
 									existing.divisionId === div.divisionId &&
 									existing.gender === div.gender,
 							);
 
 							if (hasConflict) {
-								// Delete conflicting division from duplicate tournament
+								// Delete conflicting division from source tournament
 								await txn
 									.delete(tournamentDivisions)
 									.where(eq(tournamentDivisions.id, div.id));
@@ -306,15 +306,15 @@ export const editTournamentFn = createServerFn({ method: "POST" })
 								// Move non-conflicting division to target tournament
 								await txn
 									.update(tournamentDivisions)
-									.set({ tournamentId })
+									.set({ tournamentId: target.id })
 									.where(eq(tournamentDivisions.id, div.id));
 							}
 						}
 
-						// Delete the now-empty duplicate tournament
+						// Delete the source tournament (the one being edited)
 						await txn
 							.delete(tournaments)
-							.where(eq(tournaments.id, duplicate.id));
+							.where(eq(tournaments.id, tournamentId));
 					}
 				}
 			});

@@ -23,8 +23,8 @@ export const editPlayoffMatchRefTeamFn = createServerFn()
 	])
 	.inputValidator(editPlayoffMatchRefTeamSchema)
 	.handler(async ({ data: { id: matchId, teamId } }) => {
-		const match = await db._query.playoffMatches.findFirst({
-			where: (t, { eq }) => eq(t.id, matchId),
+		const match = await db.query.playoffMatches.findFirst({
+			where: { id: matchId },
 		});
 
 		if (!match) {
@@ -67,8 +67,8 @@ export const editPoolMatchRefTeamFn = createServerFn()
 	])
 	.inputValidator(editPoolMatchRefTeamSchema)
 	.handler(async ({ data: { id: matchId, teamId } }) => {
-		const match = await db._query.poolMatches.findFirst({
-			where: (t, { eq }) => eq(t.id, matchId),
+		const match = await db.query.poolMatches.findFirst({
+			where: { id: matchId },
 		});
 
 		if (!match) {

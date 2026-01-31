@@ -226,6 +226,11 @@ export const relations = defineRelations(tables, (r) => ({
 			from: r.tournamentDirectors.tournamentId,
 			to: r.tournaments.id,
 		}),
+		director: r.one.directors({
+			from: r.tournamentDirectors.directorId,
+			to: r.directors.id,
+			optional: false,
+		}),
 	},
 	tournamentDivisions: {
 		tournament: r.one.tournaments({
@@ -240,12 +245,31 @@ export const relations = defineRelations(tables, (r) => ({
 		}),
 		pools: r.many.pools(),
 		teams: r.many.tournamentDivisionTeams(),
+		requirements: r.many.tournamentDivisionRequirements(),
 	},
 	venues: {
 		tournaments: r.many.tournaments(),
+		director: r.one.users({
+			from: r.venues.directorId,
+			to: r.users.id,
+		}),
 	},
 	users: {
 		invoices: r.many.invoices(),
 		profiles: r.many.playerProfiles(),
+	},
+	directors: {
+		profile: r.one.playerProfiles({
+			from: r.directors.profileId,
+			to: r.playerProfiles.id,
+			optional: false,
+		}),
+	},
+	tournamentDivisionRequirements: {
+		tournamentDivision: r.one.tournamentDivisions({
+			from: r.tournamentDivisionRequirements.tournamentDivisionId,
+			to: r.tournamentDivisions.id,
+			optional: false,
+		}),
 	},
 }));
