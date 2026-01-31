@@ -60,9 +60,9 @@ function RouteComponent() {
 											<li>Wait a few minutes and try again</li>
 											<li>
 												Contact{" "}
-												<Link to="mailto:info@cbva.com" className="underline">
+												<a href="mailto:info@cbva.com" className="underline">
 													info@cbva.com
-												</Link>{" "}
+												</a>{" "}
 												for assistance
 											</li>
 										</ul>
