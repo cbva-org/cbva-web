@@ -1,22 +1,28 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { eq, sql } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import z from "zod";
 import { authMiddleware, requireRole } from "@/auth/shared";
 import { db } from "@/db/connection";
 import { selectUserSchema, updateUserSchema, users } from "@/db/schema";
 import { forbidden } from "@/lib/responses";
 
-export const searchUsersSchema = selectUserSchema.pick({
-	name: true,
+export const searchUsersSchema = z.object({
+	name: z.string().optional(),
+	email: z.string().optional(),
+	phone: z.string().optional(),
 });
 
 export const getUsersFn = createServerFn()
 	.middleware([requireRole(["admin"])])
 	.inputValidator(searchUsersSchema)
-	.handler(async ({ data: { name } }) => {
-		return await db._query.users.findMany({
-			where: (t, { ilike }) => ilike(t.name, `%${name}%`),
+	.handler(async ({ data: { name, email, phone } }) => {
+		return await db.query.users.findMany({
+			where: {
+				name: name ? { ilike: `%${name}%` } : undefined,
+				email: email ? { ilike: `%${email}%` } : undefined,
+				phoneNumber: phone ? { ilike: `%${phone}%` } : undefined,
+			},
 			limit: 10,
 			orderBy: (t, { asc }) => asc(t.name),
 		});
@@ -24,15 +30,22 @@ export const getUsersFn = createServerFn()
 
 export const usersQueryOptions = ({
 	name,
+	email,
+	phone,
 }: z.infer<typeof searchUsersSchema>) =>
 	queryOptions({
-		queryKey: ["users", name],
+		queryKey: ["users", { name, email, phone }],
 		queryFn: async () => {
-			if (name.length < 3) {
-				return { users: [], total: 0 };
+			const hasSearch =
+				(name && name.length >= 2) ||
+				(email && email.length >= 2) ||
+				(phone && phone.length >= 2);
+
+			if (!hasSearch) {
+				return { users: [] };
 			}
 
-			const data = await getUsersFn({ data: { name } });
+			const data = await getUsersFn({ data: { name, email, phone } });
 
 			return { users: data };
 		},
@@ -120,5 +133,55 @@ export const adminUpdateUserMutationOptions = () =>
 	mutationOptions({
 		mutationFn: async (data: z.infer<typeof adminUpdateUserSchema>) => {
 			return adminUpdateUserFn({ data });
+		},
+	});
+
+export const adminVerifyEmailSchema = z.object({
+	id: z.string(),
+});
+
+export const adminVerifyEmailFn = createServerFn({ method: "POST" })
+	.middleware([requireRole(["admin"])])
+	.inputValidator(adminVerifyEmailSchema)
+	.handler(async ({ data: { id } }) => {
+		await db
+			.update(users)
+			.set({
+				emailVerified: true,
+			})
+			.where(eq(users.id, id));
+
+		return { success: true };
+	});
+
+export const adminVerifyEmailMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof adminVerifyEmailSchema>) => {
+			return adminVerifyEmailFn({ data });
+		},
+	});
+
+export const adminVerifyPhoneSchema = z.object({
+	id: z.string(),
+});
+
+export const adminVerifyPhoneFn = createServerFn({ method: "POST" })
+	.middleware([requireRole(["admin"])])
+	.inputValidator(adminVerifyPhoneSchema)
+	.handler(async ({ data: { id } }) => {
+		await db
+			.update(users)
+			.set({
+				phoneNumberVerified: true,
+			})
+			.where(eq(users.id, id));
+
+		return { success: true };
+	});
+
+export const adminVerifyPhoneMutationOptions = () =>
+	mutationOptions({
+		mutationFn: async (data: z.infer<typeof adminVerifyPhoneSchema>) => {
+			return adminVerifyPhoneFn({ data });
 		},
 	});

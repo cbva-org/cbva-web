@@ -1,16 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useDebounce } from "ahooks";
-import { Suspense, useState } from "react";
-import { Header } from "react-aria-components";
-import type { Role } from "@/auth/permissions";
 import { viewerQueryOptions } from "@/auth/shared";
-import { ScheduleDashboard } from "@/components/admin/schedule";
-import { UpdateUserForm } from "@/components/admin/update-user-form";
 import { UsersList } from "@/components/admin/users-list";
-import { title } from "@/components/base/primitives";
-import { SearchField } from "@/components/base/search-field";
-import { usersQueryOptions } from "@/data/users";
 import { DefaultLayout } from "@/layouts/default";
 
 export const Route = createFileRoute("/admin/users")({
@@ -29,7 +19,7 @@ function RouteComponent() {
 	return (
 		<DefaultLayout
 			classNames={{
-				content: "max-w-2xl px-4 py-16 mx-auto flex flex-col space-y-8",
+				content: "max-w-4xl px-4 py-16 mx-auto flex flex-col space-y-8",
 			}}
 		>
 			<UsersList />
