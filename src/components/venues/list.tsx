@@ -6,12 +6,9 @@ import {
 import { Link } from "@tanstack/react-router";
 
 import { useViewerHasPermission } from "@/auth/shared";
-import {
-	DropdownMenu,
-	DropdownMenuItem,
-} from "@/components/base/dropdown-menu";
 import { updateVenueMutationOptions, venuesQueryOptions } from "@/data/venues";
 import { EditableImage } from "../base/editable-image";
+import { ReorderVenuesForm } from "./reorder-venues-form";
 
 export function VenuesList() {
 	const queryClient = useQueryClient();
@@ -38,13 +35,7 @@ export function VenuesList() {
 						<br /> Tournaments
 					</h2>
 
-					{/* {canCreateVenue && ( */}
-					{/* 	<DropdownMenu> */}
-					{/* 		<DropdownMenuItem href="/venue/create"> */}
-					{/* 			Create New */}
-					{/* 		</DropdownMenuItem> */}
-					{/* 	</DropdownMenu> */}
-					{/* )} */}
+					{canCreateVenue && <ReorderVenuesForm />}
 				</div>
 
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">

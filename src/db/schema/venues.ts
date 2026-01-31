@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm/_relations";
 import {
 	index,
+	integer,
 	pgTable,
 	serial,
 	text,
@@ -34,6 +35,7 @@ export const venues = pgTable(
 		// TODO: add check for confirming user has director role
 		directorId: text().references(() => users.id),
 		externalRef: uuid().unique(),
+		order: integer().default(0).notNull(),
 	},
 	(table) => [
 		unique("name_city_unique").on(table.name, table.city),

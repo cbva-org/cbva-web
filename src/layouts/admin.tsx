@@ -17,6 +17,10 @@ export function AdminLayout(props: DefaultLayoutProps) {
 					title: "Invoices",
 					to: "/admin/invoices" as const,
 				},
+				{
+					title: "Locations",
+					to: "/admin/venues" as const,
+				},
 			]}
 		/>
 	);

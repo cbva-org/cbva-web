@@ -1,0 +1,93 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ListOrderedIcon } from "lucide-react";
+import { useState } from "react";
+import { DialogTrigger, Heading } from "react-aria-components";
+import { Button } from "@/components/base/button";
+import { useAppForm } from "@/components/base/form/form";
+import { Modal } from "@/components/base/modal";
+import { OrderingList } from "@/components/base/ordering-list";
+import { title } from "@/components/base/primitives";
+import { adminVenuesQueryOptions, venuesQueryOptions } from "@/data/venues";
+import { setVenuesOrderMutationOptions } from "@/functions/venues/set-venues-order";
+
+export function ReorderVenuesForm() {
+	const [isOpen, setOpen] = useState(false);
+
+	const queryClient = useQueryClient();
+
+	const { mutateAsync: setVenueOrder } = useMutation({
+		...setVenuesOrderMutationOptions(),
+		onSuccess: () => {
+			queryClient.invalidateQueries(venuesQueryOptions());
+			queryClient.invalidateQueries(adminVenuesQueryOptions());
+		},
+	});
+
+	const { data: items } = useQuery({
+		...adminVenuesQueryOptions(),
+		select: (data) =>
+			data
+				.filter((venue) => venue.status === "active")
+				.map(({ id, name, city }) => ({
+					value: id,
+					display: `${name}, ${city}`,
+				})),
+	});
+
+	const form = useAppForm({
+		defaultValues: {
+			order: items?.map(({ value }) => value) ?? [],
+		},
+		onSubmit: async ({ value: { order }, formApi }) => {
+			await setVenueOrder({ order });
+			formApi.reset();
+			setOpen(false);
+		},
+	});
+
+	return (
+		<DialogTrigger isOpen={isOpen} onOpenChange={setOpen}>
+			<Button
+				variant="icon"
+				color="secondary"
+				tooltip="Reorder Active Locations"
+			>
+				<ListOrderedIcon size={16} />
+			</Button>
+
+			<Modal size="md" isDismissable isOpen={isOpen} onOpenChange={setOpen}>
+				<div className="p-4 flex flex-col space-y-4">
+					<Heading className={title({ size: "sm" })} slot="title">
+						Reorder Active Locations
+					</Heading>
+
+					<form
+						className="flex-col space-y-4"
+						onSubmit={(e) => {
+							e.preventDefault();
+							form.handleSubmit();
+						}}
+					>
+						<form.AppField name="order">
+							{(field) => (
+								<OrderingList
+									items={items ?? []}
+									onChange={(order) => field.handleChange(order)}
+								/>
+							)}
+						</form.AppField>
+						<form.AppForm>
+							<form.Footer>
+								<Button onPress={() => setOpen(false)}>Cancel</Button>
+
+								<form.SubmitButton requireChange={false}>
+									Save Order
+								</form.SubmitButton>
+							</form.Footer>
+						</form.AppForm>
+					</form>
+				</div>
+			</Modal>
+		</DialogTrigger>
+	);
+}
