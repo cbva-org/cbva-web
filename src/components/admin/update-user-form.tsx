@@ -9,7 +9,6 @@ import {
 	adminUpdateUserSchema,
 } from "@/data/users";
 import type { User } from "@/db/schema";
-import { ImpersonateButton } from "../impersonator/impersonate-button";
 
 export type UpdateUserFormProps = Pick<User, "id" | "name" | "role"> & {
 	refetch: () => void;
@@ -82,8 +81,6 @@ export function UpdateUserForm({
 				<span className="text-sm text-gray-500">Name</span>
 				<span className="font-medium">{name}</span>
 			</div>
-
-			<ImpersonateButton variant="outline" color="default" userId={id} />
 
 			<form.AppField
 				name="role"

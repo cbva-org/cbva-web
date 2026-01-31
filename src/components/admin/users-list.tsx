@@ -11,6 +11,7 @@ import {
 } from "react-aria-components";
 import { authClient } from "@/auth/client";
 import type { Role } from "@/auth/permissions";
+import { impersonatorQueryOptions, viewerQueryOptions } from "@/auth/shared";
 import { UpdateUserForm } from "@/components/admin/update-user-form";
 import { Button } from "@/components/base/button";
 import { CopyButton } from "@/components/base/copy-button";
@@ -235,6 +236,22 @@ function UserRow({
 		}
 	}, [isPasswordOpen, resetPasswordMutation]);
 
+	const { mutate: impersonate } = useMutation({
+		mutationFn: async () => {
+			const { error } = await authClient.admin.impersonateUser({
+				userId: user.id,
+			});
+
+			if (error) {
+				throw error;
+			}
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries(viewerQueryOptions());
+			queryClient.invalidateQueries(impersonatorQueryOptions());
+		},
+	});
+
 	return (
 		<TableRow>
 			<TableCell>
@@ -294,6 +311,9 @@ function UserRow({
 					>
 						{user.phoneNumberVerified ? "Phone Verified" : "Verify Phone"}
 					</DropdownMenuItem>
+					<DropdownMenuItem id="impersonate" onAction={() => impersonate()}>
+						Impersonate
+					</DropdownMenuItem>
 				</DropdownMenu>
 
 				<DialogTrigger isOpen={isEditOpen} onOpenChange={setEditOpen}>
@@ -326,8 +346,8 @@ function UserRow({
 								<>
 									<p>
 										Generate a temporary password for{" "}
-										<span className="font-semibold">{user.name}</span>. They will
-										be prompted to change it on next login.
+										<span className="font-semibold">{user.name}</span>. They
+										will be prompted to change it on next login.
 									</p>
 									<div className="flex justify-end gap-2">
 										<Button onPress={() => setPasswordOpen(false)}>
@@ -350,11 +370,16 @@ function UserRow({
 										not be able to see this password again.
 									</p>
 									<div className="rounded-lg border border-gray-300 p-3 flex items-center justify-between gap-2 bg-gray-50">
-										<code className="text-sm break-all">{generatedPassword}</code>
+										<code className="text-sm break-all">
+											{generatedPassword}
+										</code>
 										<CopyButton value={generatedPassword} />
 									</div>
 									<div className="flex justify-end">
-										<Button color="primary" onPress={() => setPasswordOpen(false)}>
+										<Button
+											color="primary"
+											onPress={() => setPasswordOpen(false)}
+										>
 											Done
 										</Button>
 									</div>
