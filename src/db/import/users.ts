@@ -23,7 +23,7 @@ export async function importUsers(levels: Map<string, number>) {
 	);
 
 	// while (hasMore) {
-	const legacyUsers = await legacy.query.users.findMany({
+	const legacyUsers = await legacy._query.users.findMany({
 		with: {
 			phoneVerifications: true,
 		},
