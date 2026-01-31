@@ -1,10 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@/components/base/link";
 import { subtitle, title } from "@/components/base/primitives";
 import { VenueDisplay } from "@/components/venues/display";
 import { VenueHeader } from "@/components/venues/header";
 import { venueQueryOptions } from "@/data/venues";
 import { DefaultLayout } from "@/layouts/default";
+import { button } from "@/components/base/button";
 
 export const Route = createFileRoute("/venues/$venueId")({
 	ssr: "data-only",
@@ -29,7 +31,14 @@ function RouteComponent() {
 
 			<div className="text-center border-b-2 border-gray-300 py-16">
 				<h1 className={title()}>{venue.name}</h1>
-				<h2 className={subtitle({ class: "font-bold" })}>{venue.city}</h2>
+				<h2 className={subtitle({ class: "font-bold mb-4" })}>{venue.city}</h2>
+				<Link
+					to="/tournaments"
+					search={{ venues: [venue.id] }}
+					className={button({ radius: "full", color: "primary" })}
+				>
+					View Tournaments
+				</Link>
 			</div>
 
 			<VenueDisplay venue={venue} />
