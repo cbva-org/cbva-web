@@ -143,7 +143,7 @@ const getAdminVenues = createServerFn({
 })
 	.middleware([requireRole(["admin"])])
 	.handler(async () => {
-		return await db._query.venues.findMany({
+		return await db.query.venues.findMany({
 			columns: {
 				id: true,
 				name: true,
