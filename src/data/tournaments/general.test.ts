@@ -87,16 +87,8 @@ describe("Edit general info", () => {
 		});
 
 		// After merge, only one tournament should exist
-		// When tournament B is moved to venue A, tournament A becomes the "duplicate"
-		// and gets deleted, with its divisions merged into B
+		// When tournament B is moved to venue A, B gets merged into A and deleted
 		const updatedA = await db.query.tournaments.findFirst({
-			columns: {
-				id: true,
-			},
-			where: { id: aId },
-		});
-
-		const updatedB = await db.query.tournaments.findFirst({
 			columns: {
 				id: true,
 			},
@@ -107,17 +99,24 @@ describe("Edit general info", () => {
 					},
 				},
 			},
+			where: { id: aId },
+		});
+
+		const updatedB = await db.query.tournaments.findFirst({
+			columns: {
+				id: true,
+			},
 			where: { id: bId },
 		});
 
-		// aId tournament should be deleted after merge (it was the duplicate at venue A)
-		expect(updatedA).toBeUndefined();
-		expect(updatedB).toBeDefined();
-		expect(updatedB!.tournamentDivisions).toHaveLength(3);
+		// bId tournament should be deleted after merge (it was merged into A)
+		expect(updatedB).toBeUndefined();
+		expect(updatedA).toBeDefined();
+		expect(updatedA!.tournamentDivisions).toHaveLength(3);
 
 		expect(
 			pick(
-				updatedB!.tournamentDivisions.find(
+				updatedA!.tournamentDivisions.find(
 					({ division }) => division.name === "a",
 				),
 				["gender"],
@@ -128,7 +127,7 @@ describe("Edit general info", () => {
 
 		expect(
 			pick(
-				updatedB!.tournamentDivisions.find(
+				updatedA!.tournamentDivisions.find(
 					({ division }) => division.name === "b",
 				),
 				["gender"],
@@ -139,7 +138,7 @@ describe("Edit general info", () => {
 
 		expect(
 			pick(
-				updatedB!.tournamentDivisions.find(
+				updatedA!.tournamentDivisions.find(
 					({ division }) => division.name === "aa",
 				),
 				["gender"],
