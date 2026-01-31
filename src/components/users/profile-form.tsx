@@ -103,7 +103,12 @@ export function ProfileForm({
 	const queryClient = useQueryClient();
 
 	const form = useAppForm({
-		defaultValues: (initialValues ?? {}) as z.infer<typeof schema>,
+		defaultValues: ({
+			...initialValues,
+			notJuniorsEligible: initialValues?.highSchoolGraduationYear
+				? false
+				: true,
+		} ?? {}) as z.infer<typeof schema>,
 		// ({} as Partial<
 		// 	Omit<CreatePlayerProfile, "birthdate"> & { birthdate: CalendarDate }
 		// >)),
