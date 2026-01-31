@@ -19,7 +19,7 @@ import {
 async function readVenues() {
 	return await db._query.venues.findMany({
 		where: (venues, { eq }) => eq(venues.status, "active"),
-		orderBy: (venues, { asc }) => [asc(venues.city), asc(venues.name)],
+		orderBy: (venues, { asc }) => [asc(venues.order), asc(venues.name)],
 	});
 }
 
