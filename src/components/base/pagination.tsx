@@ -176,63 +176,73 @@ export function Pagination<T extends FileRouteTypes["fullPaths"]>({
 		showEllipsis: true,
 	});
 
-	return (
-		<div className="flex flex-row items-center justify-center">
-			<div className="flex flex-row gap-2 justify-center">
-				<Link
-					{...backLinkProps}
-					className={button({
-						variant: "solid",
-						color: "alternate",
-					})}
-				>
-					<ChevronLeft />
-				</Link>
-				{pages
-					.map((page) => {
-						const linkProps: LinkProps<T> = {
-							to,
-							search: (prev: any) => ({
-								...prev,
-								page: page.number,
-								pageSize,
-							}),
-							disabled: page.isCurrent,
-							...props,
-						};
+	const startItem = (page - 1) * pageSize + 1;
+	const endItem = Math.min(page * pageSize, pageInfo.totalItems);
 
-						return {
-							display: page.type === "page" ? page.number : "...",
-							number: page.number,
-							className: button({
-								variant: "solid",
-								color: page.isCurrent ? "secondary" : "alternate",
-								isDisabled: page.isCurrent,
-								className: page.isCurrent ? undefined : "hidden sm:inline-flex",
-							}),
-							linkProps,
-						};
-					})
-					.map(({ display, number, className, linkProps }, i) => (
-						<Link
-							key={i}
-							to={to}
-							className={className}
-							{...linkProps}
-							title={`Go to page ${number}`}
-						>
-							{display}
-						</Link>
-					))}
-				<Link
-					{...nextLinkProps}
-					className={button({
-						variant: "solid",
-						color: "alternate",
-					})}
-				>
-					<ChevronRight />
-				</Link>
+	return (
+		<div className="flex flex-col gap-2 items-center">
+			<div className="flex flex-col gap-2">
+				<div className="flex flex-row gap-2 justify-center">
+					<Link
+						{...backLinkProps}
+						className={button({
+							variant: "solid",
+							color: "alternate",
+						})}
+					>
+						<ChevronLeft />
+					</Link>
+					{pages
+						.map((page) => {
+							const linkProps: LinkProps<T> = {
+								to,
+								search: (prev: any) => ({
+									...prev,
+									page: page.number,
+									pageSize,
+								}),
+								disabled: page.isCurrent,
+								...props,
+							};
+
+							return {
+								display: page.type === "page" ? page.number : "...",
+								number: page.number,
+								className: button({
+									variant: "solid",
+									color: page.isCurrent ? "secondary" : "alternate",
+									isDisabled: page.isCurrent,
+									className: page.isCurrent
+										? undefined
+										: "hidden sm:inline-flex",
+								}),
+								linkProps,
+							};
+						})
+						.map(({ display, number, className, linkProps }, i) => (
+							<Link
+								key={i}
+								to={to}
+								className={className}
+								{...linkProps}
+								title={`Go to page ${number}`}
+							>
+								{display}
+							</Link>
+						))}
+					<Link
+						{...nextLinkProps}
+						className={button({
+							variant: "solid",
+							color: "alternate",
+						})}
+					>
+						<ChevronRight />
+					</Link>
+				</div>
+				<span className="text-sm text-gray-600 text-right">
+					{startItem}–{endItem} of {pageInfo.totalItems}
+				</span>
 			</div>
 		</div>
 	);
